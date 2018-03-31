@@ -1,0 +1,404 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:id="@+id/HEIGHTESTVIEW">
+
+    <RelativeLayout
+        android:id="@+id/crossview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
+
+        <RelativeLayout
+            android:id="@+id/balanceview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:elevation="9dp"
+            android:visibility="visible">
+
+            <RelativeLayout
+                android:id="@+id/balancelayout"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:background="@color/colorAccent"
+                android:elevation="24dp">
+
+                <TextView
+                    android:id="@+id/addressinfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:elevation="5dp"
+                    android:gravity="top"
+                    android:text="Wallet Address"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorDarkBackground"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/address"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginTop="13dp"
+                    android:elevation="5dp"
+                    android:gravity="top"
+                    android:text="0.000000000000"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorDarkBackground"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/balancevalue"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:elevation="5dp"
+                    android:gravity="center"
+                    android:text="0.000000000000"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground"
+                    android:textSize="23sp" />
+
+                <TextView
+                    android:id="@+id/balanceinfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_above="@+id/connected"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="-27dp"
+                    android:elevation="5dp"
+                    android:gravity="center"
+                    android:text="Your Balance:"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/connected1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/connected"
+                    android:layout_alignParentStart="true"
+                    android:text="Connected to:"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground" />
+
+                <TextView
+                    android:id="@+id/connected"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:text="Connected to:"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground" />
+
+                <ImageView
+                    android:id="@+id/qrimage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    app:srcCompat="@mipmap/ic_launcher" />
+
+                <ImageView
+                    android:id="@+id/refreshIcon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginBottom="7dp"
+                    android:layout_marginStart="7dp" />
+
+            </RelativeLayout>
+
+
+            <ListView
+                android:id="@+id/transactionlist"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/balancelayout">
+
+            </ListView>
+
+            <ProgressBar
+                android:id="@+id/waitingtransbar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="50dp"
+                android:layout_height="60dp"
+                android:layout_alignParentBottom="false"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentRight="false"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentTop="false"
+                android:layout_centerHorizontal="true"
+                android:layout_centerInParent="true"
+                android:layout_centerVertical="true"
+                android:foregroundGravity="center_vertical|center_horizontal|center"
+                android:visibility="visible" />
+
+            <RelativeLayout
+                android:id="@+id/qrrequestview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:background="#64ffffff"
+                android:elevation="25dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/closeqrrequest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginEnd="35dp"
+                    android:layout_marginTop="30dp"
+                    android:background="@drawable/backgroundanimation"
+                    app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
+
+                <ImageView
+                    android:id="@+id/qrreuqestimage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerInParent="true"
+                    android:layout_centerVertical="true"
+                    app:srcCompat="@drawable/aro" />
+            </RelativeLayout>
+
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/historyview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:minHeight="178dp"
+            android:visibility="gone">
+
+            <ListView
+                android:id="@+id/historylisttransactions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="50dp"
+                android:layout_height="60dp"
+                android:layout_alignParentBottom="false"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentRight="false"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentTop="false"
+                android:layout_centerHorizontal="true"
+                android:layout_centerInParent="true"
+                android:layout_centerVertical="true"
+                android:foregroundGravity="center_vertical|center_horizontal|center"
+                android:visibility="visible" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/send"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone">
+
+            <RelativeLayout
+                android:id="@+id/backgroundgradient"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.dynamitechetan.flowinggradient.FlowingGradient
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:transition_drawable="@drawable/animationlist"
+                    app:transition_duration="4000" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/addresstext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignStart="@+id/amounttext"
+                android:layout_marginTop="15dp"
+                android:fontFamily="sans-serif"
+                android:text="Address to:"
+                android:textAllCaps="false"
+                android:textColor="@color/colorBackground"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/addressto"
+                style="@android:style/TextAppearance.Holo.Widget.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="19dp"
+                android:layout_marginStart="19dp"
+                android:layout_marginTop="29dp"
+                android:elevation="24dp"
+                android:ems="10"
+                android:hint="Address"
+                android:inputType="text"
+                android:textColor="@color/colorBackground"
+                android:textColorHint="@color/colorBackground"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/amounttext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="85dp"
+                android:text="Amount:"
+                android:textColor="@color/colorBackground"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/amountto"
+                style="@style/Widget.AppCompat.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/amounttext"
+                android:layout_below="@+id/amounttext"
+                android:elevation="24dp"
+                android:ems="10"
+                android:hint="Amount"
+                android:inputType="numberDecimal"
+                android:textAlignment="viewStart"
+                android:textColor="@color/colorBackground"
+                android:textColorHint="@color/colorBackground"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/fee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="145dp"
+                android:text="Fee: 0.000"
+                android:textAlignment="center"
+                android:textColor="@color/colorBackground"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/messageedit"
+                android:layout_alignStart="@+id/amountto"
+                android:layout_marginBottom="41dp"
+                android:text="Message"
+                android:textColor="@color/colorBackground"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/messageedit"
+                style="@style/Widget.AppCompat.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/textView7"
+                android:layout_below="@+id/fee"
+                android:layout_marginTop="16dp"
+                android:elevation="24dp"
+                android:ems="10"
+                android:hint="Message"
+                android:inputType="text"
+                android:textAlignment="viewStart"
+                android:textAllCaps="false"
+                android:textColor="@color/colorBackground"
+                android:textColorHint="@color/colorBackground" />
+
+            <Button
+                android:id="@+id/sendbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="28dp"
+                android:layout_marginEnd="15dp"
+                android:background="@color/colorBackground"
+                android:elevation="24dp"
+                android:text="SEND" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/receiveview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone">
+
+            <RelativeLayout
+                android:id="@+id/backgroundgradienthere"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.dynamitechetan.flowinggradient.FlowingGradient
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:transition_drawable="@drawable/animationlist"
+                    app:transition_duration="4000" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/receiveviewtext"
+                android:layout_width="match_parent"
+                android:layout_height="70dp">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:gravity="center_vertical|fill_vertical|center_horizontal"
+                    android:text="Scan an {ARORECEIVE} QR Code..."
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/scannerview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/receiveviewtext">
+
+                <com.dlazaro66.qrcodereaderview.QRCodeReaderView
+                    android:id="@+id/receivescanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+
+</RelativeLayout>
