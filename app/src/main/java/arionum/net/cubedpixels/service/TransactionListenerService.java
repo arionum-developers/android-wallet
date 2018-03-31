@@ -63,12 +63,12 @@ public class TransactionListenerService extends Service {
 	public void initializeTimerTask() {
 		timerTask = new TimerTask() {
 			public void run() {
-				
+				//USING INT COUNTER AS EFFICIENT NETWORK AND KEEP ALIVE SERVICE
 				//CHECK IF NETWORK IS AVAILABLE
 				if (!isNetworkAvailable()) {
 					try {
 						counter += 7;
-						Thread.sleep(7000);
+						Thread.sleep(10000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -87,7 +87,7 @@ public class TransactionListenerService extends Service {
 				}
 				//CHECK LAST TRANSACTION ID -> IF ADDRESS IS SET
 				if (getString("address") != "")
-					if (counter > 100) {
+					if (counter > 4*60) {
 						counter = 0;
 						ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 							@Override
