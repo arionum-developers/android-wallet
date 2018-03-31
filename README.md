@@ -7,6 +7,11 @@ QRview,MaterialDrawer and MaterialDialogs
 ARO API: 
 >arionum.net.cubedpixels.api.ApiRequest
 
+Support and Donations:
+```
+1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
+```
+
 Screenshots
 
 
