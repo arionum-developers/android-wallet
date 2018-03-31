@@ -63,6 +63,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -304,7 +305,7 @@ public class HomeView extends AppCompatActivity {
 								Double amount = Double.parseDouble(dialog.getInputEditText().getText().toString());
 								ImageView qrimage = findViewById(R.id.qrreuqestimage);
 								Bitmap myBitmap = QRCode
-										.from("sendaro" + "|" + HomeView.this.address + "|" + amount + "|")
+										.from("sendaro" + "|" + HomeView.this.address + "|" + doubleVal(amount).replace(",",".") + "|")
 										.withSize(600, 600).withColor(Color.BLACK, Color.parseColor("#00000000"))
 										.bitmap();
 								qrimage.setImageBitmap(myBitmap);
@@ -345,11 +346,11 @@ public class HomeView extends AppCompatActivity {
 			public void afterTextChanged(Editable editable) {
 				try {
 					String t = editable.toString();
-					Double d = Double.parseDouble(t);
-					Double a = d * 0.0025;
+					float d = Float.parseFloat(t+"F");
+					double a = d * 0.0025;
 					if (a > 10)
 						a = 10.0;
-					fee.setText("Fee: " + a + " ARO");
+					fee.setText("Fee: " + doubleVal(a).replace(",",".") + " ARO");
 				} catch (Exception e) {
 					fee.setText("Fee: 0.000 ARO");
 				}
@@ -364,7 +365,7 @@ public class HomeView extends AppCompatActivity {
 					final String address = ((EditText) findViewById(R.id.addressto)).getText().toString();
 					final String message = ((EditText) findViewById(R.id.messageedit)).getText().toString();
 					new MaterialDialog.Builder(HomeView.this).title("Transaction")
-							.content("Are you sure you want to send " + amount + " ARO " + "\n to: " + address)
+							.content("Are you sure you want to send " + doubleVal(amount).replace(",",".") + " ARO " + "\n to: " + address)
 							.cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
 							.onPositive(new MaterialDialog.SingleButtonCallback() {
 								@Override
@@ -588,6 +589,32 @@ public class HomeView extends AppCompatActivity {
 		});
 	}
 
+
+	public static String doubleVal(final Double d) {
+		return d == null ? "" : doubleVal(d.doubleValue());
+	}
+
+	public static String doubleVal(final double d) {
+		int afterlength = getDecimals(d);
+		String temp = "";
+		for(int i = 0; i < afterlength; i++)
+			temp += "#";
+		DecimalFormat format = new DecimalFormat("0."+temp);
+
+		return format.format(d);
+	}
+	public static int getDecimals(double d)
+	{
+		String[] splitt = (d+"").split("\\.");
+		if(splitt.length <= 1)
+			return 0;
+		String after = splitt[1];
+		while(after.lastIndexOf("0") == after.length())
+			after = after.substring(0,after.length()-1);
+		if(after.length() > 10)
+			return 10;
+			return after.length();
+	}
 	public static ViewGroup getParent(View view) {
 		return (ViewGroup) view.getParent();
 	}
@@ -705,7 +732,7 @@ public class HomeView extends AppCompatActivity {
 								message = "No Message given";
 							new MaterialDialog.Builder(HomeView.this).title("Scanned Transaction Request")
 									.content("Do you want to accept the QR request?" + "\nAddress to: " + address
-											+ "\nValue: " + val + "\nMessage: " + message)
+											+ "\nValue: " + doubleVal(val).replace(",",".") + "\nMessage: " + message)
 									.positiveText("Yes").negativeText("No")
 									.onNegative(new MaterialDialog.SingleButtonCallback() {
 										@Override
