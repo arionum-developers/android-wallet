@@ -11,7 +11,7 @@ Class is making an Asynchron Response and Receive
 The Loadingscreen is using an Animated SVG
 
 Screenshots
-![](https://media.discordapp.net/attachments/425761758934728714/428478620856614942/Screenshot_20180328-110040.png?width=380&height=676 | width=100)
+![Front Page](https://media.discordapp.net/attachments/425761758934728714/428478620856614942/Screenshot_20180328-110040.png?width=380&height=676 "Front Page")
 
 Arionum and CubedPixels
 ```
