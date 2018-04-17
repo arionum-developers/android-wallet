@@ -46,7 +46,6 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 				String publickey = splitt[1];
 				String privatekey = splitt[2];
 				String privatekey2 = new String(Base58.encode(splitt[2].getBytes()));
-				//SAVING WITH ENCODING
 				saveString("address", address);
 				saveString("publickey", publickey);
 				saveString("privatekey", privatekey2);

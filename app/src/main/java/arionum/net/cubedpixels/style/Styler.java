@@ -11,10 +11,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class Styler {
-	//CUSTOM STYER MADE BY CUBY
+	//CUSTOM STYER
 	//ITERATED THROUGH EVERY VIEW AND SEARCHES FOR TEXTVIEW AND BUTTONS
 	//TO STYLE A CERTAIN FONT
-	
+	//REALLY STUPID xD
 	
 	public static void styleText(Context context, TextView tv) {
 		Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), "fonts/segoeui2.ttf");

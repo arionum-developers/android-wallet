@@ -44,7 +44,7 @@ public class TransactionListenerService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.i("EXIT", "ondestroy!");
+		Log.i("EXIT", "Arionum Service got shutdown!");
 		Intent broadcastIntent = new Intent("arionum.net.cubedpixels.RestartService");
 		sendBroadcast(broadcastIntent);
 		stoptimertask();
