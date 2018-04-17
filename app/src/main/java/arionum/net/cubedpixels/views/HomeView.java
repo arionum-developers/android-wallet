@@ -955,9 +955,9 @@ public class HomeView extends AppCompatActivity {
 
     public void createDrawer(Bundle savedinstance) {
 		final IProfile profile = new ProfileDrawerItem().withName(address).withEmail(public_key)
-				.withIcon(R.drawable.aro).withSelectedBackgroundAnimated(true);
+				.withIcon(R.drawable.ic_launcher_round).withSelectedBackgroundAnimated(true);
 
-		headerResult = new AccountHeaderBuilder().withActivity(this).withHeaderBackground(R.drawable.background)
+		headerResult = new AccountHeaderBuilder().withActivity(this).withHeaderBackground(R.drawable.colormain)
 				.withTranslucentStatusBar(false)
 				.addProfiles(profile,
 						new ProfileSettingDrawerItem().withName("Logout").withIcon(GoogleMaterial.Icon.gmd_settings)

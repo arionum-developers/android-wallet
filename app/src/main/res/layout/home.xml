@@ -166,8 +166,8 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginEnd="35dp"
                     android:layout_marginTop="30dp"
-                    android:background="@drawable/backgroundanimation"
-                    app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
+                    android:background="@android:drawable/ic_delete"
+                    app:srcCompat="@android:drawable/ic_delete" />
 
                 <ImageView
                     android:id="@+id/qrreuqestimage"
@@ -225,13 +225,10 @@
             <RelativeLayout
                 android:id="@+id/backgroundgradient"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="@color/colorAccent">
 
-                <com.dynamitechetan.flowinggradient.FlowingGradient
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:transition_drawable="@drawable/animationlist"
-                    app:transition_duration="4000" />
+
             </RelativeLayout>
 
             <TextView
@@ -357,11 +354,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <com.dynamitechetan.flowinggradient.FlowingGradient
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:transition_drawable="@drawable/animationlist"
-                    app:transition_duration="4000" />
 
             </RelativeLayout>
 
