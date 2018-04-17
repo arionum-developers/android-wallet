@@ -312,7 +312,7 @@ public class HomeView extends AppCompatActivity {
 		TextView address = findViewById(R.id.address);
         address.setText(HomeView.address);
         setupQR();
-
+        setupThankyouList();
 
         // QR
 		float[] hsv = new float[3];
