@@ -1118,7 +1118,8 @@ public class HomeView extends AppCompatActivity {
                 unixTime = unix1;
                 message = msg1;
 
-        System.out.println("VALS: "+val);
+        System.out.println("SIGNING DONE VALUES: ");
+        System.out.println(val);
         System.out.println(signature);
         System.out.println(fee);
         System.out.println(unixTime);
