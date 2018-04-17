@@ -80,7 +80,7 @@ import arionum.net.cubedpixels.utils.DoneTask;
 
 public class HomeView extends AppCompatActivity {
 
-	private HomeView instance;
+	private static HomeView instance;
 	private static ArrayList<String> peers = new ArrayList<>();
 	private static ArrayList<Page> pages = new ArrayList<>();
 	private static String currentPeer = "";
@@ -109,7 +109,6 @@ public class HomeView extends AppCompatActivity {
 						.content("Your private key couldn't be encrypted!").show();
 			}
 		this.address = getString("address");
-
 		LayoutInflaterCompat.setFactory2(getLayoutInflater(), new IconicsLayoutInflater2(getDelegate()));
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
@@ -211,6 +210,18 @@ public class HomeView extends AppCompatActivity {
 		}, "getTransactions", new ApiRequest.Argument("public_key", this.public_key),
 				new ApiRequest.Argument("account", this.address), new ApiRequest.Argument("limit", "10"));
 
+	}
+
+	public static String getPublic_key() {
+		return public_key;
+	}
+
+	public static String getAddress() {
+		return address;
+	}
+
+	public static String getPrivate_key() {
+		return private_key;
 	}
 
 	public void refreshLastTransactions() {
@@ -364,6 +375,13 @@ public class HomeView extends AppCompatActivity {
 					final Double amount = Double.parseDouble(amountedit.getText().toString());
 					final String address = ((EditText) findViewById(R.id.addressto)).getText().toString();
 					final String message = ((EditText) findViewById(R.id.messageedit)).getText().toString();
+					DecimalFormat format = new DecimalFormat("0.########");
+					String vals = format.format(amount);
+					if(!vals.contains(","))
+						vals+=",0";
+					while(vals.split(",")[1].length() < 8)
+						vals+= "0";
+					vals = vals.replace(",",".");
 					new MaterialDialog.Builder(HomeView.this).title("Transaction")
 							.content("Are you sure you want to send " + doubleVal(amount).replace(",",".") + " ARO " + "\n to: " + address)
 							.cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
@@ -374,67 +392,17 @@ public class HomeView extends AppCompatActivity {
 									final MaterialDialog d = new MaterialDialog.Builder(HomeView.this).title("Sending")
 											.progress(true, 100).progressIndeterminateStyle(true).cancelable(false)
 											.show();
-									ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-										@Override
-										public void onFeedback(final JSONObject object) {
-											d.dismiss();
-											if (object == null || object.toString().contains("error")) {
-												Handler h = new Handler(instance.getMainLooper());
-												h.post(new Runnable() {
-													@Override
-													public void run() {
-														try {
-															MaterialDialog d = new MaterialDialog.Builder(HomeView.this)
-																	.title("Error:").content("Message: " + "\n"
-																			+ object.get("data") + " <-> ")
-																	.cancelable(true).show();
-														} catch (Exception e) {
-															e.printStackTrace();
-															MaterialDialog d = new MaterialDialog.Builder(HomeView.this)
-																	.title("Error:")
-																	.content("Message: " + "\n" + e.getMessage())
-																	.cancelable(true).show();
-														}
-													}
-												});
 
-											} else {
-												Handler h = new Handler(instance.getMainLooper());
-												h.post(new Runnable() {
-													@Override
-													public void run() {
-														try {
-															MaterialDialog d = new MaterialDialog.Builder(HomeView.this)
-																	.title("Transaction sent!")
-																	.content("Your transaction ID:" + "\n"
-																			+ object.get("data").toString())
-																	.cancelable(true).show();
-														} catch (final Exception e) {
-															e.printStackTrace();
-															Handler h = new Handler(instance.getMainLooper());
-															h.post(new Runnable() {
-																@Override
-																public void run() {
-																	MaterialDialog d = new MaterialDialog.Builder(
-																			HomeView.this).title("Error:")
-																					.content("Debug: " + e.getMessage())
-																					.cancelable(true).show();
-																}
-															});
-														}
-													}
-												});
 
-											}
+									//TODO REQUEST SEND
 
-										}
-									}, "send", new ApiRequest.Argument("val", amount),
-											new ApiRequest.Argument("dst", address),
-											new ApiRequest.Argument("public_key", HomeView.this.public_key),
-											new ApiRequest.Argument("private_key", HomeView.this.private_key),
-											new ApiRequest.Argument("date", System.currentTimeMillis() / 1000),
-											new ApiRequest.Argument("message",
-													"Send from Arionum Android Wallet | " + message));
+									makeTransaction(address, amount.doubleValue(), message, new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            d.dismiss();
+                                        }
+                                    });
+
 
 								}
 							}).show();
@@ -588,6 +556,7 @@ public class HomeView extends AppCompatActivity {
 			}
 		});
 	}
+
 
 
 	public static String doubleVal(final Double d) {
@@ -761,166 +730,44 @@ public class HomeView extends AppCompatActivity {
 										@Override
 										public void onClick(@NonNull MaterialDialog dialog,
 												@NonNull DialogAction which) {
-											ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-												@Override
-												public void onFeedback(final JSONObject object) {
-													if (object == null || object.toString().contains("error")) {
-														Handler h = new Handler(instance.getMainLooper());
-														h.post(new Runnable() {
-															@Override
-															public void run() {
-																try {
-																	MaterialDialog d = new MaterialDialog.Builder(
-																			HomeView.this)
-																					.title("Error:")
-																					.content("Message: " + "\n"
-																							+ object.get("data")
-																							+ " <-> ")
-																					.cancelable(true).show();
-																	// REPLACE
-																	// AND COPY
-																	replaceView(qrCodeReaderView, savedState);
-																	savedState = new QRCodeReaderView(HomeView.this);
-																	savedState.setId(R.id.receivescanner);
-																	savedState.setLayoutParams(
-																			new RelativeLayout.LayoutParams(
-																					RelativeLayout.LayoutParams.MATCH_PARENT,
-																					RelativeLayout.LayoutParams.MATCH_PARENT));
 
-																	qrCodeReaderView = findViewById(
-																			R.id.receivescanner);
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.bringToFront();
-																	qrCodeReaderView.setOnQRCodeReadListener(
-																			createQRlistener());
-																	qrCodeReaderView.setAutofocusInterval(1000L);
-																	qrCodeReaderView.setBackCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																} catch (Exception e) {
-																	e.printStackTrace();
-																	MaterialDialog d = new MaterialDialog.Builder(
-																			HomeView.this)
-																					.title("Error:")
-																					.content("Message: " + "\n"
-																							+ e.getMessage())
-																					.cancelable(true).show();
-																	// REPLACE
-																	// AND COPY
-																	replaceView(qrCodeReaderView, savedState);
-																	savedState = new QRCodeReaderView(HomeView.this);
-																	savedState.setId(R.id.receivescanner);
-																	savedState.setLayoutParams(
-																			new RelativeLayout.LayoutParams(
-																					RelativeLayout.LayoutParams.MATCH_PARENT,
-																					RelativeLayout.LayoutParams.MATCH_PARENT));
 
-																	qrCodeReaderView = findViewById(
-																			R.id.receivescanner);
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.bringToFront();
-																	qrCodeReaderView.setOnQRCodeReadListener(
-																			createQRlistener());
-																	qrCodeReaderView.setAutofocusInterval(1000L);
-																	qrCodeReaderView.setBackCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																}
-															}
-														});
 
-													} else {
-														Handler h = new Handler(instance.getMainLooper());
-														h.post(new Runnable() {
-															@Override
-															public void run() {
-																try {
-																	MaterialDialog d = new MaterialDialog.Builder(
-																			HomeView.this)
-																					.title("Transaction sent!")
-																					.content("Your transaction ID:"
-																							+ "\n" + object.get("data")
-																									.toString())
-																					.cancelable(true).show();
-																	// REPLACE
-																	// AND COPY
-																	replaceView(qrCodeReaderView, savedState);
-																	savedState = new QRCodeReaderView(HomeView.this);
-																	savedState.setId(R.id.receivescanner);
-																	savedState.setLayoutParams(
-																			new RelativeLayout.LayoutParams(
-																					RelativeLayout.LayoutParams.MATCH_PARENT,
-																					RelativeLayout.LayoutParams.MATCH_PARENT));
 
-																	qrCodeReaderView = findViewById(
-																			R.id.receivescanner);
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																	qrCodeReaderView.startCamera();
-																	qrCodeReaderView.bringToFront();
-																	qrCodeReaderView.setOnQRCodeReadListener(
-																			createQRlistener());
-																	qrCodeReaderView.setAutofocusInterval(1000L);
-																	qrCodeReaderView.setBackCamera();
-																	qrCodeReaderView.setQRDecodingEnabled(true);
-																} catch (final Exception e) {
-																	e.printStackTrace();
-																	Handler h = new Handler(instance.getMainLooper());
-																	h.post(new Runnable() {
-																		@Override
-																		public void run() {
-																			MaterialDialog d = new MaterialDialog.Builder(
-																					HomeView.this)
-																							.title("Error:")
-																							.content("Debug: "
-																									+ e.getMessage())
-																							.cancelable(true).show();
-																			// REPLACE
-																			// AND
-																			// COPY
-																			replaceView(qrCodeReaderView, savedState);
-																			savedState = new QRCodeReaderView(
-																					HomeView.this);
-																			savedState.setId(R.id.receivescanner);
-																			savedState.setLayoutParams(
-																					new RelativeLayout.LayoutParams(
-																							RelativeLayout.LayoutParams.MATCH_PARENT,
-																							RelativeLayout.LayoutParams.MATCH_PARENT));
 
-																			qrCodeReaderView = findViewById(
-																					R.id.receivescanner);
-																			qrCodeReaderView.setQRDecodingEnabled(true);
-																			qrCodeReaderView.startCamera();
-																			qrCodeReaderView.setQRDecodingEnabled(true);
-																			qrCodeReaderView.startCamera();
-																			qrCodeReaderView.bringToFront();
-																			qrCodeReaderView.setOnQRCodeReadListener(
-																					createQRlistener());
-																			qrCodeReaderView
-																					.setAutofocusInterval(1000L);
-																			qrCodeReaderView.setBackCamera();
-																			qrCodeReaderView.setQRDecodingEnabled(true);
-																		}
-																	});
-																}
-															}
-														});
 
-													}
+                                            makeTransaction(address, val.doubleValue(), "Send from Arionum Android Wallet", new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    replaceView(qrCodeReaderView, savedState);
+                                                    savedState = new QRCodeReaderView(HomeView.this);
+                                                    savedState.setId(R.id.receivescanner);
+                                                    savedState.setLayoutParams(
+                                                            new RelativeLayout.LayoutParams(
+                                                                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                                                                    RelativeLayout.LayoutParams.MATCH_PARENT));
 
-												}
-											}, "send", new ApiRequest.Argument("val", val),
-													new ApiRequest.Argument("dst", address),
-													new ApiRequest.Argument("public_key", HomeView.this.public_key),
-													new ApiRequest.Argument("private_key", HomeView.this.private_key),
-													new ApiRequest.Argument("date", System.currentTimeMillis() / 1000),
-													new ApiRequest.Argument("message",
-															"Send from Arionum Android Wallet"));
+                                                    qrCodeReaderView = findViewById(
+                                                            R.id.receivescanner);
+                                                    qrCodeReaderView.setQRDecodingEnabled(true);
+                                                    qrCodeReaderView.startCamera();
+                                                    qrCodeReaderView.setQRDecodingEnabled(true);
+                                                    qrCodeReaderView.startCamera();
+                                                    qrCodeReaderView.bringToFront();
+                                                    qrCodeReaderView.setOnQRCodeReadListener(
+                                                            createQRlistener());
+                                                    qrCodeReaderView.setAutofocusInterval(1000L);
+                                                    qrCodeReaderView.setBackCamera();
+                                                    qrCodeReaderView.setQRDecodingEnabled(true);
+                                                }
+                                            });
+
+
+
+
+
+
+
 										}
 									}).show();
 						}
@@ -1252,5 +1099,96 @@ public class HomeView extends AppCompatActivity {
 
 	public abstract class Call {
 		public abstract void onDone(JSONObject o);
+	}
+
+    static String signature = "";
+    static String fee = "";
+    static String val = "";
+    static String unixTime = "";
+    static String message = "";
+	public static void makeTransaction(final String addressTO, double value, String MSG, final Runnable run)
+    {
+		long UNIX = System.currentTimeMillis()/1000;
+		Base58.getSignature(addressTO, MSG, value, UNIX, new Base58.CallBackSigner() {
+            @Override
+            public void onDone(String signed1, String unix1, String val1, String fee1, String msg1) {
+                signature = signed1;
+                val = val1;
+                fee = fee1;
+                unixTime = unix1;
+                message = msg1;
+
+        System.out.println("VALS: "+val);
+        System.out.println(signature);
+        System.out.println(fee);
+        System.out.println(unixTime);
+        System.out.println(message);
+
+
+		ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+									   @Override
+									   public void onFeedback(final JSONObject object) {
+                                           run.run();
+										   if (object == null || object.toString().contains("error")) {
+											   Handler h = new Handler(HomeView.instance.getMainLooper());
+											   h.post(new Runnable() {
+												   @Override
+												   public void run() {
+													   try {
+														   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+																   .title("Error:").content("Message: " + "\n"
+																		   + object.get("data") + " <-> ")
+																   .cancelable(true).show();
+													   } catch (Exception e) {
+														   e.printStackTrace();
+														   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+																   .title("Error:")
+																   .content("Message: " + "\n" + e.getMessage())
+																   .cancelable(true).show();
+													   }
+												   }
+											   });
+
+										   } else {
+											   Handler h = new Handler(instance.getMainLooper());
+											   h.post(new Runnable() {
+												   @Override
+												   public void run() {
+													   try {
+														   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+																   .title("Transaction sent!")
+																   .content("Your transaction ID:" + "\n"
+																		   + object.get("data").toString())
+																   .cancelable(true).show();
+													   } catch (final Exception e) {
+														   e.printStackTrace();
+														   Handler h = new Handler(instance.getMainLooper());
+														   h.post(new Runnable() {
+															   @Override
+															   public void run() {
+																   MaterialDialog d = new MaterialDialog.Builder(
+																		   HomeView.instance).title("Error:")
+																		   .content("Debug: " + e.getMessage())
+																		   .cancelable(true).show();
+															   }
+														   });
+													   }
+												   }
+											   });
+
+										   }
+
+									   }
+								   }, "send", new ApiRequest.Argument("val", val),
+				new ApiRequest.Argument("dst", addressTO),
+				new ApiRequest.Argument("public_key", HomeView.instance.public_key),
+				new ApiRequest.Argument("signature", signature),
+				new ApiRequest.Argument("date", unixTime),
+				new ApiRequest.Argument("message",message)
+				,new ApiRequest.Argument("version",1));
+
+
+            }
+        });
 	}
 }

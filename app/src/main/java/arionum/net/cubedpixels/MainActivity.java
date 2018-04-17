@@ -31,7 +31,7 @@ import arionum.net.cubedpixels.views.QRview;
 
 public class MainActivity extends AppCompatActivity {
 	public static boolean running = true;
-	private MainActivity instance;
+	private static MainActivity instance;
 	private Drawable drawable;
 
 	private String[] someStrings = { "Searching Node...", "Searching the Internet...", "HODLING...", "Waiting music...",
@@ -43,7 +43,11 @@ public class MainActivity extends AppCompatActivity {
 			"Destroying Meteors...", "Scuffing cats...", "Petting cats...", "Thinking about cats...",
 			"Connecting to Arionum..." ,"Making cats smarter...","Building Arionum..."};
 
-	@Override
+    public static MainActivity getInstance() {
+        return instance;
+    }
+
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);

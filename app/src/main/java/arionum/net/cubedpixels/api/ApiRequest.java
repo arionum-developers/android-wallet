@@ -2,11 +2,11 @@ package arionum.net.cubedpixels.api;
 
 import org.json.JSONObject;
 
-import arionum.net.cubedpixels.views.HomeView;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
+
+import arionum.net.cubedpixels.views.HomeView;
 
 public class ApiRequest {
 
@@ -21,6 +21,7 @@ public class ApiRequest {
 						afterwards += "&" + a.getName() + "=" + a.getData();
 					}
 					URL url = new URL(HomeView.getCurrentPeer() + "/api.php?q=" + option + afterwards);
+					System.out.println(url.toString());
 					String response = "";
 					//DOWNLOAD URL BYTES
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();

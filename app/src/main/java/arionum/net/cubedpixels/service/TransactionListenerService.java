@@ -59,7 +59,7 @@ public class TransactionListenerService extends Service {
 		initializeTimerTask();
 		timer.schedule(timerTask, 1000, 1000);
 	}
-	 
+
 	public void initializeTimerTask() {
 		timerTask = new TimerTask() {
 			public void run() {

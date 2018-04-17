@@ -33,7 +33,8 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 		qrCodeReaderView.setAutofocusInterval(1000L);
 		qrCodeReaderView.setTorchEnabled(true);
 		qrCodeReaderView.setBackCamera();
-	}
+
+}
 
 	@Override
 	public void onQRCodeRead(String text, PointF[] points) {
