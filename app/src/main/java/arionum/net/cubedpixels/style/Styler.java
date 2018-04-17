@@ -15,6 +15,7 @@ public class Styler {
 	//ITERATED THROUGH EVERY VIEW AND SEARCHES FOR TEXTVIEW AND BUTTONS
 	//TO STYLE A CERTAIN FONT
 	//REALLY STUPID xD
+	//DONT USE THIS STUFF
 	
 	public static void styleText(Context context, TextView tv) {
 		Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), "fonts/segoeui2.ttf");

@@ -10,7 +10,8 @@ public class CrossfadeWrapper implements ICrossfader {
 		this.mCrossfader = crossfader;
 	}
 
-	@Override
+    //WRAPPER FOR ICONS
+    @Override
 	public void crossfade() {
 		mCrossfader.crossFade();
 	}

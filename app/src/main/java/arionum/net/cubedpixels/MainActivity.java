@@ -30,6 +30,9 @@ import arionum.net.cubedpixels.views.HomeView;
 import arionum.net.cubedpixels.views.QRview;
 
 public class MainActivity extends AppCompatActivity {
+
+	//MAIN AND LAUNCH ACTIVITY
+
 	public static boolean running = true;
 	private static MainActivity instance;
 	private Drawable drawable;
@@ -41,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
 			"Adding flying Cats...", "Doing Maths...", "Counting Stars...", "Counting AROs...", "Searching Server...",
 			"Waking Arionum...", "Loading stuff...", "Doing stuff...", "Walking in the Internet...",
 			"Destroying Meteors...", "Scuffing cats...", "Petting cats...", "Thinking about cats...",
-			"Connecting to Arionum..." ,"Making cats smarter...","Building Arionum...","Thanking BitcoinJ for EC..."};
+			"Connecting to Arionum...", "Making cats smarter...", "Building Arionum...", "Thanking BitcoinJ for EC...",
+			"Waking up the Devs..."};
 
     public static MainActivity getInstance() {
         return instance;
@@ -51,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		this.instance = this;
+		instance = this;
 		ImageView animationview = findViewById(R.id.imageView4);
 		drawable = animationview.getDrawable();
 

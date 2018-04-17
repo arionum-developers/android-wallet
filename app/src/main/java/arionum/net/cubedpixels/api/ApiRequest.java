@@ -41,6 +41,7 @@ public class ApiRequest {
 					//FULL RESPONSE
 					response = new String(baos.toByteArray());
 					//PARSE JSON
+					//DONE
 					JSONObject obj = new JSONObject(response.toString());
 					feedback.onFeedback(obj);
 				} catch (Exception e) {
@@ -55,7 +56,7 @@ public class ApiRequest {
 		public abstract void onFeedback(JSONObject object);
 
 		public void onPreFetch(JSONObject object) {
-		};
+		}
 	}
 
 	public static class Argument {

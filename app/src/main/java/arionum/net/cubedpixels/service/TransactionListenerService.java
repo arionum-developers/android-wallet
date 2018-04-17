@@ -26,6 +26,9 @@ import arionum.net.cubedpixels.views.HomeView;
 
 public class TransactionListenerService extends Service {
 	public int counter = 0;
+	long oldTime = 0;
+	private Timer timer;
+	private TimerTask timerTask;
 
 	public TransactionListenerService(Context applicationContext) {
 		super();
@@ -44,15 +47,11 @@ public class TransactionListenerService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.i("EXIT", "Arionum Service got shutdown!");
+		Log.i("EXIT", "Arionum Service is shutting down! Trying to restart...");
 		Intent broadcastIntent = new Intent("arionum.net.cubedpixels.RestartService");
 		sendBroadcast(broadcastIntent);
 		stoptimertask();
 	}
-
-	private Timer timer;
-	private TimerTask timerTask;
-	long oldTime = 0;
 
 	public void startTimer() {
 		timer = new Timer();

@@ -19,6 +19,8 @@ import arionum.net.cubedpixels.utils.Base58;
 
 public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCodeReadListener {
 
+	//QR VIEWER
+
 	private TextView resultTextView;
 	private QRCodeReaderView qrCodeReaderView;
 

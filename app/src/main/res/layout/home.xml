@@ -1,10 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/HEIGHTESTVIEW"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:id="@+id/HEIGHTESTVIEW">
+    android:gravity="center">
 
     <RelativeLayout
         android:id="@+id/crossview"
@@ -20,7 +19,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:elevation="9dp"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <RelativeLayout
                 android:id="@+id/balancelayout"
@@ -397,6 +396,105 @@
 
         </RelativeLayout>
 
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/aboutview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:visibility="visible">
+
+        <RelativeLayout
+            android:id="@+id/info_box"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@android:drawable/edit_text"
+            android:paddingBottom="20dp"
+            android:paddingTop="20dp">
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_above="@+id/textView3"
+                android:layout_alignParentEnd="true"
+                app:srcCompat="@drawable/aro" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="33dp"
+                app:srcCompat="@drawable/cuby" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/imageView"
+                android:layout_marginStart="12dp"
+                android:layout_toEndOf="@+id/imageView"
+                android:text="Cuby"
+                android:textColor="@color/colorDark"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/textView2"
+                android:layout_below="@+id/textView2"
+                android:text="Max Schleining"
+                android:textColor="#696969" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/textView3"
+                android:layout_below="@+id/textView3"
+                android:text="http://cubedpixels.net" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/textView4"
+                android:layout_below="@+id/textView4"
+                android:text="Web and Application Designer / Programmer" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/thankyou"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/info_box"
+            android:layout_margin="20dp"
+            android:background="@android:drawable/edit_text">
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:text="Thanks to:"
+                android:textAppearance="@style/TextAppearance.Design.Tab" />
+
+            <TextView
+                android:id="@+id/thankstolist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textView6"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp" />
+        </RelativeLayout>
 
     </RelativeLayout>
 
