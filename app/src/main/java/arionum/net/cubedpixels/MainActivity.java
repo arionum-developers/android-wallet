@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 			"Waking Arionum...", "Loading stuff...", "Doing stuff...", "Walking in the Internet...",
 			"Destroying Meteors...", "Scuffing cats...", "Petting cats...", "Thinking about cats...",
 			"Connecting to Arionum...", "Making cats smarter...", "Building Arionum...", "Thanking BitcoinJ for EC...",
-			"Waking up the Devs..."};
+			"Waking up the Devs...", "Playing Kurby music...", "Hey wake up!", "Doing really hard math..."};
 
     public static MainActivity getInstance() {
         return instance;
