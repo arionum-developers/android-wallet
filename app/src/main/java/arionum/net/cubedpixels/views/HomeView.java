@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -311,7 +310,6 @@ public class HomeView extends AppCompatActivity {
 		test.setText(currentPeer.replace("http://", ""));
 		TextView address = findViewById(R.id.address);
         address.setText(HomeView.address);
-        setupQR();
         setupThankyouList();
 
         // QR
@@ -1095,34 +1093,7 @@ public class HomeView extends AppCompatActivity {
 		return value;
 	}
 
-	public void setupQR() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					URL u = new URL("http://cubedpixels.net/qr/generateQRcode.php?"+version);
-					Scanner s = new Scanner(u.openConnection().getInputStream());
-					while (s.hasNext()) {
-						String d = s.next();
-						if (d.contains("UPDATE")) {
-							String packageURL = "";
-							upToDate = true;
-							packageURL = d.replace("UPDATE", "");
-							try {
-								startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageURL)));
-							} catch (android.content.ActivityNotFoundException anfe) {
-								startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageURL)));
-							}
-						}
-					}
-					s.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
 
-	}
 
 	public static abstract class Page {
 		private String name;
