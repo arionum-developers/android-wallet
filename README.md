@@ -1,22 +1,27 @@
 # Arionum-Wallet-Android
 An Android Wallet for the Arionum Coin!
 
->QR Generator for PHP Wallet Users
-https://cubedpixels.net/qr
+[QR Generator for PHP Wallet Users][qr-generator]
 
->Features and Imports:
-QRview,MaterialDrawer and MaterialDialogs
+### Features and Imports:
 
-ARO API: 
->arionum.net.cubedpixels.api.ApiRequest
+- `QRview`
+- `MaterialDrawer`
+- `MaterialDialogs`
+
+### ARO API:
+
+- `arionum.net.cubedpixels.api.ApiRequest`
+
+### Development donations:
 
 Just got scammed please Donate :3
-Development donations:
+
 ```
 1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
 ```
 
-Screenshots
+### Screenshots
 
 
 <div align="center">
@@ -26,7 +31,10 @@ Screenshots
 
 </div>
 
-Arionum and CubedPixels
-```
-http://arionum.com/  , http://cubedpixels.net
-```
+### Links
+
+[Arionum] and [CubedPixels]
+
+[arionum]: https://arionum.com
+[cubedpixels]: https://cubedpixels.net
+[qr-generator]: https://cubedpixels.net/qr
