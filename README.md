@@ -1,6 +1,9 @@
 # Arionum-Wallet-Android
 An Android Wallet for the Arionum Coin!
 
+>QR Generator for PHP Wallet Users
+http://cubedpixels.net/qr
+
 >Features and Imports:
 QRview,MaterialDrawer and MaterialDialogs
 
