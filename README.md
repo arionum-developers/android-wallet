@@ -11,7 +11,7 @@ An Android Wallet for the Arionum Coin!
 - `MaterialDrawer`
 - `MaterialDialogs`
 
-### ARO API:
+### ARO API
 
 - `arionum.net.cubedpixels.api.ApiRequest`
 
