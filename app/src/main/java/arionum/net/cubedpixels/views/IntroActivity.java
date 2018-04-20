@@ -34,9 +34,10 @@ public class IntroActivity extends MaterialIntroActivity {
                 .backgroundColor(R.color.colorBlue)
                 .buttonsColor(R.color.colorDark)
                 .image(R.drawable.avd_anim_white)
-                .title("Welcome to the Arionum Wallet")
-                .description("The first blockchain platform\n" +
-                        "for PHP developers")
+                .title("The Arionum Wallet")
+                .description("- Manage your Arionum on the go\n" +
+                        "- Send and receive ARO's by using QR codes"
+                        + "\n- Receive transaction notifications")
                 .build());
 
         addSlide(new SlideFragmentBuilder()
@@ -45,27 +46,13 @@ public class IntroActivity extends MaterialIntroActivity {
                         .neededPermissions(new String[]{Manifest.permission.CAMERA})
                         .image(R.drawable.avd_anim_white)
                         .title("Setup")
-                        .description("In order to import an existing ARO wallet, the app requires access to the camera to scan QR codes")
+                        .description("To import existing ARO wallets, the app requires permission to the camera to scan QR codes.")
                         .build(),
                 new MessageButtonBehaviour(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                     }
                 }, "Permission Granted"));
-
-        addSlide(new SlideFragmentBuilder()
-                        .backgroundColor(R.color.colorBlue)
-                        .buttonsColor(R.color.colorDark)
-                        .image(R.drawable.avd_anim_white)
-                        .title("Done")
-                        .description("Bring me into the App!")
-                        .build(),
-                new MessageButtonBehaviour(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onFinish();
-                    }
-                }, "Finish!"));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
