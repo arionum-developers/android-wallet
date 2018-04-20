@@ -51,7 +51,7 @@ public class IntroActivity extends MaterialIntroActivity {
                     @Override
                     public void onClick(View v) {
                     }
-                }, "Thanks!"));
+                }, "Permission Granted"));
 
         addSlide(new SlideFragmentBuilder()
                         .backgroundColor(R.color.colorBlue)
