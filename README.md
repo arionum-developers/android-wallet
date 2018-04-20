@@ -17,7 +17,7 @@ An Android Wallet for the Arionum Coin!
 
 ### Development donations
 
-Just got scammed please Donate :3
+Just got scammed, please donate. :3
 
 ```
 1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
