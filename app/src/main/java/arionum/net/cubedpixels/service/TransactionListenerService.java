@@ -84,7 +84,8 @@ public class TransactionListenerService extends Service {
 					});
 					return;
 				}
-				//CHECK LAST TRANSACTION ID -> IF ADDRESS IS SET
+                counter += 1;
+                //CHECK LAST TRANSACTION ID -> IF ADDRESS IS SET
 				if (getString("address") != "")
 					if (counter > 4*60) {
 						counter = 0;

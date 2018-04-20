@@ -13,7 +13,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-
+        android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
@@ -22,10 +22,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".views.HomeView">
+        <activity
+            android:name=".views.HomeView"
+            android:windowSoftInputMode="stateHidden|adjustPan">
         </activity>
         <activity android:name=".views.QRview">
         </activity>
+        <activity
+            android:name=".views.IntroActivity$IntroViewActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan"></activity>
+
+        <activity
+            android:name=".views.IntroActivity$PreIntroAcitivity"
+            android:windowSoftInputMode="stateHidden|adjustPan"></activity>
+
+        <activity
+            android:name=".views.IntroActivity"
+            android:theme="@style/Theme.Intro" />
+
         <service
             android:name="arionum.net.cubedpixels.service.TransactionListenerService"
             android:enabled="true" >

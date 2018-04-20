@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fancy="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/introtop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/colormain">
+
+        <ImageView
+            android:id="@+id/preintroimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="76dp"
+            app:srcCompat="@drawable/avd_anim_white" />
+
+        <RelativeLayout
+            android:id="@+id/button_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/preintroimage"
+            android:visibility="visible">
+
+            <mehdi.sakout.fancybuttons.FancyButton
+                android:id="@+id/btn_scan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+
+                android:layout_above="@+id/btn_login"
+
+
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="#ffffff"
+                fancy:fb_focusColor="@color/colorAccent"
+                fancy:fb_fontIconResource="&#xf029;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Scan QR Login"
+                fancy:fb_textColor="@color/colorAccent" />
+
+            <mehdi.sakout.fancybuttons.FancyButton
+                android:id="@+id/btn_login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_centerHorizontal="true"
+                android:layout_centerInParent="true"
+                android:layout_marginTop="5dp"
+
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="#ffffff"
+                fancy:fb_focusColor="@color/colorAccent"
+                fancy:fb_fontIconResource="&#xf04b;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Login via Text"
+                fancy:fb_textColor="@color/colorAccent" />
+
+            <mehdi.sakout.fancybuttons.FancyButton
+                android:id="@+id/btn_create"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_below="@+id/btn_login"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:paddingBottom="10dp"
+
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="@color/colorAccent"
+                fancy:fb_focusColor="#ffffff"
+                fancy:fb_fontIconResource="&#xf249;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Create a new Wallet"
+                fancy:fb_textColor="#ffffff" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/login_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/preintroimage"
+            android:visibility="gone">
+
+            <com.rengwuxian.materialedittext.MaterialEditText
+                android:id="@+id/address_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Address"
+                android:selectAllOnFocus="false"
+                android:textAlignment="center"
+                android:textColor="@color/colorBackground"
+                android:textSize="19sp"
+                app:met_baseColor="@android:color/white"
+                app:met_floatingLabel="normal"
+                app:met_primaryColor="#ffffff"
+                app:met_singleLineEllipsis="true" />
+
+            <com.rengwuxian.materialedittext.MaterialEditText
+                android:id="@+id/public_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/address_text"
+                android:hint="Public Key"
+                android:selectAllOnFocus="false"
+                android:textAlignment="center"
+                android:textColor="@color/colorBackground"
+                android:textSize="19sp"
+                app:met_baseColor="@android:color/white"
+                app:met_floatingLabel="normal"
+                app:met_primaryColor="#ffffff"
+                app:met_singleLineEllipsis="true" />
+
+            <com.rengwuxian.materialedittext.MaterialEditText
+                android:id="@+id/private_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/public_text"
+                android:hint="Private Key (Optional)"
+                android:selectAllOnFocus="false"
+                android:textAlignment="center"
+                android:textColor="#ffffff"
+                android:textSize="19sp"
+                app:met_baseColor="#ffffff"
+                app:met_floatingLabel="normal"
+                app:met_primaryColor="#ffffff"
+                app:met_singleLineEllipsis="true" />
+
+            <mehdi.sakout.fancybuttons.FancyButton
+                android:id="@+id/btn_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/private_text"
+
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="#ffffff"
+                fancy:fb_focusColor="@color/colorAccent"
+                fancy:fb_fontIconResource="&#xf100;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Back"
+                fancy:fb_textColor="@color/colorAccent" />
+
+            <mehdi.sakout.fancybuttons.FancyButton
+                android:id="@+id/btn_createNOW"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/private_text"
+                android:paddingBottom="10dp"
+
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="#ffffff"
+                fancy:fb_focusColor="@color/colorAccent"
+                fancy:fb_fontIconResource="&#xf04b;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Create"
+                fancy:fb_textColor="@color/colorAccent" />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

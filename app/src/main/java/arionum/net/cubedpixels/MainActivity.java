@@ -1,33 +1,28 @@
 package arionum.net.cubedpixels;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v13.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.Random;
 
 import arionum.net.cubedpixels.service.TransactionListenerService;
 import arionum.net.cubedpixels.utils.DoneTask;
 import arionum.net.cubedpixels.views.HomeView;
-import arionum.net.cubedpixels.views.QRview;
+import arionum.net.cubedpixels.views.IntroActivity.PreIntroAcitivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
 			"Waking Arionum...", "Loading stuff...", "Doing stuff...", "Walking in the Internet...",
 			"Destroying Meteors...", "Scuffing cats...", "Petting cats...", "Thinking about cats...",
 			"Connecting to Arionum...", "Making cats smarter...", "Building Arionum...", "Thanking BitcoinJ for EC...",
-			"Waking up the Devs...", "Playing Kurby music...", "Hey wake up!", "Doing really hard math..."};
+			"Waking up the Devs...", "Playing Kurby music...", "Hey wake up!", "Doing really hard math...",
+			"Arionum \"Kickin' ass and taking names since '18\""};
 
     public static MainActivity getInstance() {
         return instance;
@@ -55,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			Window w = getWindow();
+			w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+		}
 		instance = this;
 		ImageView animationview = findViewById(R.id.imageView4);
 		drawable = animationview.getDrawable();
@@ -64,13 +64,13 @@ public class MainActivity extends AppCompatActivity {
 		if (!isServiceRunning(mSensorService.getClass())) {
 			startService(serviceint);
 		}
+		start();
 
 		if (drawable instanceof Animatable) {
 			((Animatable) drawable).start();
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					isStoragePermissionGranted();
 					while (running) {
 						setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
 						while (((Animatable) drawable).isRunning()) {
@@ -92,45 +92,6 @@ public class MainActivity extends AppCompatActivity {
 			}).start();
 		}
 
-	}
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-			Log.v("ICM", "Permission: " + permissions[0] + "was " + grantResults[0]);
-			start();
-		}
-		if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
-			Log.v("ICM", "Permission: " + permissions[0] + "was " + grantResults[0]);
-			new MaterialDialog.Builder(MainActivity.this).title("Error").content("You need to grant Permissions!")
-					.positiveText("Back").onPositive(new MaterialDialog.SingleButtonCallback() {
-						@Override
-						public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-							finish();
-						}
-					}).show();
-		}
-	}
-
-	public boolean isStoragePermissionGranted() {
-		if (Build.VERSION.SDK_INT >= 23) {
-			if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-
-				Log.v("IMC", "Permission is granted");
-				start();
-				return true;
-			} else {
-
-				Log.v("IMC", "Permission is revoked");
-				ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA }, 1);
-				return false;
-			}
-		} else {
-			start();
-			Log.v("IMC", "Permission is granted");
-			return true;
-		}
 	}
 
 	public void setLoadingText(final String text) {
@@ -176,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 					instance.startActivity(i);
 					running = false;
 				} else {
-					Intent i = new Intent(instance, QRview.class);
+					Intent i = new Intent(instance, PreIntroAcitivity.class);
 					i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 					instance.startActivity(i);

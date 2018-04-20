@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/accent"
+        android:paddingTop="40dp"
         android:text="Searching for an QR Code..."
         android:textAlignment="center"
         android:textColor="@color/colorBackground"

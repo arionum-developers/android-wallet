@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fancy="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/introtop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/colorBlue">
+
+        <ImageView
+            android:id="@+id/preintroimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="76dp"
+            app:srcCompat="@drawable/avd_anim_white" />
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/preintroimage"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="Welcome to Arionum"
+            android:textColor="@color/colorBackground"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView8"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="The first blockchain platform\nfor PHP developers"
+            android:textAlignment="center"
+            android:textColor="@color/colorBackground"
+            android:textSize="16sp" />
+
+        <mehdi.sakout.fancybuttons.FancyButton
+            android:id="@+id/btn_startup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="57dp"
+            android:layout_marginTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="10dp"
+            fancy:fb_borderColor="#ffffff"
+            fancy:fb_borderWidth="1dp"
+            fancy:fb_defaultColor="#ffffff"
+            fancy:fb_focusColor="@color/colorAccent"
+            fancy:fb_fontIconResource="&#xf138;"
+            fancy:fb_iconPosition="left"
+            fancy:fb_radius="30dp"
+            fancy:fb_text="Let's Get Started"
+            fancy:fb_textColor="@color/colorAccent" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

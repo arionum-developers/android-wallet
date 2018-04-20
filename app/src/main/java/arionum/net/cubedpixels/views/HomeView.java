@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -23,6 +24,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -67,6 +72,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -77,6 +83,8 @@ import arionum.net.cubedpixels.style.Styler;
 import arionum.net.cubedpixels.utils.Base58;
 import arionum.net.cubedpixels.utils.CrossfadeWrapper;
 import arionum.net.cubedpixels.utils.DoneTask;
+
+import static android.view.View.GONE;
 
 public class HomeView extends AppCompatActivity {
 
@@ -303,7 +311,10 @@ public class HomeView extends AppCompatActivity {
         LayoutInflaterCompat.setFactory2(getLayoutInflater(), new IconicsLayoutInflater2(getDelegate()));
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
-
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			Window w = getWindow();
+			w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+		}
 		// SETUP
         currentPeer = peers.get(new Random().nextInt(peers.size()));
         TextView test = findViewById(R.id.connected);
@@ -367,17 +378,6 @@ public class HomeView extends AppCompatActivity {
 		// GETTRANSACTIONS
 		ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 			@Override
-			public void onPreFetch(JSONObject object) {
-				try {
-					System.out.println("PREFETCH");
-					sortArrayAndPutInList(object.getJSONArray("data"), (ListView) findViewById(R.id.transactionlist));
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			@Override
 			public void onFeedback(JSONObject object) {
 				System.out.println("GOT RESPONSE! TRANSACTIONS!");
 				try {
@@ -390,7 +390,7 @@ public class HomeView extends AppCompatActivity {
 					h.post(new Runnable() {
 						@Override
 						public void run() {
-							findViewById(R.id.waitingtransbar).setVisibility(View.GONE);
+							findViewById(R.id.waitingtransbar).setVisibility(GONE);
 						}
 					});
 				} catch (Exception e) {
@@ -441,15 +441,6 @@ public class HomeView extends AppCompatActivity {
                                    }, "getBalance", new ApiRequest.Argument("public_key", public_key),
                 new ApiRequest.Argument("account", address));
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-			@Override
-			public void onPreFetch(JSONObject object) {
-				try {
-					sortArrayAndPutInList(object.getJSONArray("data"), (ListView) findViewById(R.id.transactionlist));
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
 
 			@Override
 			public void onFeedback(JSONObject object) {
@@ -459,7 +450,7 @@ public class HomeView extends AppCompatActivity {
 					h.post(new Runnable() {
 						@Override
 						public void run() {
-							findViewById(R.id.waitingtransbar).setVisibility(View.GONE);
+							findViewById(R.id.waitingtransbar).setVisibility(GONE);
 						}
 					});
 				} catch (Exception e) {
@@ -535,7 +526,7 @@ public class HomeView extends AppCompatActivity {
 		qrrequestclose.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				findViewById(R.id.qrrequestview).setVisibility(View.GONE);
+				findViewById(R.id.qrrequestview).setVisibility(GONE);
 			}
 		});
 
@@ -676,6 +667,32 @@ public class HomeView extends AppCompatActivity {
 					public void onSame(String id) {
 						try {
 							String transactions = getString("transactions");
+							if (transactions.isEmpty()) {
+								downloadTransactions(new Call() {
+									@Override
+									public void onDone(JSONObject o) {
+										try {
+											ListView l = findViewById(R.id.historylisttransactions);
+											sortArrayAndPutInList(o.getJSONArray("data"),
+													(ListView) findViewById(R.id.historylisttransactions));
+											Handler h = new Handler(instance.getMainLooper());
+											h.post(new Runnable() {
+												@Override
+												public void run() {
+													findViewById(R.id.progressBar).setVisibility(GONE);
+												}
+											});
+										} catch (Exception e) {
+											e.printStackTrace();
+										}
+									}
+								});
+								return;
+							}
+
+
+
+
 							final JSONObject p = new JSONObject(transactions);
 							JSONArray a = p.getJSONArray("data");
 							if (a.length() < 11) {
@@ -689,7 +706,7 @@ public class HomeView extends AppCompatActivity {
 											h.post(new Runnable() {
 												@Override
 												public void run() {
-													findViewById(R.id.progressBar).setVisibility(View.GONE);
+													findViewById(R.id.progressBar).setVisibility(GONE);
 												}
 											});
 										} catch (Exception e) {
@@ -710,7 +727,7 @@ public class HomeView extends AppCompatActivity {
 												h.post(new Runnable() {
 													@Override
 													public void run() {
-														findViewById(R.id.progressBar).setVisibility(View.GONE);
+														findViewById(R.id.progressBar).setVisibility(GONE);
 													}
 												});
 											} catch (Exception e) {
@@ -725,7 +742,7 @@ public class HomeView extends AppCompatActivity {
 									h.post(new Runnable() {
 										@Override
 										public void run() {
-											findViewById(R.id.progressBar).setVisibility(View.GONE);
+											findViewById(R.id.progressBar).setVisibility(GONE);
 										}
 									});
 								}
@@ -749,7 +766,7 @@ public class HomeView extends AppCompatActivity {
 									h.post(new Runnable() {
 										@Override
 										public void run() {
-											findViewById(R.id.progressBar).setVisibility(View.GONE);
+											findViewById(R.id.progressBar).setVisibility(GONE);
 										}
 									});
 								} catch (Exception e) {
@@ -780,12 +797,44 @@ public class HomeView extends AppCompatActivity {
 
 				}
 			}
+			System.out.println(size + " | " + name.size());
+
+			List<String> list = new ArrayList<String>();
+			final ArrayAdapter emptyAdapter = new ArrayAdapter<String>(HomeView.this,
+					android.R.layout.simple_list_item_1,
+					list.toArray(new String[0]));
+
+
 			final CustomList adapter = new CustomList(HomeView.this, name, icon);
 			Handler h = new Handler(instance.getMainLooper());
 			h.post(new Runnable() {
 				@Override
 				public void run() {
+					final int y = view.getScrollY();
+					view.clearChoices();
+					view.clearAnimation();
+					for (int index = 0; index < view.getChildCount(); ++index) {
+						View child = view.getChildAt(index);
+						child.setVisibility(GONE);
+					}
+
+
+					view.setAdapter(emptyAdapter);
 					view.setAdapter(adapter);
+
+					view.post(new Runnable() {
+						@Override
+						public void run() {
+							view.setScrollY(y);
+							for (int index = 0; index < view.getChildCount(); ++index) {
+								View child = view.getChildAt(index);
+								Animation animation = new TranslateAnimation(500, 0, 0, 0);
+								animation.setDuration(1000);
+								animation.setStartOffset(index * 100);
+								child.startAnimation(animation);
+							}
+						}
+					});
 				}
 			});
 		} catch (Exception e) {
@@ -800,15 +849,6 @@ public class HomeView extends AppCompatActivity {
 				// GETTRANSACTIONS
 				findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
 				ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-					@Override
-					public void onPreFetch(JSONObject object) {
-						try {
-							call.onDone(object);
-
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
 
 					@Override
 					public void onFeedback(JSONObject object) {
@@ -945,7 +985,7 @@ public class HomeView extends AppCompatActivity {
 			} else {
 				if (p.getLayout().getVisibility() == View.VISIBLE)
 					p.onDisable();
-				p.getLayout().setVisibility(View.GONE);
+				p.getLayout().setVisibility(GONE);
 			}
 
 		}
