@@ -4,17 +4,17 @@ An Android Wallet for the Arionum Coin!
 
 [QR Generator for PHP Wallet Users][qr-generator]
 
-### Features and Imports:
+### Features and Imports
 
 - `QRview`
 - `MaterialDrawer`
 - `MaterialDialogs`
 
-### ARO API:
+### ARO API
 
 - `arionum.net.cubedpixels.api.ApiRequest`
 
-### Development donations:
+### Development donations
 
 Just got scammed please Donate :3
 
