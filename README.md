@@ -1,22 +1,29 @@
 # Arionum-Wallet-Android
+
 An Android Wallet for the Arionum Coin!
 
->QR Generator for PHP Wallet Users
-http://cubedpixels.net/qr
+[![ico-play-store]][play-store]
+[![ico-qr-generator]][qr-generator]
 
->Features and Imports:
-QRview,MaterialDrawer and MaterialDialogs
+### Features and Imports
 
-ARO API: 
->arionum.net.cubedpixels.api.ApiRequest
+- `QRview`
+- `MaterialDrawer`
+- `MaterialDialogs`
 
-Just got scammed please Donate :3
-Development donations:
+### ARO API
+
+- `arionum.net.cubedpixels.api.ApiRequest`
+
+### Development donations
+
+Just got scammed, please donate. :3
+
 ```
 1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
 ```
 
-Screenshots
+### Screenshots
 
 
 <div align="center">
@@ -26,7 +33,14 @@ Screenshots
 
 </div>
 
-Arionum and CubedPixels
-```
-http://arionum.com/  , http://cubedpixels.net
-```
+### Links
+
+[Arionum] and [CubedPixels]
+
+[arionum]: https://arionum.com
+[cubedpixels]: https://cubedpixels.net
+[qr-generator]: https://cubedpixels.net/qr
+[play-store]: https://play.google.com/store/apps/details?id=arionum.net.cubedpixels
+
+[ico-play-store]: https://img.shields.io/badge/install-play%20store-689f38.svg
+[ico-qr-generator]: https://img.shields.io/badge/qr%20code-generator-blue.svg
