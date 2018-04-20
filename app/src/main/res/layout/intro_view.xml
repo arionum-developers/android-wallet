@@ -90,6 +90,7 @@
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp"
                 android:paddingTop="10dp"
+                android:visibility="gone"
                 fancy:fb_borderColor="#ffffff"
                 fancy:fb_borderWidth="1dp"
                 fancy:fb_defaultColor="@color/colorAccent"
