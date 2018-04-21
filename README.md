@@ -22,6 +22,9 @@ Just got scammed, please donate. :3
 ```
 1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
 ```
+<div align="center">
+  <img src="http://cubedpixels.net/uploader/uploads/155422449/generator.png" width="200px"</img> 
+</div>
 
 ### Screenshots
 
