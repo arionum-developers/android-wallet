@@ -330,7 +330,7 @@ public class HomeView extends AppCompatActivity {
         ImageView myImage = findViewById(R.id.qrimage);
         myImage.setImageBitmap(myBitmap);
 		myImage.setAlpha(150);
- 
+  
 		// ICONS
 		ImageView sync = findViewById(R.id.refreshIcon);
 		IconicsDrawable syncd = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_refresh_sync)
