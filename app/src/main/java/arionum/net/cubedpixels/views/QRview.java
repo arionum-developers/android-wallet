@@ -3,13 +3,10 @@ package arionum.net.cubedpixels.views;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PointF;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -31,15 +28,13 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.qr_login);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow();
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        }
+
         resultTextView = findViewById(R.id.qrtextview);
 		qrCodeReaderView = findViewById(R.id.asdqrview);
 		qrCodeReaderView.setOnQRCodeReadListener(this);
 		qrCodeReaderView.setQRDecodingEnabled(true);
 		qrCodeReaderView.setAutofocusInterval(1000L);
+		qrCodeReaderView.setLoggingEnabled(false);
 		qrCodeReaderView.setTorchEnabled(true);
 		qrCodeReaderView.setBackCamera();
 
@@ -106,4 +101,6 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 		super.onPause();
 		qrCodeReaderView.stopCamera();
 	}
+
+
 }

@@ -6,14 +6,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,10 +49,6 @@ public class MainActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_main);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-			Window w = getWindow();
-			w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-		}
 		instance = this;
 		ImageView animationview = findViewById(R.id.imageView4);
 		drawable = animationview.getDrawable();
