@@ -797,6 +797,7 @@ public class HomeView extends AppCompatActivity {
 								child.startAnimation(animation);
 								view.setScrollY(y);
 							}
+							
 							view.setScrollY(y);
 						}
 					});
