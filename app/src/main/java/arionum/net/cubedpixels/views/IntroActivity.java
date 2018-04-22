@@ -164,6 +164,11 @@ public class IntroActivity extends MaterialIntroActivity {
                     EditText address = findViewById(R.id.address_text);
                     EditText publickey = findViewById(R.id.public_text);
                     EditText privatekey = findViewById(R.id.private_text);
+                    if (address.getText().toString().isEmpty() || publickey.getText().toString().isEmpty()) {
+                        Snackbar mySnackbar = Snackbar.make(findViewById(R.id.introtop), "Please fill the address and publickey field!", Snackbar.LENGTH_SHORT);
+                        mySnackbar.show();
+                        return;
+                    }
                     saveString("address", address.getText().toString());
                     saveString("publickey", publickey.getText().toString());
                     saveString("privatekey", privatekey.getText().toString());

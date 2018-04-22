@@ -103,14 +103,15 @@ public class HomeView extends AppCompatActivity {
 	private static String address = "";
     private static QRCodeReaderView.OnQRCodeReadListener upcminglstnr;
     private static QRCodeReaderView qrCodeReaderView;
-    private static QRCodeReaderView savedState;
     boolean upToDate = false;
     private AccountHeader headerResult = null;
 	private Drawer result = null;
 	private MiniDrawer miniResult = null;
 	private Crossfader crossFader;
 	private boolean refreshing = true;
-    private OnCheckedChangeListener onCheckedChangeListener = new OnCheckedChangeListener() {
+
+
+	private OnCheckedChangeListener onCheckedChangeListener = new OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
             if (drawerItem instanceof Nameable) {
@@ -121,6 +122,7 @@ public class HomeView extends AppCompatActivity {
             }
         }
     };
+
     private int version = 0;
 
     public static String getPublic_key() {
@@ -161,27 +163,6 @@ public class HomeView extends AppCompatActivity {
         return after.length();
     }
 
-    public static ViewGroup getParent(View view) {
-        return (ViewGroup) view.getParent();
-    }
-
-    public static void removeView(View view) {
-        ViewGroup parent = getParent(view);
-        if (parent != null) {
-            parent.removeView(view);
-        }
-    }
-
-    public static void replaceView(View currentView, View newView) {
-        ViewGroup parent = getParent(currentView);
-        if (parent == null) {
-            return;
-        }
-        final int index = parent.indexOfChild(currentView);
-        removeView(currentView);
-        removeView(newView);
-        parent.addView(newView, index);
-    }
 
     public static void setup(final DoneTask done) {
         new Thread(new Runnable() {
@@ -330,7 +311,7 @@ public class HomeView extends AppCompatActivity {
         ImageView myImage = findViewById(R.id.qrimage);
         myImage.setImageBitmap(myBitmap);
 		myImage.setAlpha(150);
-  
+
 		// ICONS
 		ImageView sync = findViewById(R.id.refreshIcon);
 		IconicsDrawable syncd = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_refresh_sync)
@@ -604,11 +585,6 @@ public class HomeView extends AppCompatActivity {
 			}
 		});
 		qrCodeReaderView = findViewById(R.id.receivescanner);
-		savedState = new QRCodeReaderView(this);
-		savedState.setId(R.id.receivescanner);
-		savedState.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
-				RelativeLayout.LayoutParams.MATCH_PARENT));
-
 		final QRCodeReaderView.OnQRCodeReadListener listener = createQRlistener();
 		qrCodeReaderView.setQRDecodingEnabled(false);
 		qrCodeReaderView.setOnQRCodeReadListener(listener);
@@ -619,13 +595,6 @@ public class HomeView extends AppCompatActivity {
 		pages.add(new Page("RECEIVE", (RelativeLayout) findViewById(R.id.receiveview)) {
 			@Override
 			public void onEnable() {
-				// REPLACE AND COPY
-				replaceView(qrCodeReaderView, savedState);
-				savedState = new QRCodeReaderView(HomeView.this);
-				savedState.setId(R.id.receivescanner);
-				savedState.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
-						RelativeLayout.LayoutParams.MATCH_PARENT));
-
 				qrCodeReaderView = findViewById(R.id.receivescanner);
 				qrCodeReaderView.setQRDecodingEnabled(true);
 				qrCodeReaderView.startCamera();
@@ -820,14 +789,15 @@ public class HomeView extends AppCompatActivity {
 					view.post(new Runnable() {
 						@Override
 						public void run() {
-							view.setScrollY(y);
 							for (int index = 0; index < view.getChildCount(); ++index) {
 								View child = view.getChildAt(index);
 								Animation animation = new TranslateAnimation(500, 0, 0, 0);
 								animation.setDuration(1000);
 								animation.setStartOffset(index * 100);
 								child.startAnimation(animation);
+								view.setScrollY(y);
 							}
+							view.setScrollY(y);
 						}
 					});
 				}
@@ -899,14 +869,6 @@ public class HomeView extends AppCompatActivity {
 										@Override
 										public void onClick(@NonNull MaterialDialog dialog,
 												@NonNull DialogAction which) {
-											// REPLACE AND COPY
-											replaceView(qrCodeReaderView, savedState);
-											savedState = new QRCodeReaderView(HomeView.this);
-											savedState.setId(R.id.receivescanner);
-											savedState.setLayoutParams(new RelativeLayout.LayoutParams(
-													RelativeLayout.LayoutParams.MATCH_PARENT,
-													RelativeLayout.LayoutParams.MATCH_PARENT));
-
 											qrCodeReaderView = findViewById(R.id.receivescanner);
 											qrCodeReaderView.setQRDecodingEnabled(true);
 											qrCodeReaderView.startCamera();
@@ -922,44 +884,15 @@ public class HomeView extends AppCompatActivity {
 										@Override
 										public void onClick(@NonNull MaterialDialog dialog,
 												@NonNull DialogAction which) {
-
-
-
-
-
-
-                                            makeTransaction(address, val.doubleValue(), "Send from Arionum Android Wallet", new Runnable() {
-                                                @Override
+											makeTransaction(address, val.doubleValue(), "", new Runnable() {
+												@Override
                                                 public void run() {
-                                                    replaceView(qrCodeReaderView, savedState);
-                                                    savedState = new QRCodeReaderView(HomeView.this);
-                                                    savedState.setId(R.id.receivescanner);
-                                                    savedState.setLayoutParams(
-                                                            new RelativeLayout.LayoutParams(
-                                                                    RelativeLayout.LayoutParams.MATCH_PARENT,
-                                                                    RelativeLayout.LayoutParams.MATCH_PARENT));
-
                                                     qrCodeReaderView = findViewById(
                                                             R.id.receivescanner);
-                                                    qrCodeReaderView.setQRDecodingEnabled(true);
                                                     qrCodeReaderView.startCamera();
-                                                    qrCodeReaderView.setQRDecodingEnabled(true);
-                                                    qrCodeReaderView.startCamera();
-                                                    qrCodeReaderView.bringToFront();
-                                                    qrCodeReaderView.setOnQRCodeReadListener(
-                                                            createQRlistener());
-                                                    qrCodeReaderView.setAutofocusInterval(1000L);
-                                                    qrCodeReaderView.setBackCamera();
                                                     qrCodeReaderView.setQRDecodingEnabled(true);
                                                 }
                                             });
-
-
-
-
-
-
-
 										}
 									}).show();
 						}
@@ -972,6 +905,17 @@ public class HomeView extends AppCompatActivity {
 		};
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		qrCodeReaderView.startCamera();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		qrCodeReaderView.stopCamera();
+	}
 	public void showPage(String name) {
 		for (Page p : pages) {
 			if (p.getName().equalsIgnoreCase(name)) {
