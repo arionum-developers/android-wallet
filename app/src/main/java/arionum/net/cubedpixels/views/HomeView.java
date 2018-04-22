@@ -58,6 +58,7 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
+import com.nineoldandroids.view.ViewHelper;
 
 import net.glxn.qrgen.android.QRCode;
 
@@ -746,6 +747,10 @@ public class HomeView extends AppCompatActivity {
 
 	public void sortArrayAndPutInList(JSONArray array, final ListView view) {
 		try {
+
+			final int y = view.getScrollY();
+			final float yz = ViewHelper.getScrollY(view);
+
 			int size = array.length();
 			ArrayList<String> name = new ArrayList<String>();
 			ArrayList<GoogleMaterial.Icon> icon = new ArrayList<GoogleMaterial.Icon>();
@@ -768,13 +773,11 @@ public class HomeView extends AppCompatActivity {
 					android.R.layout.simple_list_item_1,
 					list.toArray(new String[0]));
 
-
 			final CustomList adapter = new CustomList(HomeView.this, name, icon);
 			Handler h = new Handler(instance.getMainLooper());
 			h.post(new Runnable() {
 				@Override
 				public void run() {
-					final int y = view.getScrollY();
 					view.clearChoices();
 					view.clearAnimation();
 					for (int index = 0; index < view.getChildCount(); ++index) {
@@ -785,6 +788,7 @@ public class HomeView extends AppCompatActivity {
 
 					view.setAdapter(emptyAdapter);
 					view.setAdapter(adapter);
+					view.setScrollY(y);
 
 					view.post(new Runnable() {
 						@Override
@@ -797,10 +801,16 @@ public class HomeView extends AppCompatActivity {
 								child.startAnimation(animation);
 								view.setScrollY(y);
 							}
-							
-							view.setScrollY(y);
+							view.post(new Runnable() {
+								@Override
+								public void run() {
+									System.out.println("SCROLLING TO: " + y + " | " + yz);
+									view.scrollTo(0, y);
+								}
+							});
 						}
 					});
+					view.setScrollY(y);
 				}
 			});
 		} catch (Exception e) {
