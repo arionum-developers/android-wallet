@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -26,6 +27,7 @@ public class IntroActivity extends MaterialIntroActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         hideBackButton();
         addSlide(new SlideFragmentBuilder()
                 .backgroundColor(R.color.colorBlue)
@@ -72,6 +74,7 @@ public class IntroActivity extends MaterialIntroActivity {
         @Override
         protected void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
             setContentView(R.layout.pre_intro_view);
             ImageView i = findViewById(R.id.preintroimage);
             final Animation a = new TranslateAnimation(0, 0, 0, 20);
@@ -124,6 +127,7 @@ public class IntroActivity extends MaterialIntroActivity {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
             setContentView(R.layout.intro_view);
 
             findViewById(R.id.btn_login).setOnClickListener(new View.OnClickListener() {
