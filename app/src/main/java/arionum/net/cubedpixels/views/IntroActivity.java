@@ -93,7 +93,7 @@ public class IntroActivity extends MaterialIntroActivity {
 
             i.setAnimation(b);
             findViewById(R.id.btn_startup).setAnimation(a);
-
+ 
 
             findViewById(R.id.btn_startup).setOnClickListener(new View.OnClickListener() {
                 @Override
