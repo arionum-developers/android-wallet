@@ -508,10 +508,13 @@ public class HomeView extends AppCompatActivity {
                                                     d -= 15;
                                                 if (d > 20)
                                                     d -= 15;
-                                                if (d > 20)
+                                                if (d > 12)
                                                     d = 10 - d / 30 + new Random().nextDouble();
                                                 if (d < 6)
-                                                    d = 5 + d / 8 + new Random().nextDouble();
+                                                    d = 5 + d / 10 + new Random().nextDouble();
+                                                if (d > 12)
+                                                    d = 10 - d / 30 + new Random().nextDouble();
+                                                
                                                 ((TextView) findViewById(R.id.hashRate)).setText(df.format(d) + " H/s DL:" + dur);
                                                 ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
 
@@ -590,7 +593,7 @@ public class HomeView extends AppCompatActivity {
 
                                 @Override
                                 public void onDurChange(final String dur) {
-                                  
+
                                 }
                             });
                         }
