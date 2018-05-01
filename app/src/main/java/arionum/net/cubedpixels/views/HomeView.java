@@ -498,7 +498,7 @@ public class HomeView extends AppCompatActivity {
                                         public void run() {
                                             try {
                                                 DecimalFormat df = new DecimalFormat("#.00");
-                                                double d = Double.parseDouble(hash.replace(",", ".")) / 3;
+                                                double d = Double.parseDouble(hash.replace(",", ".")) / 3.7;
 
                                                 if (d > 50)
                                                     d -= 25;
