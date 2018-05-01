@@ -498,15 +498,15 @@ public class HomeView extends AppCompatActivity {
                                         public void run() {
                                             try {
                                                 DecimalFormat df = new DecimalFormat("#.00");
-                                                double d = Double.parseDouble(hash.replace(",", ".")) / 3.7;
+                                                double d = Double.parseDouble(hash.replace(",", ".")) / 5;
 
                                                 if (d > 50)
-                                                    d -= 25;
+                                                    d -= 35;
                                                 if (d > 30)
-                                                    d -= 15;
+                                                    d -= 25;
                                                 if (d > 20)
-                                                    d -= 10;
-                                                ((TextView) findViewById(R.id.hashRate)).setText(df.format(d) + " H/s " + dur + (Long.parseLong(dur) < Miner.limitDuration));
+                                                    d -= 15;
+                                                ((TextView) findViewById(R.id.hashRate)).setText(df.format(d) + " H/s DL:" + dur);
                                                 ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
 
                                                 GraphView graph = findViewById(R.id.graph);
