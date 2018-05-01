@@ -104,7 +104,7 @@ public class IntroActivity extends MaterialIntroActivity {
                     startActivity(i);
                 }
             });
-        } 
+        }
 
         @Override
         public void onBackPressed() {

@@ -1,16 +1,18 @@
 package arionum.net.cubedpixels.service;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -29,10 +31,12 @@ public class TransactionListenerService extends Service {
 	long oldTime = 0;
 	private Timer timer;
 	private TimerTask timerTask;
+    private Context context;
 
-	public TransactionListenerService(Context applicationContext) {
+    public TransactionListenerService(Context applicationContext) {
 		super();
-	}
+        context = applicationContext;
+    }
 
 	public TransactionListenerService() {
 	}
@@ -102,7 +106,8 @@ public class TransactionListenerService extends Service {
 											NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
 													TransactionListenerService.this, "ARONOTIFICATIONS")
 															.setSmallIcon(R.drawable.aro)
-															.setContentTitle("Arionum Wallet | New Transaction!")
+                                                    .setChannelId("notify_001")
+                                                    .setContentTitle("Arionum Wallet | New Transaction!")
 															.setContentText("You got a new Transaction of: "
 																	+ ((JSONObject) array.get(0)).get("val").toString()
 																	+ "ARO" + " from " + ""
@@ -119,14 +124,21 @@ public class TransactionListenerService extends Service {
 																							.get("src")))
 															.setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-											NotificationManagerCompat notificationManager = NotificationManagerCompat
-													.from(TransactionListenerService.this);
-											notificationManager.notify(1337, mBuilder.build());
-										} else {
+                                            NotificationManager mNotificationManager =
+                                                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                NotificationChannel channel = new NotificationChannel("notify_001",
+                                                        "Channel human readable title",
+                                                        NotificationManager.IMPORTANCE_DEFAULT);
+                                                mNotificationManager.createNotificationChannel(channel);
+                                            }
+                                            mNotificationManager.notify(1347, mBuilder.build());
+                                        } else {
 											NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
 													TransactionListenerService.this, "ARONOTIFICATIONS")
 															.setSmallIcon(R.drawable.aro)
-															.setContentTitle("Arionum Wallet | Aro Sent!")
+                                                    .setChannelId("notify_001")
+                                                    .setContentTitle("Arionum Wallet | Aro Sent!")
 															.setContentText("Your : "
 																	+ ((JSONObject) array.get(0)).get("val").toString()
 																	+ "ARO has been send" + " to " + ""
@@ -140,7 +152,16 @@ public class TransactionListenerService extends Service {
 																			.addLine("to " + ((JSONObject) array.get(0))
 																					.get("src")))
 															.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-										}
+                                            NotificationManager mNotificationManager =
+                                                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                NotificationChannel channel = new NotificationChannel("notify_001",
+                                                        "Channel human readable title",
+                                                        NotificationManager.IMPORTANCE_DEFAULT);
+                                                mNotificationManager.createNotificationChannel(channel);
+                                            }
+                                            mNotificationManager.notify(1347, mBuilder.build());
+                                        }
 										System.out.println("1 new notifications");
 									} else {
 										System.out.println("no new notifications");

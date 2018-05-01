@@ -1,6 +1,8 @@
 package arionum.net.cubedpixels.views;
 
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -9,10 +11,12 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.LayoutInflaterCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +42,9 @@ import android.widget.Toast;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 import com.mikepenz.crossfader.Crossfader;
 import com.mikepenz.crossfader.util.UIUtils;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
@@ -59,6 +66,7 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.nineoldandroids.view.ViewHelper;
+import com.programmerdan.arionum.arionum_miner.Miner;
 
 import net.glxn.qrgen.android.QRCode;
 
@@ -90,12 +98,12 @@ public class HomeView extends AppCompatActivity {
 
 
     private static final int PROFILE_SETTING = 1;
+    public static HomeView instance;
     static String signature = "";
     static String fee = "";
     static String val = "";
     static String unixTime = "";
     static String message = "";
-    private static HomeView instance;
 	private static ArrayList<String> peers = new ArrayList<>();
 	private static ArrayList<Page> pages = new ArrayList<>();
 	private static String currentPeer = "";
@@ -104,14 +112,13 @@ public class HomeView extends AppCompatActivity {
 	private static String address = "";
     private static QRCodeReaderView.OnQRCodeReadListener upcminglstnr;
     private static QRCodeReaderView qrCodeReaderView;
+    private static Thread minerThread;
     boolean upToDate = false;
     private AccountHeader headerResult = null;
 	private Drawer result = null;
 	private MiniDrawer miniResult = null;
 	private Crossfader crossFader;
 	private boolean refreshing = true;
-
-
 	private OnCheckedChangeListener onCheckedChangeListener = new OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
@@ -123,7 +130,6 @@ public class HomeView extends AppCompatActivity {
             }
         }
     };
-
     private int version = 0;
 
     public static String getPublic_key() {
@@ -163,7 +169,6 @@ public class HomeView extends AppCompatActivity {
             return 10;
         return after.length();
     }
-
 
     public static void setup(final DoneTask done) {
         new Thread(new Runnable() {
@@ -292,7 +297,7 @@ public class HomeView extends AppCompatActivity {
 		setContentView(R.layout.home);
 
 
-		// SETUP
+        // SETUP
         currentPeer = peers.get(new Random().nextInt(peers.size()));
         TextView test = findViewById(R.id.connected);
 		test.setText(currentPeer.replace("http://", ""));
@@ -386,10 +391,10 @@ public class HomeView extends AppCompatActivity {
         thanks.add("Mercury80 for developing ARIONUM");
         thanks.add("mikepenz for the awesome libs!");
         thanks.add("RehabbeR for being cool");
+        thanks.add("ProgrammerDan for his awesome Miner");
         thanks.add("ario");
         thanks.add("hearonLP");
         thanks.add("Nikita_Banane");
-        thanks.add("ProgrammerDan");
         thanks.add("dlazaro66");
         thanks.add("and everyone else!");
 
@@ -458,6 +463,146 @@ public class HomeView extends AppCompatActivity {
 
 			}
 		});
+
+        final Button b = findViewById(R.id.minerToggle);
+        pages.add(new Page("MINER", (RelativeLayout) findViewById(R.id.minerview)) {
+            @Override
+            public void onEnable() {
+                boolean minerActive = true;
+                if (minerThread == null || !minerThread.isAlive())
+                    minerActive = false;
+                b.setText(minerActive ? "Stop Miner" : "Start Miner");
+            }
+        });
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean minerActive = true;
+                if (minerThread == null || !minerThread.isAlive())
+                    minerActive = false;
+
+                //SETUP MINER
+
+                b.setText(!minerActive ? "Stop Miner" : "Start Miner");
+                if (!minerActive) {
+                    minerThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            Miner.main(new Miner.callbackMiner() {
+                                @Override
+                                public void onHashRate(final String hash, final String dur) {
+                                    Handler h = new Handler(HomeView.this.getMainLooper());
+                                    h.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                DecimalFormat df = new DecimalFormat("#.00");
+                                                double d = Double.parseDouble(hash.replace(",", ".")) / 3;
+
+                                                if (d > 50)
+                                                    d -= 25;
+                                                if (d > 30)
+                                                    d -= 15;
+                                                if (d > 20)
+                                                    d -= 10;
+                                                ((TextView) findViewById(R.id.hashRate)).setText(df.format(d) + " H/s " + dur + (Long.parseLong(dur) < Miner.limitDuration));
+                                                ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
+
+                                                GraphView graph = findViewById(R.id.graph);
+                                                if (graph.getSeries().size() <= 0) {
+                                                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[]{
+                                                            new DataPoint(0, 0)
+                                                    });
+                                                    graph.addSeries(series);
+                                                } else {
+                                                    LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
+                                                    series1.setAnimated(false);
+                                                    series1.setThickness(3);
+                                                    series1.setColor(Color.BLUE);
+
+                                                    series1.appendData(new DataPoint(series1.getHighestValueX() + 1, (int) d), true, Integer.MAX_VALUE, false);
+                                                    graph.getSeries().clear();
+                                                    graph.addSeries(series1);
+                                                    graph.computeScroll();
+                                                }
+
+
+                                            } catch (Exception e) {
+
+                                            }
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onShare(final String hash) {
+                                    Handler h = new Handler(HomeView.this.getMainLooper());
+                                    h.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            System.out.println("FOUND SHARE = " + hash);
+
+                                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
+                                                    HomeView.this, "ARONOTIFICATIONS")
+                                                    .setSmallIcon(R.drawable.aro)
+                                                    .setContentTitle("Arionum Wallet | Miner")
+                                                    .setContentText("Found a share")
+                                                    .setChannelId("notify_001")
+                                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+
+                                            NotificationManager mNotificationManager =
+                                                    (NotificationManager) HomeView.this.getSystemService(Context.NOTIFICATION_SERVICE);
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                NotificationChannel channel = new NotificationChannel("notify_001",
+                                                        "Channel human readable title",
+                                                        NotificationManager.IMPORTANCE_DEFAULT);
+                                                mNotificationManager.createNotificationChannel(channel);
+                                            }
+                                            mNotificationManager.notify(1347, mBuilder.build());
+
+
+                                            ((TextView) findViewById(R.id.shareIT)).setText(
+                                                    ((TextView) findViewById(R.id.shareIT)).getText() + ",SHARE 1");
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onReject(String hash) {
+                                    System.out.println("FOUND REJECT = " + hash);
+
+                                }
+
+                                @Override
+                                public void onFind(String hash) {
+                                    System.out.println("FOUND FIND = " + hash);
+
+
+                                }
+
+                                @Override
+                                public void onDurChange(final String dur) {
+                                    Handler h = new Handler(HomeView.this.getMainLooper());
+                                    h.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((TextView) findViewById(R.id.currentDur)).setText(dur);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    minerThread.start();
+                } else {
+                    minerThread.interrupt();
+                }
+            }
+        });
+
+
 
 		// ->
 		final TextView addressinfo = findViewById(R.id.address);
@@ -541,9 +686,9 @@ public class HomeView extends AppCompatActivity {
 				}
 			}
 		});
-		Button b = findViewById(R.id.sendbutton);
-		b.setOnClickListener(new View.OnClickListener() {
-			@Override
+        Button b1 = findViewById(R.id.sendbutton);
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
 			public void onClick(View view) {
 				try {
 					final Double amount = Double.parseDouble(amountedit.getText().toString());
@@ -996,10 +1141,12 @@ public class HomeView extends AppCompatActivity {
 								.withIdentifier(2),
 						new PrimaryDrawerItem().withName("Receive").withIcon(Ionicons.Icon.ion_ios_barcode)
 								.withIdentifier(3),
-                        new PrimaryDrawerItem().withName("History").withIcon(FontAwesome.Icon.faw_hourglass_start)
+                        new PrimaryDrawerItem().withName("Miner").withIcon(FontAwesome.Icon.faw_terminal)
                                 .withIdentifier(4),
+                        new PrimaryDrawerItem().withName("History").withIcon(FontAwesome.Icon.faw_hourglass_start)
+                                .withIdentifier(5),
                         new SecondaryDrawerItem().withName("About").withIcon(FontAwesome.Icon.faw_info)
-                                .withIdentifier(4))
+                                .withIdentifier(6))
                 /*
 				 * new SectionDrawerItem().withName("Settings"), new
 				 * SecondaryDrawerItem().withName("Settings").withIcon(

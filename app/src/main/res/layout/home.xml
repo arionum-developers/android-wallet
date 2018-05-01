@@ -390,6 +390,63 @@
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/minerview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/shareIT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="63dp"
+                android:layout_marginEnd="44dp"
+                android:text="0" />
+
+            <TextView
+                android:id="@+id/limitVIEW"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginBottom="69dp"
+                android:layout_marginStart="31dp"
+                android:text="0 LIMIT" />
+
+            <TextView
+                android:id="@+id/hashRate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="33dp"
+                android:text="0.0 H/s"
+                android:textSize="22sp" />
+
+            <Button
+                android:id="@+id/minerToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/hashRate"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="47dp"
+                android:text="Start Mining" />
+
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/graph"
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/minerToggle" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/aboutview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
