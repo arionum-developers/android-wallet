@@ -14,6 +14,10 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Random;
 
 import arionum.net.cubedpixels.service.TransactionListenerService;
@@ -45,9 +49,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread thread, final Throwable throwable) {
+				throwable.printStackTrace();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				throwable.printStackTrace(pw);
+				String sStackTrace = sw.toString();
+				final Handler h = new Handler(HomeView.instance.getMainLooper());
+				h.post(new Runnable() {
+					@Override
+					public void run() {
+						new MaterialDialog.Builder(HomeView.instance)
+								.title("ERROR")
+								.content(throwable.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really okay?")
+								.positiveText("OH NO!")
+								.show();
+					}
+				});
+			}
+		});
 		setContentView(R.layout.activity_main);
 		instance = this;
 		ImageView animationview = findViewById(R.id.imageView4);

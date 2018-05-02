@@ -1,28 +1,25 @@
 package com.programmerdan.arionum.arionum_miner;
 
 
-import android.util.Base64;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import at.gadermaier.argon2.Argon2;
-import at.gadermaier.argon2.Argon2Factory;
-import at.gadermaier.argon2.model.Argon2Type;
+import de.wuthoehle.argon2jni.Argon2;
+import de.wuthoehle.argon2jni.EncodedArgon2Result;
 
 public class MappedHasher extends Hasher {
 
 	/*Local Hasher vars*/
 
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
+    static SecureRandom rnd = new SecureRandom();
     private final Argon2 context;
-
     private final int iterations = 1;
     private final int parallelism = 1;
     private final int hashLen = 32;
-    private byte[] encoded;
     private SecureRandom random = new SecureRandom();
     private Random insRandom = new Random(random.nextLong());
     private String rawHashBase;
@@ -42,18 +39,7 @@ public class MappedHasher extends Hasher {
         genNonce();
         // SET UP ARGON FOR DIRECT-TO-JNA-WRAPPER-EXEC
 
-        context = Argon2Factory.create();
-        context.setClearMemory(true);
-        context.setSalt(salt);
-        context.setSecret(null);
-        context.setAdditional(null);
-        context.setIterations(iterations);
-        context.setParallelism(parallelism);
-        context.setPassword(m_hashBaseBuffer);
-        context.setOutputLength(hashLen);
-        context.setType(Argon2Type.Argon2i);
-        String hash = context.hash();
-        encoded = new byte[hash.length()];
+        context = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
     }
 
     @Override
@@ -74,7 +60,7 @@ public class MappedHasher extends Hasher {
         StringBuilder hashBase;
         random.nextBytes(nonce);
 
-        encNonce = android.util.Base64.encodeToString(nonce, android.util.Base64.DEFAULT);
+        encNonce = new String(android.util.Base64.encode(nonce, android.util.Base64.DEFAULT));
 
         char[] nonceChar = encNonce.toCharArray();
 
@@ -105,10 +91,15 @@ public class MappedHasher extends Hasher {
         System.arraycopy(hashBaseBuffer, 0, fullHashBaseBuffer, 0, hashBaseBuffer.length);
     }
 
+    String randomString(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString();
+    }
+
     @Override
     public void go() {
-        context.setClearMemory(true);
-
         boolean doLoop = true;
         this.hashBegin = System.currentTimeMillis();
 
@@ -144,7 +135,9 @@ public class MappedHasher extends Hasher {
                 statBegin = System.nanoTime();
                 try {
                     //insRandom.nextBytes(salt); // 47 ns
+                    salt = new byte[16];
                     random.nextBytes(salt);
+
                     statArgonBegin = System.nanoTime();
 
 					/*argonlib.argon2i_hash_encoded(iterations, memory, parallelism, hashBaseBuffer, hashBaseBufferSize, salt,
@@ -152,26 +145,16 @@ public class MappedHasher extends Hasher {
 					*/
                     // -- 34,200,000 ns
                     // set argon params in context..
-                    context.setOutputLength(32);
-                    context.setSalt(salt);
-                    context.setType(Argon2Type.Argon2i);
-                    context.setPassword(m_hashBaseBuffer);
 
-                    String hash = context.hash();
+                    String base = hashBase_Done;
 
 
-                    //byte[] method1 = new byte[encoded.length];
-                    //System.arraycopy(encoded, 0, method1, 0, encoded.length);
-
-                    //argonlib.argon2i_hash_encoded(iterations, memory, parallelism, hashBaseBuffer, hashBaseBufferSize, salt,
-                    //		saltLen, hashLen, encoded, encLen); // refactor saves like 30,000-200,000 ns per hash // 34.2 ms
-
+                    EncodedArgon2Result result = context.argon2_hash(base.getBytes(), salt);
+                    String hash = result.getEncoded();
                     statArgonEnd = System.nanoTime();
 
 
-                    String hashed_done = hashBase_Done + "$argon2i$v=19$m=524288,t=1,p=1$" + Base64.encodeToString(salt, Base64.NO_CLOSE).replace("=", "") + "$" +
-                            Base64.encodeToString(hash.getBytes(), Base64.NO_CLOSE).replace("=", "");
-
+                    String hashed_done = base + hash;
 
                     fullHashBaseBuffer = hashed_done.getBytes();
                     statShaBegin = System.nanoTime();
@@ -199,9 +182,10 @@ public class MappedHasher extends Hasher {
                     // 385 ns for duration
 
                     if (finalDuration <= this.limit) {
+                        Miner.finalDuration = Long.MAX_VALUE;
                         caller.onShare(finalDuration + "");
                         System.out.println("SUBMITTING!!");
-                        parent.submit(rawNonce, hashed_done, finalDuration, this.difficulty.longValue(), this.getType(), this.blockHeight);
+                        parent.submit(rawNonce, hash, finalDuration, this.difficulty.longValue(), this.getType(), this.blockHeight);
                         if (finalDuration <= 240) {
                             finds++;
                             caller.onFind(finalDuration + "");

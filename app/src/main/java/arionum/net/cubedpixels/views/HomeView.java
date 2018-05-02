@@ -73,6 +73,7 @@ import net.glxn.qrgen.android.QRCode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -89,6 +90,7 @@ import arionum.net.cubedpixels.style.Styler;
 import arionum.net.cubedpixels.utils.Base58;
 import arionum.net.cubedpixels.utils.CrossfadeWrapper;
 import arionum.net.cubedpixels.utils.DoneTask;
+import mehdi.sakout.fancybuttons.FancyButton;
 
 import static android.view.View.GONE;
 
@@ -283,6 +285,7 @@ public class HomeView extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
         instance = this;
 
+
         public_key = getString("publickey");
         if (!getString("privatekey").isEmpty())
 			try {
@@ -298,7 +301,10 @@ public class HomeView extends AppCompatActivity {
 
 
         // SETUP
+        if (peers.size() > 0)
         currentPeer = peers.get(new Random().nextInt(peers.size()));
+        else
+            currentPeer = "http://peer1.arionum.com";
         TextView test = findViewById(R.id.connected);
 		test.setText(currentPeer.replace("http://", ""));
 		TextView address = findViewById(R.id.address);
@@ -311,7 +317,7 @@ public class HomeView extends AppCompatActivity {
 		Color.colorToHSV(color, hsv);
 		hsv[2] *= 1.2f;
 		color = Color.HSVToColor(hsv);
-        Bitmap myBitmap = QRCode.from("sendaro" + "|" + HomeView.address + "||").withSize(200, 200)
+        Bitmap myBitmap = QRCode.from("sendaro" + "|" + HomeView.address + "||").withSize(100, 100)
                 .withColor(color, Color.parseColor("#00000000")).bitmap();
 		myBitmap.setHasAlpha(true);
         ImageView myImage = findViewById(R.id.qrimage);
@@ -464,7 +470,8 @@ public class HomeView extends AppCompatActivity {
 			}
 		});
 
-        final Button b = findViewById(R.id.minerToggle);
+        final FancyButton b = findViewById(R.id.minerToggle);
+        final EditText editPool = findViewById(R.id.pool);
         pages.add(new Page("MINER", (RelativeLayout) findViewById(R.id.minerview)) {
             @Override
             public void onEnable() {
@@ -472,6 +479,9 @@ public class HomeView extends AppCompatActivity {
                 if (minerThread == null || !minerThread.isAlive())
                     minerActive = false;
                 b.setText(minerActive ? "Stop Miner" : "Start Miner");
+
+                editPool.setEnabled(!minerActive);
+                editPool.setText("http://aro.cool");
             }
         });
         b.setOnClickListener(new View.OnClickListener() {
@@ -484,6 +494,7 @@ public class HomeView extends AppCompatActivity {
                 //SETUP MINER
 
                 b.setText(!minerActive ? "Stop Miner" : "Start Miner");
+                editPool.setEnabled(minerActive);
                 if (!minerActive) {
                     minerThread = new Thread(new Runnable() {
                         @Override
@@ -498,24 +509,14 @@ public class HomeView extends AppCompatActivity {
                                         public void run() {
                                             try {
                                                 DecimalFormat df = new DecimalFormat("#.00");
-                                                double d = Double.parseDouble(hash.replace(",", ".")) / 5;
+                                                double d = Double.parseDouble(hash.replace(",", "."));
+                                                d *= 3.3;
 
-                                                if (d > 50)
-                                                    d -= 35;
-                                                if (d > 30)
-                                                    d -= 25;
-                                                if (d > 20)
-                                                    d -= 15;
-                                                if (d > 20)
-                                                    d -= 15;
-                                                if (d > 12)
-                                                    d = 10 - d / 30 + new Random().nextDouble();
-                                                if (d < 6)
-                                                    d = 5 + d / 10 + new Random().nextDouble();
-                                                if (d > 12)
-                                                    d = 10 - d / 30 + new Random().nextDouble();
-                                                
-                                                ((TextView) findViewById(R.id.hashRate)).setText(df.format(d) + " H/s DL:" + dur);
+                                                String s = df.format(d);
+                                                if (s.startsWith(","))
+                                                    s = "0" + s;
+
+                                                ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + dur);
                                                 ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
 
                                                 GraphView graph = findViewById(R.id.graph);
@@ -528,7 +529,7 @@ public class HomeView extends AppCompatActivity {
                                                     LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
                                                     series1.setAnimated(false);
                                                     series1.setThickness(3);
-                                                    series1.setColor(Color.BLUE);
+                                                    series1.setColor(ContextCompat.getColor(instance, R.color.colorAccent));
 
                                                     series1.appendData(new DataPoint(series1.getHighestValueX() + 1, (int) d), true, Integer.MAX_VALUE, false);
                                                     graph.getSeries().clear();
@@ -595,12 +596,33 @@ public class HomeView extends AppCompatActivity {
                                 public void onDurChange(final String dur) {
 
                                 }
-                            });
+
+                                @Override
+                                public void onStop() {
+                                    b.setText("Stop Miner");
+                                    try {
+
+                                        Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
+                                        m.setAccessible(true);
+                                        m.invoke(minerThread, new ThreadDeath());
+                                        minerThread.interrupt();
+                                    } catch (Exception e) {
+                                        minerThread.interrupt();
+                                    }
+                                }
+                            }, editPool.getText().toString());
                         }
                     });
                     minerThread.start();
                 } else {
-                    minerThread.interrupt();
+                    try {
+                        Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
+                        m.setAccessible(true);
+                        m.invoke(minerThread, new ThreadDeath());
+                        minerThread.interrupt();
+                    } catch (Exception e) {
+                        minerThread.interrupt();
+                    }
                 }
             }
         });
@@ -612,12 +634,24 @@ public class HomeView extends AppCompatActivity {
 		addressinfo.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-				ClipData clip = ClipData.newPlainText("Arionum-Address", addressinfo.getText().toString());
-				clipboard.setPrimaryClip(clip);
-				Toast.makeText(instance, "Address copied to Clipboard", Toast.LENGTH_SHORT).show();
-			}
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Arionum-Address", addressinfo.getText().toString());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(instance, "Address copied to Clipboard", Toast.LENGTH_SHORT).show();
+            }
 		});
+
+        final RelativeLayout donations = findViewById(R.id.donations);
+        donations.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("DONATION-Address", "1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG");
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(instance, "Address copied to Clipboard", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
 		final ImageView qrimagerequest = findViewById(R.id.qrimage);
 		qrimagerequest.setOnClickListener(new View.OnClickListener() {
@@ -971,8 +1005,14 @@ public class HomeView extends AppCompatActivity {
 			@Override
 			public void run() {
 				// GETTRANSACTIONS
-				findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-				ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+                Handler h = new Handler(getMainLooper());
+                h.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                    }
+                });
+                ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 
 					@Override
 					public void onFeedback(JSONObject object) {

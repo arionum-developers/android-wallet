@@ -25,6 +25,10 @@
  */
 package com.programmerdan.arionum.arionum_miner;
 
+import android.os.Handler;
+
+import com.afollestad.materialdialogs.MaterialDialog;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,9 +55,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import arionum.net.cubedpixels.views.HomeView;
-import at.gadermaier.argon2.Argon2;
-import at.gadermaier.argon2.Argon2Factory;
-import at.gadermaier.argon2.model.Argon2Type;
 
 
 /**
@@ -291,13 +292,12 @@ public class Miner implements UncaughtExceptionHandler {
         this.wallClockBegin = System.currentTimeMillis();
     }
 
-    public static void main(callbackMiner callback) {
+    public static void main(callbackMiner callback, String pool) {
         Miner miner = null;
         callbackMiner = callback;
-        String defaultpool = "http://aropool.com";
         int defaultHashers = Runtime.getRuntime().availableProcessors();
         String workerName = Miner.php_uniqid();
-        miner = new Miner(defaultpool, defaultHashers, workerName);
+        miner = new Miner(pool, defaultHashers, workerName);
         miner.start();
     }
 
@@ -586,33 +586,7 @@ public class Miner implements UncaughtExceptionHandler {
         }
     }
 
-    public void makeTest() {
-        Argon2 context = Argon2Factory.create();
-        context.setClearMemory(true);
-        context.setSalt(new byte[]{16});
-        context.setSecret(null);
-        context.setAdditional(null);
-        context.setIterations(1);
-        context.setParallelism(1);
-        context.setOutputLength(64);
-        context.setType(Argon2Type.Argon2i);
 
-
-        byte[] encoded = new byte[64];
-        String hashBase = "PZ8Tyr4Nx8MHsRAGMpZmZ6TWY63dXWSCy7AEg3h9oYjeR74yj73q3gPxbxq9R3nxSSUV4KKgu1sQZu9Qj9v2q2HhT5H3LTHwW7HzAA28SjWFdzkNoovBMncD-A7tdOTOeAuvqmVtgH6YgVm83h0GWJ9vuMCYrtsE6pd-4XjCsnXntRfnskAyMST7AzzsPWCcXC7oxupE9qSMmmj7TkEyd1ZLYoonmMY57qEQqhP5uvksTh9gq8n22WpiVMoZ-24583881"; // put base here
-        String saltBase = "SFlCVUtSSXhac3Y5S09EVg"; // put base64 salt here
-        String argon2iE = "$argon2i$v=19$m=524288,t=1,p=1$SFlCVUtSSXhac3Y5S09EVg$WiGhW0/kYCNXSL3jeRxPIM+oD3Mhnm0S3PVbXUJwCzc"; // put expected argon2i here
-
-
-        context.setPassword(encoded);
-
-        encoded = context.hash().getBytes();
-
-        Argon2 encoder = Argon2Factory.create();
-        encoder.setEncodedOnly(true);
-
-
-    }
 
     /**
      * We update a specific worker with latest information from pool / node.
@@ -973,6 +947,8 @@ public class Miner implements UncaughtExceptionHandler {
                         data.append(URLEncoder.encode("height", "UTF-8")).append("=")
                                 .append(height);
 
+                        System.out.println("MAKING REQUEST WITH DATA: " + data);
+
                         out.writeBytes(data.toString());
 
                         out.flush();
@@ -997,6 +973,7 @@ public class Miner implements UncaughtExceptionHandler {
                                 submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
 
                             } else {
+                                System.out.println("DONE ACCEPTED SHARE " + obj.toString());
                                 submitStats(nonce, argon, submitDL, difficulty, workerType, failures, true);
                             }
                             notDone = false;
@@ -1096,11 +1073,20 @@ public class Miner implements UncaughtExceptionHandler {
     }
 
     @Override
-    public void uncaughtException(Thread t, Throwable e) {
+    public void uncaughtException(Thread t, final Throwable e) {
         e.printStackTrace();
-
-        System.err.println("\n\nThis is probably fatal, so exiting now.");
-        System.exit(1);
+        callbackMiner.onStop();
+        final Handler h = new Handler(HomeView.instance.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                new MaterialDialog.Builder(HomeView.instance)
+                        .title("ERROR")
+                        .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                        .positiveText("OH NO!")
+                        .show();
+            }
+        });
     }
 
     public static abstract class callbackMiner {
@@ -1113,6 +1099,8 @@ public class Miner implements UncaughtExceptionHandler {
         public abstract void onFind(String hash);
 
         public abstract void onDurChange(String dur);
+
+        public abstract void onStop();
     }
 
 }

@@ -254,8 +254,6 @@
                 android:layout_marginEnd="19dp"
                 android:layout_marginStart="19dp"
                 android:layout_marginTop="29dp"
-                android:elevation="24dp"
-                android:ems="10"
                 android:hint="Address"
                 android:inputType="text"
                 android:textColor="@color/colorBackground"
@@ -279,8 +277,6 @@
                 android:layout_height="wrap_content"
                 android:layout_alignStart="@+id/amounttext"
                 android:layout_below="@+id/amounttext"
-                android:elevation="24dp"
-                android:ems="10"
                 android:hint="Amount"
                 android:inputType="numberDecimal"
                 android:textAlignment="viewStart"
@@ -319,8 +315,6 @@
                 android:layout_alignStart="@+id/textView7"
                 android:layout_below="@+id/fee"
                 android:layout_marginTop="16dp"
-                android:elevation="24dp"
-                android:ems="10"
                 android:hint="Message"
                 android:inputType="text"
                 android:textAlignment="viewStart"
@@ -389,7 +383,7 @@
 
         </RelativeLayout>
 
-        <RelativeLayout
+        <RelativeLayout xmlns:fancy="http://schemas.android.com/apk/res-auto"
             android:id="@+id/minerview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -425,24 +419,52 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="33dp"
                 android:text="0.0 H/s"
+                android:textAlignment="center"
                 android:textSize="22sp" />
 
-            <Button
+            <EditText
+                android:id="@+id/pool"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/hashRate"
+                android:layout_marginTop="27dp"
+                android:hint="Pool"
+                android:inputType="text"
+                android:textAlignment="center"
+                android:textColor="@color/colorDark"
+                android:textStyle="italic" />
+
+            <mehdi.sakout.fancybuttons.FancyButton
                 android:id="@+id/minerToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/hashRate"
+
+                android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="47dp"
-                android:text="Start Mining" />
+                android:layout_margin="57dp"
+                android:layout_marginTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+                fancy:fb_borderColor="@color/colorAccent"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="@color/colorAccent"
+                fancy:fb_focusColor="#ffff"
+                fancy:fb_fontIconResource="&#xf138;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Start Mining"
+                fancy:fb_textColor="#ffffff" />
 
 
             <com.jjoe64.graphview.GraphView
                 android:id="@+id/graph"
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/minerToggle" />
+                android:layout_above="@+id/minerToggle"
+                android:layout_alignParentStart="true" />
 
         </RelativeLayout>
 
@@ -517,11 +539,31 @@
                     android:text="Web and Application Designer / Programmer" />
             </RelativeLayout>
 
+
+            <RelativeLayout
+                android:id="@+id/donations"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/info_box"
+                android:layout_margin="5dp"
+                android:background="@android:drawable/edit_text"
+                android:paddingBottom="20dp"
+                android:paddingTop="20dp">
+
+                <TextView
+                    android:id="@+id/donationAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG"
+                    android:textAlignment="center"
+                    android:textSize="10sp" />
+            </RelativeLayout>
+
             <RelativeLayout
                 android:id="@+id/thankyou"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@+id/info_box"
+                android:layout_below="@+id/donations"
                 android:layout_margin="20dp"
                 android:background="@android:drawable/edit_text">
 
