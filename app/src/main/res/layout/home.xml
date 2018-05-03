@@ -105,8 +105,8 @@
 
                 <ImageView
                     android:id="@+id/qrimage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentEnd="true"
                     app:srcCompat="@mipmap/ic_launcher" />
@@ -435,6 +435,32 @@
                 android:textColor="@color/colorDark"
                 android:textStyle="italic" />
 
+            <TextView
+                android:id="@+id/sugg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/hashers"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="Suggested Threads:"
+                android:textColor="#8b8b8b" />
+
+            <EditText
+                android:id="@+id/hashers"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="false"
+                android:layout_below="@+id/pool"
+                android:layout_marginTop="2dp"
+                android:layout_toRightOf="@id/sugg"
+                android:hint="Hashers"
+                android:inputType="number"
+                android:textAlignment="center"
+                android:textColor="@color/colorDark"
+                android:textSize="12sp"
+                android:textStyle="italic" />
+
+
             <mehdi.sakout.fancybuttons.FancyButton
                 android:id="@+id/minerToggle"
                 android:layout_width="wrap_content"
@@ -465,6 +491,15 @@
                 android:layout_height="200dp"
                 android:layout_above="@+id/minerToggle"
                 android:layout_alignParentStart="true" />
+
+            <TextView
+                android:id="@+id/currentDur"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/graph"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="23dp"
+                android:textAlignment="center" />
 
         </RelativeLayout>
 

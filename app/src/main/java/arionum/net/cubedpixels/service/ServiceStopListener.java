@@ -14,7 +14,8 @@ public class ServiceStopListener extends BroadcastReceiver {
 		TransactionListenerService t = new TransactionListenerService(context);
 		Intent serviceint = new Intent(context, t.getClass());
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			context.startForegroundService(serviceint);
+
+            context.startForegroundService(serviceint);
 		} else {
 			context.startService(serviceint);
 		}

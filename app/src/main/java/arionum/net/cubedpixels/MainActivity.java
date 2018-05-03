@@ -55,7 +55,8 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void uncaughtException(Thread thread, final Throwable throwable) {
 				throwable.printStackTrace();
-				StringWriter sw = new StringWriter();
+                System.out.println("ERROR");
+                StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				throwable.printStackTrace(pw);
 				String sStackTrace = sw.toString();
@@ -65,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
 					public void run() {
 						new MaterialDialog.Builder(HomeView.instance)
 								.title("ERROR")
-								.content(throwable.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really okay?")
-								.positiveText("OH NO!")
+                                .content(throwable.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart okay?")
+                                .positiveText("OH NO!")
 								.show();
 					}
 				});
@@ -181,5 +182,10 @@ public class MainActivity extends AppCompatActivity {
 		}
 		Log.i("isMyServiceRunning?", false + "");
 		return false;
-	}
+    }
+
+    @Override
+    public void onLowMemory() {
+        System.out.println("LOW MEMORY?");
+    }
 }

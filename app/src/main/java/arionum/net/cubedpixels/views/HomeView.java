@@ -1,13 +1,16 @@
 package arionum.net.cubedpixels.views;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
@@ -94,13 +97,14 @@ import mehdi.sakout.fancybuttons.FancyButton;
 
 import static android.view.View.GONE;
 
-public class HomeView extends AppCompatActivity {
+public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
     //A REALLY LONG AND UNSTRUCTURED CLASS DONT BE MAD AT ME :C
 
 
     private static final int PROFILE_SETTING = 1;
     public static HomeView instance;
+    public static Miner miner;
     static String signature = "";
     static String fee = "";
     static String val = "";
@@ -472,6 +476,7 @@ public class HomeView extends AppCompatActivity {
 
         final FancyButton b = findViewById(R.id.minerToggle);
         final EditText editPool = findViewById(R.id.pool);
+        final EditText editHashers = findViewById(R.id.hashers);
         pages.add(new Page("MINER", (RelativeLayout) findViewById(R.id.minerview)) {
             @Override
             public void onEnable() {
@@ -482,6 +487,26 @@ public class HomeView extends AppCompatActivity {
 
                 editPool.setEnabled(!minerActive);
                 editPool.setText("http://aro.cool");
+                System.gc();
+
+                int max = Runtime.getRuntime().availableProcessors();
+
+                ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+                ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+                activityManager.getMemoryInfo(memoryInfo);
+
+                double availPercent = (((double) (memoryInfo.availMem / 0x100000L)) * 1.4 / (double) ((memoryInfo.totalMem / 0x100000L)));
+
+
+                int MAXramThreads = (int) ((memoryInfo.totalMem / 0x100000L) / 512);
+                System.out.println(MAXramThreads + " | " + availPercent);
+
+                if (MAXramThreads <= max) {
+                    max = (int) (MAXramThreads * availPercent);
+                }
+
+                editHashers.setEnabled(!minerActive);
+                editHashers.setText(max + "");
             }
         });
         b.setOnClickListener(new View.OnClickListener() {
@@ -495,12 +520,13 @@ public class HomeView extends AppCompatActivity {
 
                 b.setText(!minerActive ? "Stop Miner" : "Start Miner");
                 editPool.setEnabled(minerActive);
+                editHashers.setEnabled(minerActive);
                 if (!minerActive) {
                     minerThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
 
-                            Miner.main(new Miner.callbackMiner() {
+                            miner = Miner.main(new Miner.callbackMiner() {
                                 @Override
                                 public void onHashRate(final String hash, final String dur) {
                                     Handler h = new Handler(HomeView.this.getMainLooper());
@@ -510,7 +536,6 @@ public class HomeView extends AppCompatActivity {
                                             try {
                                                 DecimalFormat df = new DecimalFormat("#.00");
                                                 double d = Double.parseDouble(hash.replace(",", "."));
-                                                d *= 3.3;
 
                                                 String s = df.format(d);
                                                 if (s.startsWith(","))
@@ -532,9 +557,9 @@ public class HomeView extends AppCompatActivity {
                                                     series1.setColor(ContextCompat.getColor(instance, R.color.colorAccent));
 
                                                     series1.appendData(new DataPoint(series1.getHighestValueX() + 1, (int) d), true, Integer.MAX_VALUE, false);
+
                                                     graph.getSeries().clear();
                                                     graph.addSeries(series1);
-                                                    graph.computeScroll();
                                                 }
 
 
@@ -594,7 +619,14 @@ public class HomeView extends AppCompatActivity {
 
                                 @Override
                                 public void onDurChange(final String dur) {
-
+                                    Handler h = new Handler(HomeView.instance.getMainLooper());
+                                    h.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            TextView t = findViewById(R.id.currentDur);
+                                            t.setText(dur);
+                                        }
+                                    });
                                 }
 
                                 @Override
@@ -610,7 +642,7 @@ public class HomeView extends AppCompatActivity {
                                         minerThread.interrupt();
                                     }
                                 }
-                            }, editPool.getText().toString());
+                            }, editPool.getText().toString(), editHashers.getText().toString());
                         }
                     });
                     minerThread.start();
@@ -1273,7 +1305,87 @@ public class HomeView extends AppCompatActivity {
 		return value;
 	}
 
+    @Override
+    public void onTrimMemory(int level) {
 
+
+        // Determine which lifecycle or system event was raised.
+        switch (level) {
+
+            case ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN:
+
+                /*
+                   Release any UI objects that currently hold memory.
+
+                   The user interface has moved to the background.
+                */
+
+                break;
+
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE:
+                System.out.println("TRIMMEMORY: MODERATE");
+                System.gc();
+                Miner.setSleep(System.currentTimeMillis());
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
+                System.out.println("TRIMMEMORY: LOW");
+                System.gc();
+                Miner.setSleep(System.currentTimeMillis());
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL:
+                System.out.println("TRIMMEMORY: CRITICAL");
+                Miner.setSleep(System.currentTimeMillis());
+                System.gc();
+
+                /*
+                   Release any memory that your app doesn't need to run.
+
+                   The device is running low on memory while the app is running.
+                   The event raised indicates the severity of the memory-related event.
+                   If the event is TRIM_MEMORY_RUNNING_CRITICAL, then the system will
+                   begin killing background processes.
+                */
+
+                break;
+
+            case ComponentCallbacks2.TRIM_MEMORY_BACKGROUND:
+            case ComponentCallbacks2.TRIM_MEMORY_MODERATE:
+            case ComponentCallbacks2.TRIM_MEMORY_COMPLETE:
+                System.out.println("TRIMMEMORY: CRITICAL");
+                Miner.setSleep(System.currentTimeMillis());
+                System.gc();
+                /*
+                   Release as much memory as the process can.
+
+                   The app is on the LRU list and the system is running low on memory.
+                   The event raised indicates where the app sits within the LRU list.
+                   If the event is TRIM_MEMORY_COMPLETE, the process will be one of
+                   the first to be terminated.
+                */
+
+                break;
+
+            default:
+                /*
+                  Release any non-critical data structures.
+
+                  The app received an unrecognized memory level value
+                  from the system. Treat this as a generic low-memory message.
+                */
+                break;
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration configuration) {
+
+        System.out.println("CONFIG: " + configuration);
+    }
+
+    @Override
+    public void onLowMemory() {
+
+        System.out.println("LOWMEMORY");
+
+    }
 
 	public static abstract class Page {
 		private String name;
@@ -1314,11 +1426,11 @@ public class HomeView extends AppCompatActivity {
             this.imageId = imageId;
             if (drawablepositive == null) {
                 drawablepositive = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_long_arrow_down)
-                        .color(getColor(R.color.colorGreen)).sizeDp(24);
+                        .color(ContextCompat.getColor(HomeView.instance, R.color.colorGreen)).sizeDp(24);
             }
             if (drawablenegative == null) {
                 drawablenegative = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_long_arrow_up)
-                        .color(getColor(R.color.colorRed)).sizeDp(24);
+                        .color(ContextCompat.getColor(HomeView.instance, R.color.colorRed)).sizeDp(24);
             }
         }
 
@@ -1336,9 +1448,9 @@ public class HomeView extends AppCompatActivity {
             value.setText(strings.get(position).split(",")[1] + " ARO");
 
             if (imageId.get(position) == GoogleMaterial.Icon.gmd_long_arrow_down)
-                value.setTextColor(getColor(R.color.colorGreen));
+                value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorGreen));
             else
-                value.setTextColor(getColor(R.color.colorRed));
+                value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorRed));
 
             from.setText("<- " + strings.get(position).split(",")[2]);
             to.setText("-> " + strings.get(position).split(",")[3]);

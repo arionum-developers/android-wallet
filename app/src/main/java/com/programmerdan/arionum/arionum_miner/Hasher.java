@@ -81,7 +81,6 @@ public abstract class Hasher implements Runnable {
             e.printStackTrace();
 
             System.err.println("\n\nThis is probably fatal, so exiting now.");
-            System.exit(1);
         }
         HasherStats stats = new HasherStats(id, argonTime, shaTime, nonArgonTime, hashTime, hashCount, bestDL, shares, finds, getType());
         parent.workerFinish(stats, this);
@@ -184,5 +183,6 @@ public abstract class Hasher implements Runnable {
     public boolean isActive() {
         return active;
     }
+
 
 }

@@ -78,6 +78,7 @@ public class Miner implements UncaughtExceptionHandler {
     public static long finalDuration = Long.MAX_VALUE;
     public static long limitDuration = 0;
     private static callbackMiner callbackMiner;
+    private static long sleep;
     protected final AtomicInteger hasherCount;
     /**
      * Count of all hashes produced by workers.
@@ -281,8 +282,8 @@ public class Miner implements UncaughtExceptionHandler {
             System.err.println("  hasher-mode: " + this.hasherMode);
             System.err.println("  colors: " + this.colors);
             System.err.println("  worker-name: " + this.worker);
-            System.exit(1);
         }
+
 
 
         this.hashers = Executors.newFixedThreadPool(
@@ -292,13 +293,20 @@ public class Miner implements UncaughtExceptionHandler {
         this.wallClockBegin = System.currentTimeMillis();
     }
 
-    public static void main(callbackMiner callback, String pool) {
+    public static void setSleep(long sleep) {
+        Miner.sleep = sleep;
+    }
+
+    public static Miner main(callbackMiner callback, String pool, String hashers) {
         Miner miner = null;
         callbackMiner = callback;
         int defaultHashers = Runtime.getRuntime().availableProcessors();
+        if (!hashers.isEmpty())
+            defaultHashers = Integer.parseInt(hashers);
         String workerName = Miner.php_uniqid();
         miner = new Miner(pool, defaultHashers, workerName);
         miner.start();
+        return miner;
     }
 
     /**
@@ -309,6 +317,10 @@ public class Miner implements UncaughtExceptionHandler {
     public static String php_uniqid() {
         double m = ((double) (System.nanoTime() / 10)) / 10000d;
         return String.format("%8x%05x", (long) Math.floor(m), (long) ((m - Math.floor(m)) * 1000000)).trim();
+    }
+
+    public boolean shouldSleep() {
+        return (System.currentTimeMillis() - sleep) < 2000;
     }
 
     public void start() {
@@ -1088,6 +1100,7 @@ public class Miner implements UncaughtExceptionHandler {
             }
         });
     }
+
 
     public static abstract class callbackMiner {
         public abstract void onHashRate(String hash, String bestDelay);

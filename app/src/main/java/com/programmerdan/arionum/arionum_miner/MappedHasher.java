@@ -1,14 +1,19 @@
 package com.programmerdan.arionum.arionum_miner;
 
 
+import android.app.ActivityManager;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
+import arionum.net.cubedpixels.views.HomeView;
 import de.wuthoehle.argon2jni.Argon2;
 import de.wuthoehle.argon2jni.EncodedArgon2Result;
+
+import static android.content.Context.ACTIVITY_SERVICE;
 
 public class MappedHasher extends Hasher {
 
@@ -98,6 +103,13 @@ public class MappedHasher extends Hasher {
         return sb.toString();
     }
 
+    private ActivityManager.MemoryInfo getAvailableMemory() {
+        ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+        return memoryInfo;
+    }
+
     @Override
     public void go() {
         boolean doLoop = true;
@@ -114,7 +126,6 @@ public class MappedHasher extends Hasher {
             e1.printStackTrace();
             active = false;
             doLoop = false;
-            System.exit(1);
         }
         if (active) {
             parent.workerInit(id);
@@ -148,11 +159,26 @@ public class MappedHasher extends Hasher {
 
                     String base = hashBase_Done;
 
-
                     EncodedArgon2Result result = context.argon2_hash(base.getBytes(), salt);
                     String hash = result.getEncoded();
                     statArgonEnd = System.nanoTime();
 
+/*
+                    ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                    ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+                    activityManager.getMemoryInfo(mi);
+                    double availableMegs = mi.availMem / 0x100000L;
+
+                    while(availableMegs < 550) {
+                        System.out.println("SLEEPING MEMORY WITH "+availableMegs);
+                        System.runFinalization();
+                        Runtime.getRuntime().gc();
+                        System.gc();
+                        Thread.sleep(1500);
+                        availableMegs = mi.availMem / 0x100000L;
+                        System.out.println(availableMegs+" AVAILABLE");
+                    }
+                    */
 
                     String hashed_done = base + hash;
 
@@ -164,7 +190,6 @@ public class MappedHasher extends Hasher {
                     for (int i = 0; i < 5; i++) {
                         byteBase = sha512.digest(byteBase);
                     }
-
                     statShaEnd = System.nanoTime();
                     // shas total 4900-5000ns for all 6 digests, or < 1000ns ea
 
@@ -178,6 +203,8 @@ public class MappedHasher extends Hasher {
                     if (Miner.finalDuration >= finalDuration)
                         Miner.finalDuration = finalDuration;
                     Miner.limitDuration = this.limit;
+
+                    caller.onDurChange(finalDuration + "");
 
                     // 385 ns for duration
 
@@ -209,6 +236,7 @@ public class MappedHasher extends Hasher {
                     this.shaTime += statShaEnd - statShaBegin;
                     this.nonArgonTime += (statArgonBegin - statBegin) + (statEnd - statArgonEnd);
 
+
                 } catch (Exception e) {
                     System.err.println("WORKER FAILED! " + e.getMessage() + " at " + e.getStackTrace()[0]);
                     e.printStackTrace();
@@ -217,8 +245,7 @@ public class MappedHasher extends Hasher {
                 this.loopTime += System.currentTimeMillis() - statCycle;
 
                 if (this.hashCount > this.targetHashCount || this.loopTime > this.maxTime) {
-                    if (!bound) {
-                        //System.out.println("Ending worker " + this.id);
+                    if (!bound) {                        //System.out.println("Ending worker " + this.id);
                         doLoop = false;
                     } else {
                         //System.out.println("Ending a session for worker " + this.id);
@@ -233,6 +260,9 @@ public class MappedHasher extends Hasher {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+
+        System.gc();
+        Runtime.getRuntime().gc();
         this.hashEnd = System.currentTimeMillis();
         this.hashTime = this.hashEnd - this.hashBegin;
         this.parent.hasherCount.decrementAndGet();
