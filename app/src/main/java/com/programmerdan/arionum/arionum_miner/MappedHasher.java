@@ -17,7 +17,7 @@ import static android.content.Context.ACTIVITY_SERVICE;
 
 public class MappedHasher extends Hasher {
 
-	/*Local Hasher vars*/
+    /*Local Hasher vars*/
 
     static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
     static SecureRandom rnd = new SecureRandom();
@@ -29,7 +29,6 @@ public class MappedHasher extends Hasher {
     private Random insRandom = new Random(random.nextLong());
     private String rawHashBase;
     private byte[] nonce = new byte[32];
-    private byte[] salt = new byte[16];
     private String rawNonce;
     private byte[] hashBaseBuffer;
     private byte[] m_hashBaseBuffer;
@@ -59,7 +58,25 @@ public class MappedHasher extends Hasher {
         // no-op, we are locked into 10800 > territory now
     }
 
+    int argos = 0;
+
+    String randomString(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString();
+    }
+
+    private ActivityManager.MemoryInfo getAvailableMemory() {
+        ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+        return memoryInfo;
+    }
+
     private void genNonce() {
+        if (caller != null)
+            caller.onDurChange("Generating Nonce...");
         insRandom = new Random(random.nextLong());
         String encNonce = null;
         StringBuilder hashBase;
@@ -94,20 +111,6 @@ public class MappedHasher extends Hasher {
         m_hashBaseBuffer = hashBaseBuffer;
         fullHashBaseBuffer = new byte[hashBaseBuffer.length + 32];
         System.arraycopy(hashBaseBuffer, 0, fullHashBaseBuffer, 0, hashBaseBuffer.length);
-    }
-
-    String randomString(int len) {
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++)
-            sb.append(AB.charAt(rnd.nextInt(AB.length())));
-        return sb.toString();
-    }
-
-    private ActivityManager.MemoryInfo getAvailableMemory() {
-        ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
-        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-        activityManager.getMemoryInfo(memoryInfo);
-        return memoryInfo;
     }
 
     @Override
@@ -146,39 +149,18 @@ public class MappedHasher extends Hasher {
                 statBegin = System.nanoTime();
                 try {
                     //insRandom.nextBytes(salt); // 47 ns
-                    salt = new byte[16];
-                    random.nextBytes(salt);
 
                     statArgonBegin = System.nanoTime();
 
-					/*argonlib.argon2i_hash_encoded(iterations, memory, parallelism, hashBaseBuffer, hashBaseBufferSize, salt,
-							saltLen, hashLen, encoded, encLen); // refactor saves like 30,000-200,000 ns per hash // 34.2 ms
-					*/
-                    // -- 34,200,000 ns
-                    // set argon params in context..
-
                     String base = hashBase_Done;
 
-                    EncodedArgon2Result result = context.argon2_hash(base.getBytes(), salt);
+
+                    EncodedArgon2Result result = context.argon2_hash(base.getBytes());
+                    argos++;
+
                     String hash = result.getEncoded();
-                    statArgonEnd = System.nanoTime();
 
-/*
-                    ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                    ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
-                    activityManager.getMemoryInfo(mi);
-                    double availableMegs = mi.availMem / 0x100000L;
 
-                    while(availableMegs < 550) {
-                        System.out.println("SLEEPING MEMORY WITH "+availableMegs);
-                        System.runFinalization();
-                        Runtime.getRuntime().gc();
-                        System.gc();
-                        Thread.sleep(1500);
-                        availableMegs = mi.availMem / 0x100000L;
-                        System.out.println(availableMegs+" AVAILABLE");
-                    }
-                    */
 
                     String hashed_done = base + hash;
 
@@ -206,13 +188,16 @@ public class MappedHasher extends Hasher {
 
                     caller.onDurChange(finalDuration + "");
 
+                    //SUBMIT:
+
+                    // parent.submit(base, hash, finalDuration, this.difficulty.longValue(), this.getType());
+
                     // 385 ns for duration
 
                     if (finalDuration <= this.limit) {
                         Miner.finalDuration = Long.MAX_VALUE;
-                        caller.onShare(finalDuration + "");
                         System.out.println("SUBMITTING!!");
-                        parent.submit(rawNonce, hash, finalDuration, this.difficulty.longValue(), this.getType(), this.blockHeight);
+                        parent.submit(rawNonce, hash, finalDuration, this.difficulty.longValue(), this.getType());
                         if (finalDuration <= 240) {
                             finds++;
                             caller.onFind(finalDuration + "");
@@ -222,9 +207,13 @@ public class MappedHasher extends Hasher {
                             System.out.println("FOUND +1 = SHARE");
                             caller.onShare(finalDuration + "");
                         }
+                        argos = 0;
                         genNonce(); // only gen a new nonce once we exhaust the one we had
                     }
-
+                    if (argos > 300) {
+                        argos = 0;
+                        genNonce();
+                    }
                     hashCount++;
                     statEnd = System.nanoTime();
 

@@ -30,6 +30,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
@@ -415,6 +416,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         t.setText(build);
     }
 
+
 	public void refreshLastTransactions() {
 		refreshing = true;
 		findViewById(R.id.waitingtransbar).setVisibility(View.VISIBLE);
@@ -522,6 +524,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 editPool.setEnabled(minerActive);
                 editHashers.setEnabled(minerActive);
                 if (!minerActive) {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     minerThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -555,10 +558,17 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                     series1.setAnimated(false);
                                                     series1.setThickness(3);
                                                     series1.setColor(ContextCompat.getColor(instance, R.color.colorAccent));
-
-                                                    series1.appendData(new DataPoint(series1.getHighestValueX() + 1, (int) d), true, Integer.MAX_VALUE, false);
-
                                                     graph.getSeries().clear();
+                                                    series1.appendData(new DataPoint(series1.getHighestValueX() + 1, d), false, Integer.MAX_VALUE, false);
+
+                                                    graph.getViewport().setMinX(series1.getLowestValueX());
+                                                    graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
+                                                    graph.getViewport().setMinY(series1.getLowestValueY());
+                                                    graph.getViewport().setMaxY(series1.getHighestValueY() + 2);
+
+                                                    graph.getViewport().setYAxisBoundsManual(true);
+                                                    graph.getViewport().setXAxisBoundsManual(true);
+
                                                     graph.addSeries(series1);
                                                 }
 
@@ -597,9 +607,14 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                             }
                                             mNotificationManager.notify(1347, mBuilder.build());
 
-
-                                            ((TextView) findViewById(R.id.shareIT)).setText(
-                                                    ((TextView) findViewById(R.id.shareIT)).getText() + ",SHARE 1");
+                                            TextView t = findViewById(R.id.shares);
+                                            String text = t.getText().toString();
+                                            int parsed = 0;
+                                            try {
+                                                parsed = Integer.parseInt(text);
+                                            } catch (Exception e) {
+                                            }
+                                            t.setText((parsed + 1));
                                         }
                                     });
                                 }
@@ -608,22 +623,90 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 public void onReject(String hash) {
                                     System.out.println("FOUND REJECT = " + hash);
 
+
+                                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
+                                            HomeView.this, "ARONOTIFICATIONS")
+                                            .setSmallIcon(R.drawable.aro)
+                                            .setContentTitle("Arionum Wallet | Miner")
+                                            .setContentText("Share got rejected!")
+                                            .setStyle(
+                                                    new NotificationCompat.InboxStyle()
+                                                            .addLine("Share got rejected")
+                                                            .addLine(hash)
+                                            )
+                                            .setChannelId("notify_001")
+                                            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+
+                                    NotificationManager mNotificationManager =
+                                            (NotificationManager) HomeView.this.getSystemService(Context.NOTIFICATION_SERVICE);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        NotificationChannel channel = new NotificationChannel("notify_001",
+                                                "Channel human readable title",
+                                                NotificationManager.IMPORTANCE_DEFAULT);
+                                        mNotificationManager.createNotificationChannel(channel);
+                                    }
+                                    mNotificationManager.notify(1357, mBuilder.build());
+                                }
+
+                                @Override
+                                public void onAccept(String hash) {
+                                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
+                                            HomeView.this, "ARONOTIFICATIONS")
+                                            .setSmallIcon(R.drawable.aro)
+                                            .setContentTitle("Arionum Wallet | Miner")
+                                            .setContentText("Share got accepted!")
+                                            .setStyle(
+                                                    new NotificationCompat.InboxStyle()
+                                                            .addLine("Share got accepted")
+                                                            .addLine(hash)
+                                            )
+                                            .setChannelId("notify_001")
+                                            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+
+                                    NotificationManager mNotificationManager =
+                                            (NotificationManager) HomeView.this.getSystemService(Context.NOTIFICATION_SERVICE);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        NotificationChannel channel = new NotificationChannel("notify_001",
+                                                "Channel human readable title",
+                                                NotificationManager.IMPORTANCE_DEFAULT);
+                                        mNotificationManager.createNotificationChannel(channel);
+                                    }
+                                    mNotificationManager.notify(1357, mBuilder.build());
                                 }
 
                                 @Override
                                 public void onFind(String hash) {
                                     System.out.println("FOUND FIND = " + hash);
 
+                                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
+                                            HomeView.this, "ARONOTIFICATIONS")
+                                            .setSmallIcon(R.drawable.aro)
+                                            .setContentTitle("Arionum Wallet | Miner")
+                                            .setContentText("Share got accepted!")
+                                            .setChannelId("notify_001")
+                                            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
+
+                                    NotificationManager mNotificationManager =
+                                            (NotificationManager) HomeView.this.getSystemService(Context.NOTIFICATION_SERVICE);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        NotificationChannel channel = new NotificationChannel("notify_001",
+                                                "Channel human readable title",
+                                                NotificationManager.IMPORTANCE_DEFAULT);
+                                        mNotificationManager.createNotificationChannel(channel);
+                                    }
+                                    mNotificationManager.notify(1357, mBuilder.build());
                                 }
 
                                 @Override
                                 public void onDurChange(final String dur) {
-                                    Handler h = new Handler(HomeView.instance.getMainLooper());
-                                    h.post(new Runnable() {
+
+                                    final TextView t = findViewById(R.id.currentDur);
+                                    runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            TextView t = findViewById(R.id.currentDur);
                                             t.setText(dur);
                                         }
                                     });
@@ -633,7 +716,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 public void onStop() {
                                     b.setText("Stop Miner");
                                     try {
-
+                                        miner.stop();
                                         Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
                                         m.setAccessible(true);
                                         m.invoke(minerThread, new ThreadDeath());
@@ -647,6 +730,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     });
                     minerThread.start();
                 } else {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     try {
                         Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
                         m.setAccessible(true);

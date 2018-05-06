@@ -40,6 +40,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -195,6 +196,39 @@ public class Miner implements UncaughtExceptionHandler {
     private ConcurrentHashMap<String, HasherStats> statsStage;
     private ConcurrentLinkedQueue<HasherStats> statsReport;
 
+    boolean sendSpeed = false;
+
+    public static void setSleep(long sleep) {
+        Miner.sleep = sleep;
+    }
+
+    public static Miner main(callbackMiner callback, String pool, String hashers) {
+        Miner miner = null;
+        callbackMiner = callback;
+        int defaultHashers = Runtime.getRuntime().availableProcessors();
+        if (!hashers.isEmpty())
+            defaultHashers = Integer.parseInt(hashers);
+        String workerName = Miner.php_uniqid();
+        miner = new Miner(pool, defaultHashers, workerName);
+        miner.start();
+        return miner;
+    }
+
+    /**
+     * Reference: http://php.net/manual/en/function.uniqid.php#95001
+     *
+     * @return a quasi-unique identifier.
+     */
+    public static String php_uniqid() {
+        double m = ((double) (System.nanoTime() / 10)) / 10000d;
+        return String.format("%8x%05x", (long) Math.floor(m), (long) ((m - Math.floor(m)) * 1000000)).trim();
+    }
+
+    public boolean shouldSleep() {
+        return (System.currentTimeMillis() - sleep) < 2000;
+    }
+
+    long lastSendSpeed = 0;
     public Miner(String node, int cores, String worker) {
         this.hasherMode = AdvMode.standard;
         this.worker = php_uniqid();
@@ -212,8 +246,11 @@ public class Miner implements UncaughtExceptionHandler {
         this.blockFinds = new AtomicLong();
         this.blockShares = new AtomicLong();
 
+        sendSpeed = false;
+        lastSendSpeed = System.currentTimeMillis();
 
-		/* autotune */
+
+        /* autotune */
         activeProfile = null;
         TreeSet<Profile> evaluatedProfiles = new TreeSet<Profile>();
         ConcurrentLinkedQueue<Profile> profilesToEvaluate = new ConcurrentLinkedQueue<Profile>();
@@ -222,7 +259,7 @@ public class Miner implements UncaughtExceptionHandler {
         long profilesTested = 0;
         /* end autotune */
 
-		/* stats report */
+        /* stats report */
         this.statsHost = null;
         this.statsInvoke = "report.php";
         this.statsToken = php_uniqid();
@@ -230,7 +267,7 @@ public class Miner implements UncaughtExceptionHandler {
         this.statsStage = new ConcurrentHashMap<String, HasherStats>();
         this.statsReport = new ConcurrentLinkedQueue<HasherStats>();
         this.stats = Executors.newCachedThreadPool();
-		/* end stats report */
+        /* end stats report */
 
         this.hashes = new AtomicLong();
         this.bestDL = new AtomicLong(Long.MAX_VALUE);
@@ -293,36 +330,6 @@ public class Miner implements UncaughtExceptionHandler {
         this.wallClockBegin = System.currentTimeMillis();
     }
 
-    public static void setSleep(long sleep) {
-        Miner.sleep = sleep;
-    }
-
-    public static Miner main(callbackMiner callback, String pool, String hashers) {
-        Miner miner = null;
-        callbackMiner = callback;
-        int defaultHashers = Runtime.getRuntime().availableProcessors();
-        if (!hashers.isEmpty())
-            defaultHashers = Integer.parseInt(hashers);
-        String workerName = Miner.php_uniqid();
-        miner = new Miner(pool, defaultHashers, workerName);
-        miner.start();
-        return miner;
-    }
-
-    /**
-     * Reference: http://php.net/manual/en/function.uniqid.php#95001
-     *
-     * @return a quasi-unique identifier.
-     */
-    public static String php_uniqid() {
-        double m = ((double) (System.nanoTime() / 10)) / 10000d;
-        return String.format("%8x%05x", (long) Math.floor(m), (long) ((m - Math.floor(m)) * 1000000)).trim();
-    }
-
-    public boolean shouldSleep() {
-        return (System.currentTimeMillis() - sleep) < 2000;
-    }
-
     public void start() {
         if (MinerType.test.equals(this.type)) {
             startTest();
@@ -348,7 +355,7 @@ public class Miner implements UncaughtExceptionHandler {
             while (updateLoop[0]) {
                 System.out.println("LOOP");
                 Future<Boolean> update = this.updaters.submit(new Callable<Boolean>() {
-                    public Boolean call() throws JSONException, IOException {
+                    public Boolean call() throws JSONException {
                         long executionTimeTracker = System.currentTimeMillis();
                         try {
                             if (cycles > 0 && (System.currentTimeMillis() - lastUpdate) < (UPDATING_DELAY * .5)) {
@@ -370,45 +377,35 @@ public class Miner implements UncaughtExceptionHandler {
 
                                 // All the frequent speed sends was placing a large UPDATE burden on the pool, so now
                                 // first h/s is sent 30s after start, and every 10 mins after that. Should help.
-                                if (!sentSpeed.get() && supercycles > 15) {
+                                if (!sendSpeed && lastSendSpeed + 1000 * 20 < System.currentTimeMillis()) {
                                     extra.append("&hashrate=").append(cummSpeed);
-                                    sentSpeed.set(true);
+                                    lastSendSpeed = System.currentTimeMillis();
+                                    sendSpeed = true;
+                                } else if (sendSpeed && lastSendSpeed + 1000 * 60 * 6 < System.currentTimeMillis()) {
+                                    extra.append("&hashrate=").append(cummSpeed);
+                                    lastSendSpeed = System.currentTimeMillis();
                                 }
+
                             }
 
                             URL url = new URL(extra.toString());
-                            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                            con.setRequestMethod("GET");
-
-                            // Having some weird cases on certain OSes where apparently the netstack
-                            // is by default unbounded timeout, so the single thread executor is
-                            // stuck forever waiting for a reply that will never come.
-                            // This should address that.
-                            con.setConnectTimeout(1000);
-                            con.setReadTimeout(1000);
+                            URLConnection connect = url.openConnection();
+                            connect.setConnectTimeout(1000);
                             updateLoop[0] = false;
-
-                            int status = con.getResponseCode();
 
                             lastUpdate = System.currentTimeMillis();
 
-                            if (status != HttpURLConnection.HTTP_OK) {
-                                con.disconnect();
-                                failures++;
-                                updateTime(System.currentTimeMillis() - executionTimeTracker);
-                                return Boolean.FALSE;
-                            }
+
 
                             long parseTimeTracker = System.currentTimeMillis();
 
-                            BufferedReader s = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                            BufferedReader s = new BufferedReader(new InputStreamReader(connect.getInputStream()));
                             String st = new String(s.readLine());
 
 
                             JSONObject obj = new JSONObject(st);
 
                             if (!"ok".equals(obj.get("status"))) {
-                                con.disconnect();
                                 failures++;
                                 updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
                                 return Boolean.FALSE;
@@ -442,8 +439,14 @@ public class Miner implements UncaughtExceptionHandler {
                             if (limit != localLimit) {
                                 limit = localLimit;
                             }
+                            long localHeight = jsonData.getLong("height");
+                            if (localHeight != height) {
+                                height = localHeight;
+                                updateWorkers();
+                            }
 
-                            long localHeight = (Long) jsonData.get("height");
+
+                            localHeight = (Long) jsonData.get("height");
                             if (localHeight != height) {
                                 height = localHeight;
                                 endline = true;
@@ -478,7 +481,6 @@ public class Miner implements UncaughtExceptionHandler {
                                 endline = true;
                                 clearSpeed();
                             }
-                            con.disconnect();
                             updates++;
                             updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
                             if (endline) {
@@ -736,7 +738,7 @@ public class Miner implements UncaughtExceptionHandler {
                         offload.incrementAndGet();
                     }
 
-					/* reporting stats */
+                    /* reporting stats */
                     if (this.statsHost != null) {
                     }
 
@@ -799,6 +801,7 @@ public class Miner implements UncaughtExceptionHandler {
     }
 
     protected void updateStats() {
+
         this.stats.submit(new Runnable() {
             public void run() {
                 HasherStats latest = null;
@@ -919,7 +922,9 @@ public class Miner implements UncaughtExceptionHandler {
         });
     }
 
-    protected void submit(final String nonce, final String argon, final long submitDL, final long difficulty, final String workerType, final long height) {
+    protected void submit(final String nonce, final String argon, final long submitDL, final long difficulty, final String workerType) {
+        if (height == 0)
+            return;
         this.submitters.submit(new Runnable() {
             public void run() {
 
@@ -982,10 +987,12 @@ public class Miner implements UncaughtExceptionHandler {
                             if (!"ok".equals(obj.get("status"))) {
                                 sessionRejects.incrementAndGet();
                                 System.out.println(" Raw Failure: " + obj.toString());
+                                callbackMiner.onReject(obj.toString());
                                 submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
 
                             } else {
                                 System.out.println("DONE ACCEPTED SHARE " + obj.toString());
+                                callbackMiner.onAccept(obj.toString());
                                 submitStats(nonce, argon, submitDL, difficulty, workerType, failures, true);
                             }
                             notDone = false;
@@ -1101,6 +1108,11 @@ public class Miner implements UncaughtExceptionHandler {
         });
     }
 
+    public void stop() {
+        this.updaters.shutdown();
+        this.hashers.shutdown();
+        this.submitters.shutdown();
+    }
 
     public static abstract class callbackMiner {
         public abstract void onHashRate(String hash, String bestDelay);
@@ -1108,6 +1120,8 @@ public class Miner implements UncaughtExceptionHandler {
         public abstract void onShare(String hash);
 
         public abstract void onReject(String hash);
+
+        public abstract void onAccept(String hash);
 
         public abstract void onFind(String hash);
 
