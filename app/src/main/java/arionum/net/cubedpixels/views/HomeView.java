@@ -26,7 +26,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +34,6 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -61,7 +59,6 @@ import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.MiniDrawer;
-import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem;
@@ -100,9 +97,6 @@ import static android.view.View.GONE;
 
 public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
-    //A REALLY LONG AND UNSTRUCTURED CLASS DONT BE MAD AT ME :C
-
-
     private static final int PROFILE_SETTING = 1;
     public static HomeView instance;
     public static Miner miner;
@@ -117,65 +111,13 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     private static String public_key = "";
     private static String private_key = "";
     private static String address = "";
-    private static QRCodeReaderView.OnQRCodeReadListener upcminglstnr;
     private static QRCodeReaderView qrCodeReaderView;
     private static Thread minerThread;
-    boolean upToDate = false;
     private AccountHeader headerResult = null;
     private Drawer result = null;
     private MiniDrawer miniResult = null;
     private Crossfader crossFader;
     private boolean refreshing = true;
-    private OnCheckedChangeListener onCheckedChangeListener = new OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
-            if (drawerItem instanceof Nameable) {
-                Log.i("material-drawer",
-                        "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked);
-            } else {
-                Log.i("material-drawer", "toggleChecked: " + isChecked);
-            }
-        }
-    };
-    private int version = 0;
-
-    public static String getPublic_key() {
-        return public_key;
-    }
-
-    public static String getAddress() {
-        return address;
-    }
-
-    public static String getPrivate_key() {
-        return private_key;
-    }
-
-    public static String doubleVal(final Double d) {
-        return d == null ? "" : doubleVal(d.doubleValue());
-    }
-
-    public static String doubleVal(final double d) {
-        int afterlength = getDecimals(d);
-        String temp = "";
-        for (int i = 0; i < afterlength; i++)
-            temp += "#";
-        DecimalFormat format = new DecimalFormat("0." + temp);
-
-        return format.format(d);
-    }
-
-    public static int getDecimals(double d) {
-        String[] splitt = (d + "").split("\\.");
-        if (splitt.length <= 1)
-            return 0;
-        String after = splitt[1];
-        while (after.lastIndexOf("0") == after.length())
-            after = after.substring(0, after.length() - 1);
-        if (after.length() > 10)
-            return 10;
-        return after.length();
-    }
 
     public static void setup(final DoneTask done) {
         new Thread(new Runnable() {
@@ -194,95 +136,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 }
             }
         }).start();
-    }
-
-    public static String getCurrentPeer() {
-        return currentPeer;
-    }
-
-    public static void makeTransaction(final String addressTO, double value, String MSG, final Runnable run) {
-        long UNIX = System.currentTimeMillis() / 1000;
-        Base58.getSignature(addressTO, MSG, value, UNIX, new Base58.CallBackSigner() {
-            @Override
-            public void onDone(String signed1, String unix1, String val1, String fee1, String msg1) {
-                signature = signed1;
-                val = val1;
-                fee = fee1;
-                unixTime = unix1;
-                message = msg1;
-
-                System.out.println("SIGNING DONE VALUES: ");
-                System.out.println(val);
-                System.out.println(signature);
-                System.out.println(fee);
-                System.out.println(unixTime);
-                System.out.println(message);
-
-
-                ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-                                               @Override
-                                               public void onFeedback(final JSONObject object) {
-                                                   run.run();
-                                                   if (object == null || object.toString().contains("error")) {
-                                                       Handler h = new Handler(HomeView.instance.getMainLooper());
-                                                       h.post(new Runnable() {
-                                                           @Override
-                                                           public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Error:").content("Message: " + "\n" +
-                                                                                   object.get("data") + " <-> ")
-                                                                           .cancelable(true).show();
-                                                               } catch (Exception e) {
-                                                                   e.printStackTrace();
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Error:")
-                                                                           .content("Message: " + "\n" + e.getMessage())
-                                                                           .cancelable(true).show();
-                                                               }
-                                                           }
-                                                       });
-
-                                                   } else {
-                                                       Handler h = new Handler(instance.getMainLooper());
-                                                       h.post(new Runnable() {
-                                                           @Override
-                                                           public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Transaction sent!")
-                                                                           .content("Your transaction ID:" + "\n" +
-                                                                                   object.get("data").toString())
-                                                                           .cancelable(true).show();
-                                                               } catch (final Exception e) {
-                                                                   e.printStackTrace();
-                                                                   Handler h = new Handler(instance.getMainLooper());
-                                                                   h.post(new Runnable() {
-                                                                       @Override
-                                                                       public void run() {
-                                                                           MaterialDialog d = new MaterialDialog.Builder(
-                                                                                   HomeView.instance).title("Error:")
-                                                                                   .content("Debug: " + e.getMessage())
-                                                                                   .cancelable(true).show();
-                                                                       }
-                                                                   });
-                                                               }
-                                                           }
-                                                       });
-
-                                                   }
-
-                                               }
-                                           }, "send", new ApiRequest.Argument("val", val),
-                        new ApiRequest.Argument("dst", addressTO),
-                        new ApiRequest.Argument("public_key", public_key),
-                        new ApiRequest.Argument("signature", signature),
-                        new ApiRequest.Argument("date", unixTime),
-                        new ApiRequest.Argument("message", message), new ApiRequest.Argument("version", 1));
-
-
-            }
-        });
     }
 
     @Override
@@ -413,46 +266,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         for (String sd : thanks)
             build += sd + "\n";
         t.setText(build);
-    }
-
-
-    public void refreshLastTransactions() {
-        refreshing = true;
-        findViewById(R.id.waitingtransbar).setVisibility(View.VISIBLE);
-        ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-                                       @Override
-                                       public void onFeedback(JSONObject object) {
-                                           System.out.println("GOT RESPONSE!");
-                                           try {
-
-                                               TextView test = findViewById(R.id.balancevalue);
-                                               test.setText(object.get("data").toString() + " ARO");
-                                           } catch (Exception e) {
-
-                                           }
-                                       }
-                                   }, "getBalance", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", address));
-        ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-
-                                       @Override
-                                       public void onFeedback(JSONObject object) {
-                                           try {
-                                               sortArrayAndPutInList(object.getJSONArray("data"), (ListView) findViewById(R.id.transactionlist));
-                                               Handler h = new Handler(instance.getMainLooper());
-                                               h.post(new Runnable() {
-                                                   @Override
-                                                   public void run() {
-                                                       findViewById(R.id.waitingtransbar).setVisibility(GONE);
-                                                   }
-                                               });
-                                           } catch (Exception e) {
-                                               e.printStackTrace();
-                                           }
-                                           refreshing = false;
-                                       }
-                                   }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "10"));
     }
 
     public void setupPages() {
@@ -1048,6 +861,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         });
     }
 
+    public static String getPublic_key() {
+        return public_key;
+    }
+
     public void sortArrayAndPutInList(JSONArray array, final ListView view) {
         try {
 
@@ -1570,5 +1387,167 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
     public abstract class Call {
         public abstract void onDone(JSONObject o);
+    }
+
+    public static String getAddress() {
+        return address;
+    }
+
+    public static String getPrivate_key() {
+        return private_key;
+    }
+
+    public static String doubleVal(final Double d) {
+        return d == null ? "" : doubleVal(d.doubleValue());
+    }
+
+    public static String doubleVal(final double d) {
+        int afterlength = getDecimals(d);
+        String temp = "";
+        for (int i = 0; i < afterlength; i++)
+            temp += "#";
+        DecimalFormat format = new DecimalFormat("0." + temp);
+
+        return format.format(d);
+    }
+
+    public static int getDecimals(double d) {
+        String[] splitt = (d + "").split("\\.");
+        if (splitt.length <= 1)
+            return 0;
+        String after = splitt[1];
+        while (after.lastIndexOf("0") == after.length())
+            after = after.substring(0, after.length() - 1);
+        if (after.length() > 10)
+            return 10;
+        return after.length();
+    }
+
+    public static String getCurrentPeer() {
+        return currentPeer;
+    }
+
+    public static void makeTransaction(final String addressTO, double value, String MSG, final Runnable run) {
+        long UNIX = System.currentTimeMillis() / 1000;
+        Base58.getSignature(addressTO, MSG, value, UNIX, new Base58.CallBackSigner() {
+            @Override
+            public void onDone(String signed1, String unix1, String val1, String fee1, String msg1) {
+                signature = signed1;
+                val = val1;
+                fee = fee1;
+                unixTime = unix1;
+                message = msg1;
+
+                System.out.println("SIGNING DONE VALUES: ");
+                System.out.println(val);
+                System.out.println(signature);
+                System.out.println(fee);
+                System.out.println(unixTime);
+                System.out.println(message);
+
+
+                ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+                                               @Override
+                                               public void onFeedback(final JSONObject object) {
+                                                   run.run();
+                                                   if (object == null || object.toString().contains("error")) {
+                                                       Handler h = new Handler(HomeView.instance.getMainLooper());
+                                                       h.post(new Runnable() {
+                                                           @Override
+                                                           public void run() {
+                                                               try {
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                                           .title("Error:").content("Message: " + "\n" +
+                                                                                   object.get("data") + " <-> ")
+                                                                           .cancelable(true).show();
+                                                               } catch (Exception e) {
+                                                                   e.printStackTrace();
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                                           .title("Error:")
+                                                                           .content("Message: " + "\n" + e.getMessage())
+                                                                           .cancelable(true).show();
+                                                               }
+                                                           }
+                                                       });
+
+                                                   } else {
+                                                       Handler h = new Handler(instance.getMainLooper());
+                                                       h.post(new Runnable() {
+                                                           @Override
+                                                           public void run() {
+                                                               try {
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                                           .title("Transaction sent!")
+                                                                           .content("Your transaction ID:" + "\n" +
+                                                                                   object.get("data").toString())
+                                                                           .cancelable(true).show();
+                                                               } catch (final Exception e) {
+                                                                   e.printStackTrace();
+                                                                   Handler h = new Handler(instance.getMainLooper());
+                                                                   h.post(new Runnable() {
+                                                                       @Override
+                                                                       public void run() {
+                                                                           MaterialDialog d = new MaterialDialog.Builder(
+                                                                                   HomeView.instance).title("Error:")
+                                                                                   .content("Debug: " + e.getMessage())
+                                                                                   .cancelable(true).show();
+                                                                       }
+                                                                   });
+                                                               }
+                                                           }
+                                                       });
+
+                                                   }
+
+                                               }
+                                           }, "send", new ApiRequest.Argument("val", val),
+                        new ApiRequest.Argument("dst", addressTO),
+                        new ApiRequest.Argument("public_key", public_key),
+                        new ApiRequest.Argument("signature", signature),
+                        new ApiRequest.Argument("date", unixTime),
+                        new ApiRequest.Argument("message", message), new ApiRequest.Argument("version", 1));
+
+
+            }
+        });
+    }
+
+    public void refreshLastTransactions() {
+        refreshing = true;
+        findViewById(R.id.waitingtransbar).setVisibility(View.VISIBLE);
+        ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+                                       @Override
+                                       public void onFeedback(JSONObject object) {
+                                           System.out.println("GOT RESPONSE!");
+                                           try {
+
+                                               TextView test = findViewById(R.id.balancevalue);
+                                               test.setText(object.get("data").toString() + " ARO");
+                                           } catch (Exception e) {
+
+                                           }
+                                       }
+                                   }, "getBalance", new ApiRequest.Argument("public_key", public_key),
+                new ApiRequest.Argument("account", address));
+        ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+
+                                       @Override
+                                       public void onFeedback(JSONObject object) {
+                                           try {
+                                               sortArrayAndPutInList(object.getJSONArray("data"), (ListView) findViewById(R.id.transactionlist));
+                                               Handler h = new Handler(instance.getMainLooper());
+                                               h.post(new Runnable() {
+                                                   @Override
+                                                   public void run() {
+                                                       findViewById(R.id.waitingtransbar).setVisibility(GONE);
+                                                   }
+                                               });
+                                           } catch (Exception e) {
+                                               e.printStackTrace();
+                                           }
+                                           refreshing = false;
+                                       }
+                                   }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
+                new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "10"));
     }
 }
