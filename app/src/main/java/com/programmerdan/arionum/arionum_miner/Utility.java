@@ -1,43 +1,9 @@
-/**
- * The MIT License (MIT)
- * Copyright (c) 2018 AroDev, adaptation portions (c) 2018 ProgrammerDan (Daniel Boston)
- * <p>
- * www.arionum.com
- * <p>
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * <p>
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of
- * the Software.
- * <p>
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
- * OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.programmerdan.arionum.arionum_miner;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 
-/**
- * Low efficiency port of base58 conversion utils from 
- * commit e14b696362fb79d60c4ff8bc651185740b8021d9 on https://github.com/arionum/miner
- *
- * Credit to AroDev, and for base58 functions: https://github.com/tuupola/base58/
- *
- * @author ProgrammerDan (Daniel Boston)
- *
- */
 public class Utility {
     public static String base58_chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -86,16 +52,7 @@ public class Utility {
         return new String(converted, Charset.forName("ASCII"));
     }
 
-    /**
-     * Be aware that php and java deal with number conversion pretty
-     * divergently. More testing and figurin' needs doing to get this to
-     * match the output of the php function.
-     *
-     * Use base58_decode string variant, where parity is achieved.
-     *
-     * @param data
-     * @return
-     */
+
     public static BigInteger base58_decodeInt(String data) {
         char[] dat = data.toCharArray();
         byte[] map = new byte[dat.length];

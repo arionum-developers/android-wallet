@@ -543,6 +543,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 String s = df.format(d);
                                                 if (s.startsWith(","))
                                                     s = "0" + s;
+                                                if (s.startsWith("."))
+                                                    s = "0" + s;
 
                                                 ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + dur);
                                                 ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
@@ -614,7 +616,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 parsed = Integer.parseInt(text);
                                             } catch (Exception e) {
                                             }
-                                            t.setText((parsed + 1));
+                                            t.setText((parsed + 1) + "");
                                         }
                                     });
                                 }
@@ -708,6 +710,13 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                         @Override
                                         public void run() {
                                             t.setText(dur);
+                                            try {
+                                                long l = Long.parseLong(dur);
+                                                if (Miner.finalDuration >= l)
+                                                    Miner.finalDuration = l;
+                                            } catch (Exception e) {
+
+                                            }
                                         }
                                     });
                                 }

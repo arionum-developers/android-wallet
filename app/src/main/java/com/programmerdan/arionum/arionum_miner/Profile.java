@@ -2,11 +2,6 @@ package com.programmerdan.arionum.arionum_miner;
 
 import java.util.Arrays;
 
-/**
- * Lightweight tracking profile to keep track of how well a particular configuration did
- *
- * @author ProgrammerDan
- */
 public class Profile implements Comparable<Profile> {
     AdvMode[] workerTypes;
     long hashes;
@@ -18,7 +13,7 @@ public class Profile implements Comparable<Profile> {
 
     public Profile(int workers) {
         workerTypes = new AdvMode[workers];
-        hashes = 0l; //new long[workers];
+        hashes = 0l;
         sampleTime = 0;
         rate = 0.0d;
         this.sampleBegin = 0l;
@@ -27,7 +22,7 @@ public class Profile implements Comparable<Profile> {
 
     public Profile(AdvMode... workers) {
         workerTypes = workers;
-        hashes = 0l;//new long[ workers.length ];
+        hashes = 0l;
         sampleTime = 0;
         rate = 0.0d;
         this.sampleBegin = 0;
@@ -63,7 +58,7 @@ public class Profile implements Comparable<Profile> {
     }
 
     public void update(long hashes, long time) {
-        this.hashes += hashes; //[idx] = hashes;
+        this.hashes += hashes;
         if (time > this.sampleTime)
             this.sampleTime = time;
     }
@@ -78,7 +73,7 @@ public class Profile implements Comparable<Profile> {
 			accumulate += hash;
 		}*/
         if (this.sampleTime > 0) {
-            rate = (double) hashes / (double) this.sampleTime; //accumulate / this.sampleTime;
+            rate = (double) hashes / (double) this.sampleTime;
         } else {
             rate = 0d;
         }
@@ -86,11 +81,6 @@ public class Profile implements Comparable<Profile> {
     }
 
     public long getHashes() {
-		/*long accumulate = 0l;
-		for (long hash : hashes) {
-			accumulate += hash;
-		}
-		return accumulate;*/
         return hashes;
     }
 

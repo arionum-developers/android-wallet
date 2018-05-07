@@ -1,30 +1,6 @@
-/**
- * The MIT License (MIT)
- * Copyright (c) 2018 AroDev, adaptation portions (c) 2018 ProgrammerDan (Daniel Boston)
- * <p>
- * www.arionum.com
- * <p>
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * <p>
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of
- * the Software.
- * <p>
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
- * OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.programmerdan.arionum.arionum_miner;
 
+import android.os.AsyncTask;
 import android.os.Handler;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -58,20 +34,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import arionum.net.cubedpixels.views.HomeView;
 
 
-/**
- * Miner wrapper.
- *
- * Implements hard fork 10800 -- Resistance
- */
 @SuppressWarnings({"unused"})
 public class Miner implements UncaughtExceptionHandler {
 
     public static final long UPDATING_DELAY = 2000l;
     public static final long UPDATING_REPORT = 45000l;
     public static final long UPDATING_STATS = 7500l;
-    protected static final long TEST_PERIOD = 270000; // 4.5 minutes
-    protected static final long INIT_DELAY = 30000; // .5 minutes
-    protected static final long REPORTING_INTERVAL = 60000l; // 60 seconds
+    protected static final long TEST_PERIOD = 270000;
+    protected static final long INIT_DELAY = 30000;
+    protected static final long REPORTING_INTERVAL = 60000l;
     private static final long MIN_HASHES_PER_SESSION = 1l;
     private static final long MIN_SESSION_LENGTH = 5000l;
     private static final long MAX_SESSION_LENGTH = 14000l;
@@ -81,52 +52,26 @@ public class Miner implements UncaughtExceptionHandler {
     private static callbackMiner callbackMiner;
     private static long sleep;
     protected final AtomicInteger hasherCount;
-    /**
-     * Count of all hashes produced by workers.
-     */
     protected final AtomicLong hashes;
-    /**
-     * Record of best DL so far this block
-     */
     protected final AtomicLong bestDL;
-    /**
-     * Count of all submits attempted
-     */
     protected final AtomicLong sessionSubmits;
-    /**
-     * Count of submits rejected (orphan, or old data hashes)
-     */
     protected final AtomicLong sessionRejects;
     protected final AtomicLong blockShares;
     protected final AtomicLong blockFinds;
     protected final long wallClockBegin;
-    /**
-     * Non-main thread group that handles submitting nonces.
-     */
     private final ExecutorService submitters;
-    /*
-     * Worker statistics
-     */
     private final ConcurrentLinkedQueue<HasherStats> deadWorkerSociety;
     private final AtomicLong deadWorkers;
     private final ConcurrentHashMap<String, Long> deadWorkerLives;
-    /**
-     * One or more hashing threads.
-     */
     private final ExecutorService hashers;
     private final ConcurrentHashMap<String, Hasher> workers;
-    /**
-     * Let's thread off updating. We'll just hash constantly, and offload updating like submitting.
-     */
     private final ExecutorService updaters;
-    /* stats on update timing */
     private final AtomicLong updateTimeAvg;
     private final AtomicLong updateTimeMax;
     private final AtomicLong updateTimeMin;
     private final AtomicLong updateParseTimeAvg;
     private final AtomicLong updateParseTimeMax;
     private final AtomicLong updateParseTimeMin;
-    /* stats on submission timing */
     private final AtomicLong submitTimeAvg;
     private final AtomicLong submitTimeMax;
     private final AtomicLong submitTimeMin;
@@ -137,28 +82,15 @@ public class Miner implements UncaughtExceptionHandler {
     protected boolean active = false;
     protected boolean colors = false;
     private int maxHashers;
-    /**
-     * Idea here is some soft profiling; hashesPerSession records how many hashes a
-     * particular worker accomplishes in a session, which starts at some initial value;
-     * then we tune it based on observed results.
-     */
     private long hashesPerSession = 10l;
-    /**
-     * The session length is the target parameter generally tuned against
-     */
     private long sessionLength = 5000l;
     private long lastRebalance;
     private double lastRebalanceHashRate = Double.MAX_VALUE;
     private double lastRebalanceTiC = 0.0d;
     private long lastRebalanceSessionLength = 0l;
-    /**
-     * Last time we checked with workers
-     */
     private long lastWorkerReport;
-    /* ==== Now update / init vars ==== */
     private MinerType type;
     private AdvMode hasherMode;
-    /* Block / Data related */
     private String node;
     private String worker;
     private String publicKey;
@@ -168,7 +100,6 @@ public class Miner implements UncaughtExceptionHandler {
     private long limit;
     private long height;
     private long lastBlockUpdate;
-    /* Update related */
     private AtomicLong lastSpeed;
     private AtomicLong speedAccrue;
     private long lastUpdate;
@@ -178,17 +109,14 @@ public class Miner implements UncaughtExceptionHandler {
     private int skips;
     private int failures;
     private int updates;
-    /* AUTO BOT MODE */
     private Profile activeProfile;
     private TreeSet<Profile> evaluatedProfiles;
     private ConcurrentLinkedQueue<Profile> profilesToEvaluate;
     private int coreCap;
     private long nextProfileSwap;
     private long profilesTested;
-    /* Future todo: reassess periodically */
     private long nextReassess;
     private Profile toReassess;
-    /* External stats reporting */
     private String statsHost;
     private String statsInvoke;
     private String statsToken;
@@ -214,11 +142,6 @@ public class Miner implements UncaughtExceptionHandler {
         return miner;
     }
 
-    /**
-     * Reference: http://php.net/manual/en/function.uniqid.php#95001
-     *
-     * @return a quasi-unique identifier.
-     */
     public static String php_uniqid() {
         double m = ((double) (System.nanoTime() / 10)) / 10000d;
         return String.format("%8x%05x", (long) Math.floor(m), (long) ((m - Math.floor(m)) * 1000000)).trim();
@@ -250,16 +173,13 @@ public class Miner implements UncaughtExceptionHandler {
         lastSendSpeed = System.currentTimeMillis();
 
 
-        /* autotune */
         activeProfile = null;
         TreeSet<Profile> evaluatedProfiles = new TreeSet<Profile>();
         ConcurrentLinkedQueue<Profile> profilesToEvaluate = new ConcurrentLinkedQueue<Profile>();
         int coreCap = Runtime.getRuntime().availableProcessors();
         long nextProfileSwap = 0;
         long profilesTested = 0;
-        /* end autotune */
 
-        /* stats report */
         this.statsHost = null;
         this.statsInvoke = "report.php";
         this.statsToken = php_uniqid();
@@ -267,7 +187,6 @@ public class Miner implements UncaughtExceptionHandler {
         this.statsStage = new ConcurrentHashMap<String, HasherStats>();
         this.statsReport = new ConcurrentLinkedQueue<HasherStats>();
         this.stats = Executors.newCachedThreadPool();
-        /* end stats report */
 
         this.hashes = new AtomicLong();
         this.bestDL = new AtomicLong(Long.MAX_VALUE);
@@ -326,7 +245,7 @@ public class Miner implements UncaughtExceptionHandler {
         this.hashers = Executors.newFixedThreadPool(
                 this.maxHashers > 0 ? this.maxHashers : Runtime.getRuntime().availableProcessors());
 
-        this.limit = 240; // default
+        this.limit = 240;
         this.wallClockBegin = System.currentTimeMillis();
     }
 
@@ -370,13 +289,10 @@ public class Miner implements UncaughtExceptionHandler {
                             if (MinerType.pool.equals(type)) {
                                 extra.append("&worker=").append(URLEncoder.encode(worker, "UTF-8"));
 
-                                // recommend not to constantly update this either, so send in first update then not again for 10 mins.
                                 if (firstRun.get() || (!sentSpeed.get() && supercycles > 15)) {
                                     extra.append("&address=").append(privateKey);
                                 }
 
-                                // All the frequent speed sends was placing a large UPDATE burden on the pool, so now
-                                // first h/s is sent 30s after start, and every 10 mins after that. Should help.
                                 if (!sendSpeed && lastSendSpeed + 1000 * 20 < System.currentTimeMillis()) {
                                     extra.append("&hashrate=").append(cummSpeed);
                                     lastSendSpeed = System.currentTimeMillis();
@@ -502,7 +418,7 @@ public class Miner implements UncaughtExceptionHandler {
                         }
                     }
                 });
-                if (firstRun.get()) { // Failures after initial are probably just temporary so we ignore them.
+                if (firstRun.get()) {
                     try {
                         if (update.get().booleanValue()) {
                             firstRun.set(false);
@@ -513,7 +429,7 @@ public class Miner implements UncaughtExceptionHandler {
                     } catch (InterruptedException | ExecutionException e) {
 
                     } finally {
-                        if (firstRun.get() && firstAttempts > 15) { // failure!
+                        if (firstRun.get() && firstAttempts > 15) {
                             System.out.println("ACTIVE == FALSE");
                             active = false;
                             firstRun.set(false);
@@ -528,7 +444,6 @@ public class Miner implements UncaughtExceptionHandler {
                                 active = false;
                                 firstRun.set(false);
                                 updateLoop[0] = false;
-                                // interruption shuts us down.
                             }
 
                         }
@@ -554,14 +469,13 @@ public class Miner implements UncaughtExceptionHandler {
                 Thread.sleep(UPDATING_DELAY);
             } catch (InterruptedException ie) {
                 active = false;
-                // interruption shuts us down.
             }
 
             if (cycles == 30) {
                 cycles = 0;
             }
 
-            if (supercycles == 300) { // 10 minutes
+            if (supercycles == 300) {
                 supercycles = 0;
                 sentSpeed.set(false);
             }
@@ -589,9 +503,6 @@ public class Miner implements UncaughtExceptionHandler {
         workers.remove(workerId);
     }
 
-    /**
-     * We update all workers with latest information from pool / node
-     */
     protected void updateWorkers() {
         for (Hasher h : workers.values()) {
             if (h != null && h.isActive()) {
@@ -602,30 +513,13 @@ public class Miner implements UncaughtExceptionHandler {
 
 
 
-    /**
-     * We update a specific worker with latest information from pool / node.
-     *
-     * @param hasher
-     *            the worker to update
-     */
     protected void updateWorker(Hasher hasher) {
         hasher.update(getDifficulty(), getBlockData(), getLimit(), getPublicKey(), getHeight(), callbackMiner);
     }
 
-    /**
-     * When a new worker is started, no-op for now.
-     *
-     * @param workerId
-     */
     protected void workerInit(final String workerId) {
     }
 
-    /**
-     * When a worker is done, tosses its stats on the pile and initiates a new worker with updated runlength goals.
-     *
-     * @param stats outgoing worker stats
-     * @param worker outgoing worker
-     */
     protected void workerFinish(HasherStats stats, Hasher worker) {
         this.deadWorkerSociety.offer(stats);
         releaseWorker(worker.getID());
@@ -642,12 +536,6 @@ public class Miner implements UncaughtExceptionHandler {
         addWorker(workerId, hasher);
     }
 
-    /**
-     * When a worker's session is done, tosses its stats on the pile and updates the worker with updated runlength goals.
-     *
-     * @param stats outgoing session stats
-     * @param worker outgoing worker
-     */
     protected long[] sessionFinish(HasherStats stats, Hasher worker) {
         this.deadWorkerSociety.offer(stats);
         try {
@@ -658,9 +546,6 @@ public class Miner implements UncaughtExceptionHandler {
         return new long[]{this.hashesPerSession, this.sessionLength * 2l};
     }
 
-    /**
-     * Periodically we tally up reports from finished worker tasks
-     */
     protected void refreshFromWorkers() {
         long wallTime = System.currentTimeMillis() - lastWorkerReport;
         lastWorkerReport = System.currentTimeMillis();
@@ -685,9 +570,7 @@ public class Miner implements UncaughtExceptionHandler {
                     report.shares += worker.shares;
                     report.finds += worker.finds;
 
-                    // shares are nonces < difficulty > 0 and >= 240
                     blockShares.addAndGet(worker.shares);
-                    // finds are nonces < 240 (block discovery)
                     blockFinds.addAndGet(worker.finds);
 
                     long argonTime = worker.argonTime;
@@ -789,7 +672,7 @@ public class Miner implements UncaughtExceptionHandler {
                 shaEff += report.shaEff * 100d;
             }
 
-            if (waitEff < 0.0d) waitEff = 0.0d; // -% is meaningless...
+            if (waitEff < 0.0d) waitEff = 0.0d;
 
 
         } catch (Throwable t) {
@@ -801,7 +684,9 @@ public class Miner implements UncaughtExceptionHandler {
     }
 
     protected void updateStats() {
-
+        String a = "1";
+        if (a.equalsIgnoreCase("1"))
+            return;
         this.stats.submit(new Runnable() {
             public void run() {
                 HasherStats latest = null;
@@ -816,7 +701,6 @@ public class Miner implements UncaughtExceptionHandler {
                                     .append("&elapsed=").append(latest.hashTime);
                         }
 
-                        //System.out.println("Reporting stats: " + to.toString());
 
                         URL url = new URL(to.toString());
                         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -828,7 +712,6 @@ public class Miner implements UncaughtExceptionHandler {
 
                             StringBuilder data = new StringBuilder();
 
-                            // argon, just the hash bit since params are universal
                             data.append(URLEncoder.encode("hashes", "UTF-8")).append("=")
                                     .append(URLEncoder.encode(Long.toString(latest.hashes), "UTF-8")).append("&");
                             data.append(URLEncoder.encode("elapsed", "UTF-8")).append("=")
@@ -844,11 +727,9 @@ public class Miner implements UncaughtExceptionHandler {
 
                         int status = con.getResponseCode();
                         if (status != HttpURLConnection.HTTP_OK) {
-                            // quietly fail..?
                             System.err.println("Failed to report stats: " + status);
                         }
                     } catch (IOException ioe) {
-                        // quietly fail.
                         System.err.println("Failed to report stats: " + ioe.getMessage());
                     }
                 }
@@ -875,7 +756,6 @@ public class Miner implements UncaughtExceptionHandler {
                         }
                     }
 
-                    //System.out.println("Reporting submit: " + to.toString());
 
                     URL url = new URL(to.toString());
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -911,11 +791,9 @@ public class Miner implements UncaughtExceptionHandler {
 
                     int status = con.getResponseCode();
                     if (status != HttpURLConnection.HTTP_OK) {
-                        // quietly fail..?
                         System.err.println("Failed to report submit: " + status);
                     }
                 } catch (IOException ioe) {
-                    // quietly fail.
                     System.err.println("Failed to report submit: " + ioe.getMessage());
                 }
             }
@@ -925,104 +803,85 @@ public class Miner implements UncaughtExceptionHandler {
     protected void submit(final String nonce, final String argon, final long submitDL, final long difficulty, final String workerType) {
         if (height == 0)
             return;
-        this.submitters.submit(new Runnable() {
-            public void run() {
 
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
                 StringBuilder extra = new StringBuilder(node);
                 extra.append("/mine.php?q=submitNonce");
                 int failures = 0;
-                boolean notDone = true;
-                while (notDone) {
-                    long executionTimeTracker = System.currentTimeMillis();
-                    try {
-                        URL url = new URL(extra.toString());
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                        con.setRequestMethod("POST");
-                        con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-                        con.setDoOutput(true);
-                        DataOutputStream out = new DataOutputStream(con.getOutputStream());
+                long executionTimeTracker = System.currentTimeMillis();
+                try {
+                    URL url = new URL(extra.toString());
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("POST");
+                    con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                    con.setDoOutput(true);
+                    DataOutputStream out = new DataOutputStream(con.getOutputStream());
 
-                        StringBuilder data = new StringBuilder();
+                    StringBuilder data = new StringBuilder();
 
-                        // argon, just the hash bit since params are universal
-                        data.append(URLEncoder.encode("argon", "UTF-8")).append("=")
-                                .append(URLEncoder.encode(argon.substring(30), "UTF-8")).append("&");
-                        // nonce
-                        data.append(URLEncoder.encode("nonce", "UTF-8")).append("=")
-                                .append(URLEncoder.encode(nonce, "UTF-8")).append("&");
-                        // private key?
-                        data.append(URLEncoder.encode("private_key", "UTF-8")).append("=")
-                                .append(URLEncoder.encode(privateKey, "UTF-8")).append("&");
-                        // public key
-                        data.append(URLEncoder.encode("public_key", "UTF-8")).append("=")
-                                .append(URLEncoder.encode(publicKey, "UTF-8")).append("&");
-                        // address (which is prikey again?)
-                        data.append(URLEncoder.encode("address", "UTF-8")).append("=")
-                                .append(URLEncoder.encode(privateKey, "UTF-8")).append("&");
+                    data.append(URLEncoder.encode("argon", "UTF-8")).append("=")
+                            .append(URLEncoder.encode(argon.substring(30), "UTF-8")).append("&");
+                    data.append(URLEncoder.encode("nonce", "UTF-8")).append("=")
+                            .append(URLEncoder.encode(nonce, "UTF-8")).append("&");
+                    data.append(URLEncoder.encode("private_key", "UTF-8")).append("=")
+                            .append(URLEncoder.encode(privateKey, "UTF-8")).append("&");
+                    data.append(URLEncoder.encode("public_key", "UTF-8")).append("=")
+                            .append(URLEncoder.encode(publicKey, "UTF-8")).append("&");
+                    data.append(URLEncoder.encode("address", "UTF-8")).append("=")
+                            .append(URLEncoder.encode(privateKey, "UTF-8")).append("&");
 
-                        // block height
-                        data.append(URLEncoder.encode("height", "UTF-8")).append("=")
-                                .append(height);
+                    data.append(URLEncoder.encode("height", "UTF-8")).append("=")
+                            .append(height);
 
-                        System.out.println("MAKING REQUEST WITH DATA: " + data);
+                    System.out.println("MAKING REQUEST WITH DATA: " + data);
 
-                        out.writeBytes(data.toString());
+                    out.writeBytes(data.toString());
 
-                        out.flush();
-                        out.close();
+                    out.flush();
+                    out.close();
 
-                        sessionSubmits.incrementAndGet();
+                    sessionSubmits.incrementAndGet();
 
-                        int status = con.getResponseCode();
-                        if (status != HttpURLConnection.HTTP_OK) {
-                            con.disconnect();
-                            failures++;
-                            submitTime(System.currentTimeMillis() - executionTimeTracker);
-                        } else {
-                            long parseTimeTracker = System.currentTimeMillis();
-                            BufferedReader b = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                            String s = b.readLine();
-                            JSONObject obj = new JSONObject(s);
-
-                            if (!"ok".equals(obj.get("status"))) {
-                                sessionRejects.incrementAndGet();
-                                System.out.println(" Raw Failure: " + obj.toString());
-                                callbackMiner.onReject(obj.toString());
-                                submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
-
-                            } else {
-                                System.out.println("DONE ACCEPTED SHARE " + obj.toString());
-                                callbackMiner.onAccept(obj.toString());
-                                submitStats(nonce, argon, submitDL, difficulty, workerType, failures, true);
-                            }
-                            notDone = false;
-
-                            con.disconnect();
-
-                            submitTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
-                        }
-                    } catch (IOException e) {
+                    int status = con.getResponseCode();
+                    if (status != HttpURLConnection.HTTP_OK) {
+                        con.disconnect();
                         failures++;
-
-
                         submitTime(System.currentTimeMillis() - executionTimeTracker);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    if (failures > 5) {
-                        notDone = false;
-                        sessionRejects.incrementAndGet();
-                        submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
-                    } else if (failures > 0) {
-                        try {
-                            Thread.sleep(50l * failures);
-                        } catch (InterruptedException ioe) {
-                        }
-                    }
-                }
+                    } else {
+                        long parseTimeTracker = System.currentTimeMillis();
+                        BufferedReader b = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                        String s = b.readLine();
+                        JSONObject obj = new JSONObject(s);
 
+                        if (!"ok".equals(obj.get("status"))) {
+                            sessionRejects.incrementAndGet();
+                            System.out.println(" Raw Failure: " + obj.toString());
+                            callbackMiner.onReject(obj.toString());
+                            submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
+
+                        } else {
+                            System.out.println("DONE ACCEPTED SHARE " + obj.toString());
+                            callbackMiner.onAccept(obj.toString());
+                            submitStats(nonce, argon, submitDL, difficulty, workerType, failures, true);
+                        }
+
+                        con.disconnect();
+
+                        submitTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
+                    }
+                } catch (IOException e) {
+                    failures++;
+
+
+                    submitTime(System.currentTimeMillis() - executionTimeTracker);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
             }
-        });
+        }.execute(null, null, null);
     }
 
     private String speed() {
@@ -1086,7 +945,6 @@ public class Miner implements UncaughtExceptionHandler {
         System.out.println("Utility Test on " + this.publicKey);
         String refKey = this.publicKey;
 
-        // No tests at present.
 
         System.out.println("Done static testing.");
     }
