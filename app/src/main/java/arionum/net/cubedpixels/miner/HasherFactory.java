@@ -1,4 +1,4 @@
-package com.programmerdan.arionum.arionum_miner;
+package arionum.net.cubedpixels.miner;
 
 public class HasherFactory {
 

@@ -67,7 +67,6 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.nineoldandroids.view.ViewHelper;
-import com.programmerdan.arionum.arionum_miner.Miner;
 
 import net.glxn.qrgen.android.QRCode;
 
@@ -87,6 +86,7 @@ import java.util.Scanner;
 import arionum.net.cubedpixels.MainActivity;
 import arionum.net.cubedpixels.R;
 import arionum.net.cubedpixels.api.ApiRequest;
+import arionum.net.cubedpixels.miner.Miner;
 import arionum.net.cubedpixels.style.Styler;
 import arionum.net.cubedpixels.utils.Base58;
 import arionum.net.cubedpixels.utils.CrossfadeWrapper;
@@ -342,8 +342,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         public void run() {
 
                             miner = Miner.main(new Miner.callbackMiner() {
+                                long bestRECORDEDdelay = Long.MAX_VALUE;
+
                                 @Override
-                                public void onHashRate(final String hash, final String dur) {
+                                public void onHashRate(final String hash, final long dur) {
                                     Handler h = new Handler(HomeView.this.getMainLooper());
                                     h.post(new Runnable() {
                                         @Override
@@ -358,7 +360,11 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 if (s.startsWith("."))
                                                     s = "0" + s;
 
-                                                ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + dur);
+                                                if (dur < bestRECORDEDdelay)
+                                                    bestRECORDEDdelay = dur;
+                                                Miner.finalDuration = bestRECORDEDdelay;
+
+                                                ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + bestRECORDEDdelay);
                                                 ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
 
                                                 GraphView graph = findViewById(R.id.graph);
@@ -395,6 +401,28 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 }
 
                                 @Override
+                                public void onDLChange(final String hash, final long bestDelay) {
+                                    Handler h = new Handler(HomeView.this.getMainLooper());
+                                    h.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            DecimalFormat df = new DecimalFormat("#.00");
+                                            double d = Double.parseDouble(hash.replace(",", "."));
+
+                                            String s = df.format(d);
+                                            if (s.startsWith(","))
+                                                s = "0" + s;
+                                            if (s.startsWith("."))
+                                                s = "0" + s;
+                                            if (bestDelay < bestRECORDEDdelay)
+                                                bestRECORDEDdelay = bestDelay;
+                                            Miner.finalDuration = bestRECORDEDdelay;
+                                            ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + bestRECORDEDdelay);
+                                        }
+                                    });
+                                }
+
+                                @Override
                                 public void onShare(final String hash) {
                                     Handler h = new Handler(HomeView.this.getMainLooper());
                                     h.post(new Runnable() {
@@ -402,11 +430,12 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                         public void run() {
                                             System.out.println("FOUND SHARE = " + hash);
 
+                                            String foundShare = hash.contains("SHAREPOOL") ? "Sharepool found a share!" : "Found a share";
                                             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
                                                     HomeView.this, "ARONOTIFICATIONS")
                                                     .setSmallIcon(R.drawable.aro)
                                                     .setContentTitle("Arionum Wallet | Miner")
-                                                    .setContentText("Found a share")
+                                                    .setContentText(foundShare)
                                                     .setChannelId("notify_001")
                                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
@@ -419,7 +448,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                         NotificationManager.IMPORTANCE_DEFAULT);
                                                 mNotificationManager.createNotificationChannel(channel);
                                             }
-                                            mNotificationManager.notify(1347, mBuilder.build());
+                                            mNotificationManager.notify(1047 + new Random().nextInt(1000), mBuilder.build());
 
                                             TextView t = findViewById(R.id.shares);
                                             String text = t.getText().toString();
@@ -437,15 +466,15 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 public void onReject(String hash) {
                                     System.out.println("FOUND REJECT = " + hash);
 
-
+                                    String foundShare = hash.contains("SHAREPOOL") ? "Sharepool share has been rejected!" : "Share got rejected!";
                                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
                                             HomeView.this, "ARONOTIFICATIONS")
                                             .setSmallIcon(R.drawable.aro)
                                             .setContentTitle("Arionum Wallet | Miner")
-                                            .setContentText("Share got rejected!")
+                                            .setContentText(foundShare)
                                             .setStyle(
                                                     new NotificationCompat.InboxStyle()
-                                                            .addLine("Share got rejected")
+                                                            .addLine(foundShare)
                                                             .addLine(hash)
                                             )
                                             .setChannelId("notify_001")
@@ -460,7 +489,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 NotificationManager.IMPORTANCE_DEFAULT);
                                         mNotificationManager.createNotificationChannel(channel);
                                     }
-                                    mNotificationManager.notify(1357, mBuilder.build());
+                                    mNotificationManager.notify(1357 + new Random().nextInt(200), mBuilder.build());
                                 }
 
                                 @Override
@@ -487,7 +516,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 NotificationManager.IMPORTANCE_DEFAULT);
                                         mNotificationManager.createNotificationChannel(channel);
                                     }
-                                    mNotificationManager.notify(1357, mBuilder.build());
+                                    mNotificationManager.notify(1357 + new Random().nextInt(100), mBuilder.build());
                                 }
 
                                 @Override
@@ -498,7 +527,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                             HomeView.this, "ARONOTIFICATIONS")
                                             .setSmallIcon(R.drawable.aro)
                                             .setContentTitle("Arionum Wallet | Miner")
-                                            .setContentText("Share got accepted!")
+                                            .setContentText("FIND got accepted!")
                                             .setChannelId("notify_001")
                                             .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
@@ -511,7 +540,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                 NotificationManager.IMPORTANCE_DEFAULT);
                                         mNotificationManager.createNotificationChannel(channel);
                                     }
-                                    mNotificationManager.notify(1357, mBuilder.build());
+                                    mNotificationManager.notify(1357 + new Random().nextInt(200), mBuilder.build());
                                 }
 
                                 @Override

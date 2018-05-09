@@ -21,7 +21,7 @@ public class Argon2 {
     public static final int DefaultVersionIdentifier = VersionIdentifiers.VERSION_13;
     public static final SecurityParameters DefaultSecurityParameterTemplate = SecurityParameterTemplates.OFFICIAL_DEFAULT;
     public static final int DefaultHashlen = 16;
-    private static SecureRandom random;
+    public static SecureRandom random;
 
     static {
         System.loadLibrary("argon2jni");
@@ -174,7 +174,7 @@ public class Argon2 {
         return encodedlen;
     }
 
-    private static void ensureRandom() {
+    public static void ensureRandom() {
         if (Argon2.random == null) {
             Argon2.random = new SecureRandom();
         }

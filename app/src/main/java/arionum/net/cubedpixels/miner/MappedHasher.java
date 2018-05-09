@@ -1,10 +1,11 @@
-package com.programmerdan.arionum.arionum_miner;
+package arionum.net.cubedpixels.miner;
 
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 
 import de.wuthoehle.argon2jni.Argon2;
 import de.wuthoehle.argon2jni.EncodedArgon2Result;
@@ -15,26 +16,16 @@ public class MappedHasher extends Hasher {
 
     private final Argon2 context;
     private SecureRandom random = new SecureRandom();
-    private String rawHashBase;
-    private byte[] nonce = new byte[32];
-    private String rawNonce;
-    private byte[] hashBaseBuffer;
-    private byte[] fullHashBaseBuffer;
+    private Nonce currentNonce;
     private Miner.callbackMiner caller;
-    private String hashBase_Done = "";
 
     public MappedHasher(Miner parent, String id, long target, long maxTime) {
         super(parent, id, target, maxTime);
-        genNonce();
         context = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
     }
 
-    @Override
-    public void update(BigInteger difficulty, String data, long limit, String publicKey, long blockHeight, Miner.callbackMiner caller) {
-        super.update(difficulty, data, limit, publicKey, blockHeight, caller);
-        this.caller = caller;
-        genNonce();
-    }
+    private ArrayList<Nonce> nonces = new ArrayList<>();
+    private ArrayList<Share> sharePool = new ArrayList<>();
 
     @Override
     public void newHeight(long oldBlockHeight, long newBlockHeight) {
@@ -43,34 +34,40 @@ public class MappedHasher extends Hasher {
 
 
     int argos = 0;
-    private void genNonce() {
-        if (caller != null)
-            caller.onDurChange("Generating Nonce...");
-        String encNonce = null;
-        StringBuilder hashBase;
-        random.nextBytes(nonce);
-        encNonce = new String(android.util.Base64.encode(nonce, android.util.Base64.DEFAULT));
-        char[] nonceChar = encNonce.toCharArray();
-        StringBuilder nonceSb = new StringBuilder(encNonce.length());
+    private byte[] temporaryHashBuffer;
 
-        for (char ar : nonceChar) {
-            if (ar >= '0' && ar <= '9' || ar >= 'a' && ar <= 'z' || ar >= 'A' && ar <= 'Z') {
-                nonceSb.append(ar);
+    public Nonce getCurrentNonce() {
+        return currentNonce;
+    }
+
+    @Override
+    public void update(BigInteger difficulty, String data, long limit, String publicKey, long blockHeight, Miner.callbackMiner caller) {
+        if (this.limit != limit) {
+            for (Share s : sharePool) {
+                if (s.getDuration() < this.limit) {
+                    System.out.println("SUBMITTING!!");
+                    parent.submit(s.getRawNonce(), s.getArgonHash() + "SHAREPOOL", s.getDuration(), this.difficulty.longValue(), this.getType());
+                    if (s.getDuration() <= 240) {
+                        finds++;
+                        caller.onFind(s.getDuration() + "//SHARE POOL");
+                        System.out.println("FOUND +1 = FOUND");
+                    } else {
+                        shares++;
+                        System.out.println("FOUND +1 = SHARE");
+                        caller.onShare(s.getDuration() + "//SHARE POOL");
+                    }
+                    argos = 0;
+                }
             }
         }
+        super.update(difficulty, data, limit, publicKey, blockHeight, caller);
+        this.caller = caller;
+    }
 
-        hashBase = new StringBuilder(hashBufferSize);
-        hashBase.append(this.publicKey).append("-");
-        hashBase.append(nonceSb).append("-");
-        hashBase.append(this.data).append("-");
-        hashBase.append(this.difficultyString);
-
-        hashBase_Done = hashBase.toString();
-        rawNonce = nonceSb.toString();
-        rawHashBase = hashBase.toString();
-        hashBaseBuffer = rawHashBase.getBytes();
-        fullHashBaseBuffer = new byte[hashBaseBuffer.length + 32];
-        System.arraycopy(hashBaseBuffer, 0, fullHashBaseBuffer, 0, hashBaseBuffer.length);
+    private Nonce genNonce() {
+        Nonce nonce = new Nonce(32);
+        currentNonce = nonce;
+        return nonce;
     }
 
     @Override
@@ -108,18 +105,29 @@ public class MappedHasher extends Hasher {
                 statCycle = System.currentTimeMillis();
                 statBegin = System.nanoTime();
                 try {
+                    //GENERATE NONCEPOOL
+                    if (nonces.size() <= 0) {
+                        for (int i = 0; i < 15; i++) {
+                            nonces.add(genNonce());
+                        }
+                    }
+
+                    //GET FIRST NONCE OF NONCEPOOL
+                    Nonce nonce = nonces.get(0);
+
                     statArgonBegin = System.nanoTime();
-                    String base = hashBase_Done;
+                    String base = nonce.getNonce();
+
                     EncodedArgon2Result result = context.argon2_hash(base.getBytes());
                     argos++;
 
                     String hash = result.getEncoded();
                     String hashed_done = base + hash;
 
-                    fullHashBaseBuffer = hashed_done.getBytes();
+                    temporaryHashBuffer = hashed_done.getBytes();
                     statShaBegin = System.nanoTime();
 
-                    byteBase = sha512.digest(fullHashBaseBuffer);
+                    byteBase = sha512.digest(temporaryHashBuffer);
                     for (int i = 0; i < 5; i++) {
                         byteBase = sha512.digest(byteBase);
                     }
@@ -130,14 +138,25 @@ public class MappedHasher extends Hasher {
                             .append(byteBase[23] & 0xFF).append(byteBase[31] & 0xFF).append(byteBase[40] & 0xFF)
                             .append(byteBase[45] & 0xFF).append(byteBase[55] & 0xFF);
 
+
                     long finalDuration = new BigInteger(duration.toString()).divide(this.difficulty).longValue();
+
+                    if (finalDuration > 4000000)
+                        nonces.remove(nonce);
+                    else
+                        sharePool.add(new Share(nonce.getNonceRaw(), hash, difficulty.longValue(), finalDuration));
+
+                    if (finalDuration < Miner.finalDuration) {
+                        Miner.finalDuration = finalDuration;
+                        caller.onDLChange(this.parent.speed(), finalDuration);
+                    }
+
                     Miner.limitDuration = this.limit;
                     caller.onDurChange(finalDuration + "");
 
                     if (finalDuration <= this.limit) {
-                        Miner.finalDuration = Long.MAX_VALUE;
                         System.out.println("SUBMITTING!!");
-                        parent.submit(rawNonce, hash, finalDuration, this.difficulty.longValue(), this.getType());
+                        parent.submit(nonce.getNonceRaw(), hash, finalDuration, this.difficulty.longValue(), this.getType());
                         if (finalDuration <= 240) {
                             finds++;
                             caller.onFind(finalDuration + "");
@@ -148,9 +167,8 @@ public class MappedHasher extends Hasher {
                             caller.onShare(finalDuration + "");
                         }
                         argos = 0;
-                        genNonce();
                     }
-                    if (argos > 400) {
+                    if (argos > 135) {
                         argos = 0;
                         System.out.println("RECREATE");
                         doLoop = false;
@@ -204,5 +222,79 @@ public class MappedHasher extends Hasher {
 
     public String getType() {
         return "CPU";
+    }
+
+    public static class Share {
+        private long duration;
+        private long difficulty;
+        private String rawNonce;
+        private String argonHash;
+
+        public Share(String rawNonce, String argonHash, long difficulty, long duration) {
+            this.duration = duration;
+            this.rawNonce = rawNonce;
+            this.argonHash = argonHash;
+            this.difficulty = difficulty;
+        }
+
+        public long getDifficulty() {
+            return difficulty;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public String getArgonHash() {
+            return argonHash;
+        }
+
+        public String getRawNonce() {
+            return rawNonce;
+        }
+    }
+
+    public class Nonce {
+        private String nonce;
+        private String nonceRaw;
+        private byte[] nonceBYTE = new byte[16];
+
+        public Nonce(int length) {
+            if (caller != null)
+                caller.onDurChange("Generating Nonce...");
+            String encNonce = null;
+            StringBuilder hashBase;
+            random.nextBytes(nonceBYTE);
+            encNonce = new String(android.util.Base64.encode(nonceBYTE, android.util.Base64.DEFAULT));
+            char[] nonceChar = encNonce.toCharArray();
+            StringBuilder nonceSb = new StringBuilder(encNonce.length());
+
+            for (char ar : nonceChar) {
+                if (ar >= '0' && ar <= '9' || ar >= 'a' && ar <= 'z' || ar >= 'A' && ar <= 'Z') {
+                    nonceSb.append(ar);
+                }
+            }
+
+            hashBase = new StringBuilder(length);
+            hashBase.append(MappedHasher.this.publicKey).append("-");
+            hashBase.append(nonceSb).append("-");
+            hashBase.append(MappedHasher.this.data).append("-");
+            hashBase.append(MappedHasher.this.difficultyString);
+
+            nonce = hashBase.toString();
+            nonceRaw = nonceSb.toString();
+        }
+
+        public byte[] getNonceBYTE() {
+            return nonceBYTE;
+        }
+
+        public String getNonce() {
+            return nonce;
+        }
+
+        public String getNonceRaw() {
+            return nonceRaw;
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.programmerdan.arionum.arionum_miner;
+package arionum.net.cubedpixels.miner;
 
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -306,7 +306,7 @@ public class Miner implements UncaughtExceptionHandler {
 
                             URL url = new URL(extra.toString());
                             URLConnection connect = url.openConnection();
-                            connect.setConnectTimeout(1000);
+                            connect.setConnectTimeout(cycles < 10 ? 10000 : 1000);
                             updateLoop[0] = false;
 
                             lastUpdate = System.currentTimeMillis();
@@ -454,8 +454,8 @@ public class Miner implements UncaughtExceptionHandler {
                 }
             }
             System.out.println("Hashrate: " + speed());
-            callbackMiner.onHashRate(speed(), finalDuration + "");
-            if (!AdvMode.auto.equals(this.hasherMode) && this.hasherCount.get() < maxHashers) {
+            callbackMiner.onHashRate(speed(), finalDuration);
+            if (this.hasherCount.get() < maxHashers) {
                 String workerId = this.deadWorkers.getAndIncrement() + "]" + php_uniqid();
                 this.deadWorkerLives.put(workerId, System.currentTimeMillis());
                 Hasher hasher = HasherFactory.createHasher(hasherMode, this, workerId, this.hashesPerSession, this.sessionLength * 2l);
@@ -800,9 +800,11 @@ public class Miner implements UncaughtExceptionHandler {
         });
     }
 
-    protected void submit(final String nonce, final String argon, final long submitDL, final long difficulty, final String workerType) {
+    protected void submit(final String nonce, String argon1, final long submitDL, final long difficulty, final String workerType) {
         if (height == 0)
             return;
+        boolean sharepool = argon1.contains("SHAREPOOL");
+        final String argon = argon1.replace("SHAREPOOL", "");
 
         new AsyncTask<Void, Void, Void>() {
             @Override
@@ -858,7 +860,7 @@ public class Miner implements UncaughtExceptionHandler {
                         if (!"ok".equals(obj.get("status"))) {
                             sessionRejects.incrementAndGet();
                             System.out.println(" Raw Failure: " + obj.toString());
-                            callbackMiner.onReject(obj.toString());
+                            callbackMiner.onReject(obj.toString() + "//SHAREPOOL");
                             submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
 
                         } else {
@@ -884,7 +886,7 @@ public class Miner implements UncaughtExceptionHandler {
         }.execute(null, null, null);
     }
 
-    private String speed() {
+    String speed() {
         return String.format("%.3f", (((double) this.lastSpeed.get() / 10000d) / (double) this.speedAccrue.get()));
     }
 
@@ -973,7 +975,9 @@ public class Miner implements UncaughtExceptionHandler {
     }
 
     public static abstract class callbackMiner {
-        public abstract void onHashRate(String hash, String bestDelay);
+        public abstract void onHashRate(String hash, long bestDelay);
+
+        public abstract void onDLChange(String hash, long bestDelay);
 
         public abstract void onShare(String hash);
 
