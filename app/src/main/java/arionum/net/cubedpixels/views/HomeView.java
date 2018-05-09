@@ -466,7 +466,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 public void onReject(String hash) {
                                     System.out.println("FOUND REJECT = " + hash);
 
-                                    String foundShare = hash.contains("SHAREPOOL") ? "Sharepool share has been rejected!" : "Share got rejected!";
+                                    String foundShare = hash.contains("SHAREPOOL") ? "Sharepool share has been sent successfully!" : "Share got rejected!";
                                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
                                             HomeView.this, "ARONOTIFICATIONS")
                                             .setSmallIcon(R.drawable.aro)
@@ -527,7 +527,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                             HomeView.this, "ARONOTIFICATIONS")
                                             .setSmallIcon(R.drawable.aro)
                                             .setContentTitle("Arionum Wallet | Miner")
-                                            .setContentText("FIND got accepted!")
+                                            .setContentText("Find got accepted!")
                                             .setChannelId("notify_001")
                                             .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 

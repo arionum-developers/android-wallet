@@ -18,6 +18,8 @@ public class MappedHasher extends Hasher {
     private SecureRandom random = new SecureRandom();
     private Nonce currentNonce;
     private Miner.callbackMiner caller;
+    int argos = 0;
+    private byte[] temporaryHashBuffer;
 
     public MappedHasher(Miner parent, String id, long target, long maxTime) {
         super(parent, id, target, maxTime);
@@ -30,14 +32,6 @@ public class MappedHasher extends Hasher {
     @Override
     public void newHeight(long oldBlockHeight, long newBlockHeight) {
 
-    }
-
-
-    int argos = 0;
-    private byte[] temporaryHashBuffer;
-
-    public Nonce getCurrentNonce() {
-        return currentNonce;
     }
 
     @Override
@@ -62,12 +56,6 @@ public class MappedHasher extends Hasher {
         }
         super.update(difficulty, data, limit, publicKey, blockHeight, caller);
         this.caller = caller;
-    }
-
-    private Nonce genNonce() {
-        Nonce nonce = new Nonce(32);
-        currentNonce = nonce;
-        return nonce;
     }
 
     @Override
@@ -219,6 +207,11 @@ public class MappedHasher extends Hasher {
         this.parent.hasherCount.decrementAndGet();
     }
 
+    private Nonce genNonce() {
+        Nonce nonce = new Nonce(32);
+        currentNonce = nonce;
+        return nonce;
+    }
 
     public String getType() {
         return "CPU";
