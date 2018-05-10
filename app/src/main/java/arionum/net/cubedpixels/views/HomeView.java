@@ -300,7 +300,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 b.setText(minerActive ? "Stop Miner" : "Start Miner");
 
                 editPool.setEnabled(!minerActive);
-                String pool = Miner.node.isEmpty() ? "http://aro.cool" : Miner.node;
+                String pool = Miner.node == null ? "http://aro.cool" : Miner.node;
                 editPool.setText(pool);
                 System.gc();
 
