@@ -91,7 +91,7 @@ public class Miner implements UncaughtExceptionHandler {
     private long lastWorkerReport;
     private MinerType type;
     private AdvMode hasherMode;
-    private String node;
+    public static String node;
     private String worker;
     private String publicKey;
     private String privateKey;
@@ -211,11 +211,11 @@ public class Miner implements UncaughtExceptionHandler {
 
 
         try {
-            this.node = node;
+            Miner.node = node;
             this.type = MinerType.pool;
             this.publicKey = HomeView.getAddress();
             this.privateKey = publicKey;
-            this.node = node;
+            Miner.node = node;
             this.hasherMode = AdvMode.standard;
             this.maxHashers = cores;
             this.worker = worker;
@@ -231,7 +231,7 @@ public class Miner implements UncaughtExceptionHandler {
         } catch (Exception e) {
             System.err.println("Invalid configuration: " + (e.getMessage()));
             System.err.println("  type: " + this.type);
-            System.err.println("  node: " + this.node);
+            System.err.println("  node: " + Miner.node);
             System.err.println("  public-key: " + this.publicKey);
             System.err.println("  private-key: " + this.privateKey);
             System.err.println("  hasher-count: " + this.maxHashers);

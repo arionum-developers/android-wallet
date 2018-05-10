@@ -25,6 +25,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="7345345h4385z34785345345345ji435nz7345"
+            android:textColor="#a96e6e6e"
             android:textSize="7sp"
             android:visibility="visible" />
 
@@ -39,6 +40,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="7345345h4385z34785345345345ji435nz7345"
+            android:textColor="#a9c1c1c1"
             android:textSize="7sp"
             android:visibility="visible" />
 
@@ -53,6 +55,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="7345345h4385z34785345345345ji435nz7345"
+            android:textColor="#a9c1c1c1"
             android:textSize="7sp"
             android:visibility="visible" />
 
@@ -61,16 +64,19 @@
             android:layout_width="match_parent"
             android:layout_height="15dp"
             android:layout_alignParentTop="true"
-            android:layout_marginTop="27dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="32dp"
             android:layout_toEndOf="@+id/img"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="Date"
-            android:textSize="7sp" />
+            android:textAlignment="textEnd"
+            android:textColor="#a96e6e6e"
+            android:textSize="9sp" />
 
         <TextView
             android:id="@+id/value"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_marginBottom="2dp"
@@ -79,7 +85,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="0.0000ARO"
-            android:textSize="11sp" />
+            android:textSize="12.5sp" />
 
     </RelativeLayout>
 </TableLayout>

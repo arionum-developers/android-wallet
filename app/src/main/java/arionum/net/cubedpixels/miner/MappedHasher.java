@@ -18,7 +18,6 @@ public class MappedHasher extends Hasher {
     private SecureRandom random = new SecureRandom();
     private Nonce currentNonce;
     private Miner.callbackMiner caller;
-    int argos = 0;
     private byte[] temporaryHashBuffer;
 
     public MappedHasher(Miner parent, String id, long target, long maxTime) {
@@ -26,8 +25,8 @@ public class MappedHasher extends Hasher {
         context = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
     }
 
-    private ArrayList<Nonce> nonces = new ArrayList<>();
-    private ArrayList<Share> sharePool = new ArrayList<>();
+    private static ArrayList<Nonce> nonces = new ArrayList<>();
+    private static ArrayList<Share> sharePool = new ArrayList<>();
 
     @Override
     public void newHeight(long oldBlockHeight, long newBlockHeight) {
@@ -50,9 +49,12 @@ public class MappedHasher extends Hasher {
                         System.out.println("FOUND +1 = SHARE");
                         caller.onShare(s.getDuration() + "//SHARE POOL");
                     }
-                    argos = 0;
                 }
             }
+        }
+        if (this.blockHeight != blockHeight) {
+            sharePool.clear();
+            nonces.clear();
         }
         super.update(difficulty, data, limit, publicKey, blockHeight, caller);
         this.caller = caller;
@@ -95,7 +97,7 @@ public class MappedHasher extends Hasher {
                 try {
                     //GENERATE NONCEPOOL
                     if (nonces.size() <= 0) {
-                        for (int i = 0; i < 15; i++) {
+                        for (int i = 0; i < 35; i++) {
                             nonces.add(genNonce());
                         }
                     }
@@ -107,7 +109,6 @@ public class MappedHasher extends Hasher {
                     String base = nonce.getNonce();
 
                     EncodedArgon2Result result = context.argon2_hash(base.getBytes());
-                    argos++;
 
                     String hash = result.getEncoded();
                     String hashed_done = base + hash;
@@ -129,7 +130,7 @@ public class MappedHasher extends Hasher {
 
                     long finalDuration = new BigInteger(duration.toString()).divide(this.difficulty).longValue();
 
-                    if (finalDuration > 4000000)
+                    if (finalDuration > 10000000)
                         nonces.remove(nonce);
                     else
                         sharePool.add(new Share(nonce.getNonceRaw(), hash, difficulty.longValue(), finalDuration));
@@ -154,17 +155,6 @@ public class MappedHasher extends Hasher {
                             System.out.println("FOUND +1 = SHARE");
                             caller.onShare(finalDuration + "");
                         }
-                        argos = 0;
-                    }
-                    if (argos > 135) {
-                        argos = 0;
-                        System.out.println("RECREATE");
-                        doLoop = false;
-                        this.hashEnd = System.currentTimeMillis();
-                        this.hashTime = this.hashEnd - this.hashBegin;
-                        this.hashBegin = System.currentTimeMillis();
-                        completeSession();
-                        this.loopTime = 0l;
                     }
                     hashCount++;
                     statEnd = System.nanoTime();
@@ -184,6 +174,7 @@ public class MappedHasher extends Hasher {
                 }
                 this.loopTime += System.currentTimeMillis() - statCycle;
 
+
                 if (this.hashCount > this.targetHashCount || this.loopTime > this.maxTime) {
                     if (!bound) {
                         doLoop = false;
@@ -195,6 +186,7 @@ public class MappedHasher extends Hasher {
                         this.loopTime = 0l;
                     }
                 }
+
             }
         } catch (Throwable e) {
             e.printStackTrace();

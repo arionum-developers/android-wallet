@@ -300,7 +300,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 b.setText(minerActive ? "Stop Miner" : "Start Miner");
 
                 editPool.setEnabled(!minerActive);
-                editPool.setText("http://aro.cool");
+                String pool = Miner.node.isEmpty() ? "http://aro.cool" : Miner.node;
+                editPool.setText(pool);
                 System.gc();
 
                 int max = Runtime.getRuntime().availableProcessors();
@@ -777,9 +778,11 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 checkIfLastTransactionIsSame(new LastTransactionTimer() {
                     @Override
                     public void onSame(String id) {
+                        System.out.println("SAME");
                         try {
                             String transactions = getString("transactions");
                             if (transactions.isEmpty()) {
+                                System.out.println("transactions empty");
                                 downloadTransactions(new Call() {
                                     @Override
                                     public void onDone(JSONObject o) {
@@ -806,6 +809,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                             final JSONObject p = new JSONObject(transactions);
                             JSONArray a = p.getJSONArray("data");
                             if (a.length() < 11) {
+                                System.out.println("length to short");
                                 downloadTransactions(new Call() {
                                     @Override
                                     public void onDone(final JSONObject o) {
@@ -824,39 +828,15 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                         }
                                     }
                                 });
-                            } else {
-                                String currentID = getString("lastID");
-                                if (currentID != ((JSONObject) a.get(0)).get("id")) {
-                                    downloadTransactions(new Call() {
-                                        @Override
-                                        public void onDone(final JSONObject o) {
-                                            try {
-                                                sortArrayAndPutInList(o.getJSONArray("data"),
-                                                        (ListView) findViewById(R.id.historylisttransactions));
-                                                Handler h = new Handler(instance.getMainLooper());
-                                                h.post(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        findViewById(R.id.progressBar).setVisibility(GONE);
-                                                    }
-                                                });
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    sortArrayAndPutInList(p.getJSONArray("data"),
-                                            (ListView) findViewById(R.id.historylisttransactions));
-                                    Handler h = new Handler(instance.getMainLooper());
-                                    h.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            findViewById(R.id.progressBar).setVisibility(GONE);
-                                        }
-                                    });
-                                }
                             }
+                            Handler h = new Handler(instance.getMainLooper());
+                            h.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    findViewById(R.id.progressBar).setVisibility(GONE);
+                                }
+                            });
+
 
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -865,6 +845,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
                     @Override
                     public void onDifferect(String id) {
+                        System.out.println("DIFFERENT");
                         downloadTransactions(new Call() {
                             @Override
                             public void onDone(JSONObject o) {
@@ -1392,7 +1373,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             to.setText("-> " + strings.get(position).split(",")[3]);
             long t = Long.parseLong(strings.get(position).split(",")[4]) * 1000;
             Calendar dated = Calendar.getInstance();
-            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             dated.setTimeInMillis(t);
             String date1 = format1.format(dated.getTime());
             date.setText(date1);
