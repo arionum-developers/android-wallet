@@ -300,7 +300,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 b.setText(minerActive ? "Stop Miner" : "Start Miner");
 
                 editPool.setEnabled(!minerActive);
-                String pool = Miner.node == null ? "http://aro.cool" : Miner.node;
+                String saved_pool = getString("miner_pool");
+                if (saved_pool.isEmpty())
+                    saved_pool = "aro.cool";
+                String pool = Miner.node == null ? saved_pool : Miner.node;
                 editPool.setText(pool);
                 System.gc();
 
@@ -337,6 +340,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 editPool.setEnabled(minerActive);
                 editHashers.setEnabled(minerActive);
                 if (!minerActive) {
+                    saveString("miner_pool", editPool.getText().toString());
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     minerThread = new Thread(new Runnable() {
                         @Override
@@ -466,7 +470,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 @Override
                                 public void onReject(String hash) {
                                     System.out.println("FOUND REJECT = " + hash);
-
+                                    if (hash.contains("SHAREPOOL")) {
+                                        onAccept(hash);
+                                        return;
+                                    }
                                     String foundShare = hash.contains("SHAREPOOL") ? "Sharepool share has been sent successfully!" : "Share got rejected!";
                                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
                                             HomeView.this, "ARONOTIFICATIONS")

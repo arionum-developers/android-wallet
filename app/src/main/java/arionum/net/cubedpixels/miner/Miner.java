@@ -803,7 +803,7 @@ public class Miner implements UncaughtExceptionHandler {
     protected void submit(final String nonce, String argon1, final long submitDL, final long difficulty, final String workerType) {
         if (height == 0)
             return;
-        boolean sharepool = argon1.contains("SHAREPOOL");
+        final boolean sharepool = argon1.contains("SHAREPOOL");
         final String argon = argon1.replace("SHAREPOOL", "");
 
         new AsyncTask<Void, Void, Void>() {
@@ -860,7 +860,7 @@ public class Miner implements UncaughtExceptionHandler {
                         if (!"ok".equals(obj.get("status"))) {
                             sessionRejects.incrementAndGet();
                             System.out.println(" Raw Failure: " + obj.toString());
-                            callbackMiner.onReject(obj.toString() + "//SHAREPOOL");
+                            callbackMiner.onReject(obj.toString() + (sharepool ? "//SHAREPOOL" : ""));
                             submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
 
                         } else {

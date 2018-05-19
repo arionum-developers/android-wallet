@@ -37,7 +37,7 @@ public class MappedHasher extends Hasher {
     public void update(BigInteger difficulty, String data, long limit, String publicKey, long blockHeight, Miner.callbackMiner caller) {
         if (this.limit != limit) {
             for (Share s : sharePool) {
-                if (s.getDuration() < this.limit) {
+                if (s.getDuration() < this.limit + 1000000) {
                     System.out.println("SUBMITTING!!");
                     parent.submit(s.getRawNonce(), s.getArgonHash() + "SHAREPOOL", s.getDuration(), this.difficulty.longValue(), this.getType());
                     if (s.getDuration() <= 240) {
@@ -53,7 +53,6 @@ public class MappedHasher extends Hasher {
             }
         }
         if (this.blockHeight != blockHeight) {
-            sharePool.clear();
             nonces.clear();
         }
         super.update(difficulty, data, limit, publicKey, blockHeight, caller);
