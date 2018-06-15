@@ -17,11 +17,21 @@ An Android Wallet for the Arionum Coin!
 
 ### Development donations
 
-Just got scammed, please donate. :3
+Please donate. :3
 
 ```
 1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
 ```
+
+### Donator´s
+```
+4JHY2YtGGZCgbNebia1foqztcwZUzewLMABgavsXaBiT8NFRJxozu9AJSvMKn1aJBiNvtFAEKcyShE4bRyovovsN - 857.00000000
+3B7wmedwJ5jTaFVHCJWuYvoDpgWTL56f8oHSmCC9osCwPkGYoqQjsKiJDNJpJfJnU9sKnmPgc1Qz6DRJDtob4SAA - 2.41625657
+48w4wjSy8Gt3f8zsP7SkQhYbFnwmZ9KcqdBiE9Tn3DA2TEpF6N2eKr4bxJzmDnyuSqA4bVWYvJcaiNpufWLLKho3 - 98.52455000
+5jhNr8GiMFbVj6yeZUqRr3DG8BxsnnogTzaQLa1a98rk6Bs3L24WL65iF46ribQQrJwHYoyRfuJiXrq8VAHeRVwY - 1.00250000
+3kggPchjYZrcUEyLgZRqf2fER1C8RWY6ir7jzmdZjNG7MNmBmvnuP8BSvesKNtTXLMbGauupB36cSCNYspUDKMb7 - 100.00000000
+```
+
 <div align="center">
   <img src="http://cubedpixels.net/uploader/uploads/155422449/generator.png" width="200px"</img> 
 </div>
