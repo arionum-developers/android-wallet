@@ -860,7 +860,7 @@ public class Miner implements UncaughtExceptionHandler {
                         if (!"ok".equals(obj.get("status"))) {
                             sessionRejects.incrementAndGet();
                             System.out.println(" Raw Failure: " + obj.toString());
-                            callbackMiner.onReject(obj.toString() + (sharepool ? "//SHAREPOOL" : ""));
+                            callbackMiner.onReject(obj.toString() + (sharepool ? "SHAREPOOL" : ""));
                             submitStats(nonce, argon, submitDL, difficulty, workerType, failures, false);
 
                         } else {

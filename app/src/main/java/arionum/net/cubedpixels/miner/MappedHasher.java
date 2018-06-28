@@ -35,23 +35,22 @@ public class MappedHasher extends Hasher {
 
     @Override
     public void update(BigInteger difficulty, String data, long limit, String publicKey, long blockHeight, Miner.callbackMiner caller) {
-        if (this.limit != limit) {
-            for (Share s : sharePool) {
-                if (s.getDuration() < this.limit + 1000000) {
-                    System.out.println("SUBMITTING!!");
-                    parent.submit(s.getRawNonce(), s.getArgonHash() + "SHAREPOOL", s.getDuration(), this.difficulty.longValue(), this.getType());
-                    if (s.getDuration() <= 240) {
-                        finds++;
-                        caller.onFind(s.getDuration() + "//SHARE POOL");
-                        System.out.println("FOUND +1 = FOUND");
-                    } else {
-                        shares++;
-                        System.out.println("FOUND +1 = SHARE");
-                        caller.onShare(s.getDuration() + "//SHARE POOL");
-                    }
+        for (Share s : sharePool) {
+            if (s.getDuration() < this.limit + 1000000) {
+                System.out.println("SUBMITTING!!");
+                caller.onShare(s.getDuration() + "SHAREPOOL");
+                parent.submit(s.getRawNonce(), s.getArgonHash() + "SHAREPOOL", s.getDuration(), this.difficulty.longValue(), this.getType());
+                if (s.getDuration() <= 240) {
+                    finds++;
+                    caller.onFind(s.getDuration() + "SHAREPOOL");
+                    System.out.println("FOUND +1 = FOUND");
+                } else {
+                    shares++;
+                    System.out.println("FOUND +1 = SHARE");
                 }
             }
         }
+        sharePool.clear();
         if (this.blockHeight != blockHeight) {
             nonces.clear();
         }
@@ -80,31 +79,21 @@ public class MappedHasher extends Hasher {
             parent.workerInit(id);
         }
 
-        long statCycle = 0l;
-        long statBegin = 0l;
-        long statArgonBegin = 0l;
-        long statArgonEnd = 0l;
-        long statShaBegin = 0l;
-        long statShaEnd = 0l;
-        long statEnd = 0l;
 
         try {
             boolean bound = true;
             while (doLoop && active) {
-                statCycle = System.currentTimeMillis();
-                statBegin = System.nanoTime();
                 try {
                     //GENERATE NONCEPOOL
                     if (nonces.size() <= 0) {
-                        for (int i = 0; i < 35; i++) {
+                        for (int i = 0; i < 26; i++) {
                             nonces.add(genNonce());
                         }
                     }
 
                     //GET FIRST NONCE OF NONCEPOOL
                     Nonce nonce = nonces.get(0);
-
-                    statArgonBegin = System.nanoTime();
+                    System.out.println("Picked Nonce:" + nonce.nonceRaw + " -> SIZE:" + nonces.size());
                     String base = nonce.getNonce();
 
                     EncodedArgon2Result result = context.argon2_hash(base.getBytes());
@@ -113,13 +102,11 @@ public class MappedHasher extends Hasher {
                     String hashed_done = base + hash;
 
                     temporaryHashBuffer = hashed_done.getBytes();
-                    statShaBegin = System.nanoTime();
 
                     byteBase = sha512.digest(temporaryHashBuffer);
                     for (int i = 0; i < 5; i++) {
                         byteBase = sha512.digest(byteBase);
                     }
-                    statShaEnd = System.nanoTime();
 
                     StringBuilder duration = new StringBuilder(25);
                     duration.append(byteBase[10] & 0xFF).append(byteBase[15] & 0xFF).append(byteBase[20] & 0xFF)
@@ -129,8 +116,9 @@ public class MappedHasher extends Hasher {
 
                     long finalDuration = new BigInteger(duration.toString()).divide(this.difficulty).longValue();
 
-                    if (finalDuration > 10000000)
-                        nonces.remove(nonce);
+                    if (finalDuration > 10000000) {
+                        nonces.remove(0);
+                    }
                     else
                         sharePool.add(new Share(nonce.getNonceRaw(), hash, difficulty.longValue(), finalDuration));
 
@@ -156,22 +144,21 @@ public class MappedHasher extends Hasher {
                         }
                     }
                     hashCount++;
-                    statEnd = System.nanoTime();
 
                     if (finalDuration < this.bestDL) {
                         this.bestDL = finalDuration;
                     }
 
-                    this.argonTime += statArgonEnd - statArgonBegin;
-                    this.shaTime += statShaEnd - statShaBegin;
-                    this.nonArgonTime += (statArgonBegin - statBegin) + (statEnd - statArgonEnd);
+                    this.argonTime += 0;
+                    this.shaTime += 0;
+                    this.nonArgonTime += 0;
 
                 } catch (Exception e) {
                     System.err.println("WORKER FAILED! " + e.getMessage() + " at " + e.getStackTrace()[0]);
                     e.printStackTrace();
                     doLoop = false;
                 }
-                this.loopTime += System.currentTimeMillis() - statCycle;
+                this.loopTime += 1;
 
 
                 if (this.hashCount > this.targetHashCount || this.loopTime > this.maxTime) {
