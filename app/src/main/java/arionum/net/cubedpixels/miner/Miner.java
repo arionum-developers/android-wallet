@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -130,17 +131,7 @@ public class Miner implements UncaughtExceptionHandler {
         Miner.sleep = sleep;
     }
 
-    public static Miner main(callbackMiner callback, String pool, String hashers) {
-        Miner miner = null;
-        callbackMiner = callback;
-        int defaultHashers = Runtime.getRuntime().availableProcessors();
-        if (!hashers.isEmpty())
-            defaultHashers = Integer.parseInt(hashers);
-        String workerName = Miner.php_uniqid();
-        miner = new Miner(pool, defaultHashers, workerName);
-        miner.start();
-        return miner;
-    }
+    public static boolean stop = false;
 
     public static String php_uniqid() {
         double m = ((double) (System.nanoTime() / 10)) / 10000d;
@@ -249,250 +240,17 @@ public class Miner implements UncaughtExceptionHandler {
         this.wallClockBegin = System.currentTimeMillis();
     }
 
-    public void start() {
-        if (MinerType.test.equals(this.type)) {
-            startTest();
-            return;
-        }
-
-        active = true;
-        this.lastUpdate = wallClockBegin;
-        final AtomicBoolean firstRun = new AtomicBoolean(true);
-        cycles = 0;
-        supercycles = 0;
-        final AtomicBoolean sentSpeed = new AtomicBoolean(false);
-        skips = 0;
-        failures = 0;
-        updates = 0;
-        System.out.println("STARTING");
-
-
-        while (active) {
-            System.out.println("ACTIVE");
-            final boolean[] updateLoop = {true};
-            int firstAttempts = 0;
-            while (updateLoop[0]) {
-                System.out.println("LOOP");
-                Future<Boolean> update = this.updaters.submit(new Callable<Boolean>() {
-                    public Boolean call() throws JSONException {
-                        long executionTimeTracker = System.currentTimeMillis();
-                        try {
-                            if (cycles > 0 && (System.currentTimeMillis() - lastUpdate) < (UPDATING_DELAY * .5)) {
-                                skips++;
-                                return Boolean.FALSE;
-                            }
-                            boolean endline = false;
-
-                            String cummSpeed = speed();
-                            StringBuilder extra = new StringBuilder(node);
-                            extra.append("/mine.php?q=info");
-                            if (MinerType.pool.equals(type)) {
-                                extra.append("&worker=").append(URLEncoder.encode(worker, "UTF-8"));
-
-                                if (firstRun.get() || (!sentSpeed.get() && supercycles > 15)) {
-                                    extra.append("&address=").append(privateKey);
-                                }
-
-                                if (!sendSpeed && lastSendSpeed + 1000 * 20 < System.currentTimeMillis()) {
-                                    extra.append("&hashrate=").append(cummSpeed);
-                                    lastSendSpeed = System.currentTimeMillis();
-                                    sendSpeed = true;
-                                } else if (sendSpeed && lastSendSpeed + 1000 * 60 * 6 < System.currentTimeMillis()) {
-                                    extra.append("&hashrate=").append(cummSpeed);
-                                    lastSendSpeed = System.currentTimeMillis();
-                                }
-
-                            }
-
-                            URL url = new URL(extra.toString());
-                            URLConnection connect = url.openConnection();
-                            connect.setConnectTimeout(cycles < 10 ? 10000 : 1000);
-                            updateLoop[0] = false;
-
-                            lastUpdate = System.currentTimeMillis();
-
-
-
-                            long parseTimeTracker = System.currentTimeMillis();
-
-                            BufferedReader s = new BufferedReader(new InputStreamReader(connect.getInputStream()));
-                            String st = new String(s.readLine());
-
-
-                            JSONObject obj = new JSONObject(st);
-
-                            if (!"ok".equals(obj.get("status"))) {
-                                failures++;
-                                updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
-                                return Boolean.FALSE;
-                            }
-
-                            JSONObject jsonData = (JSONObject) obj.get("data");
-                            String localData = (String) jsonData.get("block");
-                            if (!localData.equals(data)) {
-                                if (lastBlockUpdate > 0) {
-                                }
-                                data = localData;
-                                lastBlockUpdate = System.currentTimeMillis();
-                                long bestDLLastBlock = bestDL.getAndSet(Long.MAX_VALUE);
-
-                                endline = true;
-                            }
-                            BigInteger localDifficulty = new BigInteger((String) jsonData.get("difficulty"));
-                            if (!localDifficulty.equals(difficulty)) {
-                                difficulty = localDifficulty;
-                                endline = true;
-                            }
-                            updateLoop[0] = false;
-                            long localLimit = 0;
-                            if (MinerType.pool.equals(type)) {
-                                localLimit = Long.parseLong(jsonData.get("limit").toString());
-                                publicKey = (String) jsonData.get("public_key");
-                            } else {
-                                localLimit = 240;
-                            }
-
-                            if (limit != localLimit) {
-                                limit = localLimit;
-                            }
-                            long localHeight = jsonData.getLong("height");
-                            if (localHeight != height) {
-                                height = localHeight;
-                                updateWorkers();
-                            }
-
-
-                            localHeight = (Long) jsonData.get("height");
-                            if (localHeight != height) {
-                                height = localHeight;
-                                endline = true;
-                            }
-
-                            if (endline) {
-                                updateWorkers();
-                            }
-
-                            System.out.println("REPORTED SPEED: " + cummSpeed);
-                            System.out.println("Shares: " + sessionSubmits.get());
-                            long sinceLastReport = System.currentTimeMillis() - lastReport;
-                            if (sinceLastReport > UPDATING_REPORT) {
-                                lastReport = System.currentTimeMillis();
-                                System.out.println("REPORTED SPEED: " + cummSpeed);
-                                System.out.println("Shares: " + sessionSubmits.get());
-
-                                printWorkerHeader();
-
-                                updateTimeAvg.set(0);
-                                updateTimeMax.set(Long.MIN_VALUE);
-                                updateTimeMin.set(Long.MAX_VALUE);
-                                updateParseTimeAvg.set(0);
-                                updateParseTimeMax.set(Long.MIN_VALUE);
-                                updateParseTimeMin.set(Long.MAX_VALUE);
-                                submitParseTimeAvg.set(0);
-                                submitParseTimeMax.set(Long.MIN_VALUE);
-                                submitParseTimeMin.set(Long.MAX_VALUE);
-                                skips = 0;
-                                failures = 0;
-                                updates = 0;
-                                endline = true;
-                                clearSpeed();
-                            }
-                            updates++;
-                            updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
-                            if (endline) {
-                                System.out.println();
-                            }
-                            if ((sinceLastReport % UPDATING_STATS) < UPDATING_DELAY && sinceLastReport < 5000000000l) {
-                                printWorkerStats();
-                            }
-
-                            updateLoop[0] = false;
-                            return Boolean.TRUE;
-                        } catch (IOException e) {
-                            lastUpdate = System.currentTimeMillis();
-                            updateLoop[0] = false;
-                            e.printStackTrace();
-                            failures++;
-                            updateTime(System.currentTimeMillis() - executionTimeTracker);
-                            return Boolean.FALSE;
-                        }
-                    }
-                });
-                if (firstRun.get()) {
-                    try {
-                        if (update.get().booleanValue()) {
-                            firstRun.set(false);
-                            updateLoop[0] = false;
-                        } else {
-                            firstAttempts++;
-                        }
-                    } catch (InterruptedException | ExecutionException e) {
-
-                    } finally {
-                        if (firstRun.get() && firstAttempts > 15) {
-                            System.out.println("ACTIVE == FALSE");
-                            active = false;
-                            firstRun.set(false);
-                            updateLoop[0] = false;
-                            break;
-                        } else if (firstRun.get()) {
-
-                            try {
-                                Thread.sleep(5000l);
-                            } catch (InterruptedException ie) {
-                                System.out.println("INTERRUPT == FALSE");
-                                active = false;
-                                firstRun.set(false);
-                                updateLoop[0] = false;
-                            }
-
-                        }
-                    }
-                    lastWorkerReport = System.currentTimeMillis();
-                } else {
-                    updateLoop[0] = false;
-                }
-            }
-            System.out.println("Hashrate: " + speed());
-            callbackMiner.onHashRate(speed(), finalDuration);
-            if (this.hasherCount.get() < maxHashers) {
-                String workerId = this.deadWorkers.getAndIncrement() + "]" + php_uniqid();
-                this.deadWorkerLives.put(workerId, System.currentTimeMillis());
-                Hasher hasher = HasherFactory.createHasher(hasherMode, this, workerId, this.hashesPerSession, this.sessionLength * 2l);
-                updateWorker(hasher);
-                this.hashers.submit(hasher);
-                addWorker(workerId, hasher);
-            }
-
-
-            try {
-                Thread.sleep(UPDATING_DELAY);
-            } catch (InterruptedException ie) {
-                active = false;
-            }
-
-            if (cycles == 30) {
-                cycles = 0;
-            }
-
-            if (supercycles == 300) {
-                supercycles = 0;
-                sentSpeed.set(false);
-            }
-
-            if (cycles % 2 == 0) {
-                refreshFromWorkers();
-            }
-
-            updateStats();
-
-            cycles++;
-            supercycles++;
-        }
-
-        this.updaters.shutdown();
-        this.hashers.shutdown();
-        this.submitters.shutdown();
+    public static Miner main(callbackMiner callback, String pool, String hashers) {
+        stop = false;
+        Miner miner = null;
+        callbackMiner = callback;
+        int defaultHashers = Runtime.getRuntime().availableProcessors();
+        if (!hashers.isEmpty())
+            defaultHashers = Integer.parseInt(hashers);
+        String workerName = Miner.php_uniqid();
+        miner = new Miner(pool, defaultHashers, workerName);
+        miner.start();
+        return miner;
     }
 
     protected void addWorker(String workerId, Hasher hasher) {
@@ -886,8 +644,8 @@ public class Miner implements UncaughtExceptionHandler {
         }.execute(null, null, null);
     }
 
-    String speed() {
-        return String.format("%.3f", (((double) this.lastSpeed.get() / 10000d) / (double) this.speedAccrue.get()));
+    public static void shutDown() {
+        callbackMiner.onStop();
     }
 
     private void clearSpeed() {
@@ -968,16 +726,271 @@ public class Miner implements UncaughtExceptionHandler {
         });
     }
 
+    public void start() {
+        if (MinerType.test.equals(this.type)) {
+            startTest();
+            return;
+        }
+
+        active = true;
+        this.lastUpdate = wallClockBegin;
+        final AtomicBoolean firstRun = new AtomicBoolean(true);
+        cycles = 0;
+        supercycles = 0;
+        final AtomicBoolean sentSpeed = new AtomicBoolean(false);
+        skips = 0;
+        failures = 0;
+        updates = 0;
+        System.out.println("Starting the Miner and retrieving Files");
+
+
+        while (active && !stop) {
+            final boolean[] updateLoop = {true};
+            int firstAttempts = 0;
+            while (updateLoop[0] && !stop) {
+                Future<Boolean> update = this.updaters.submit(new Callable<Boolean>() {
+                    public Boolean call() throws JSONException {
+                        long executionTimeTracker = System.currentTimeMillis();
+                        try {
+                            if (cycles > 0 && (System.currentTimeMillis() - lastUpdate) < (UPDATING_DELAY * .5)) {
+                                skips++;
+                                System.out.println("SKIP");
+                                return Boolean.FALSE;
+                            }
+                            boolean endline = false;
+
+                            double cummSpeed = speed();
+                            StringBuilder extra = new StringBuilder(node);
+                            extra.append("/mine.php?q=info");
+                            if (MinerType.pool.equals(type)) {
+                                extra.append("&worker=").append(URLEncoder.encode(worker, "UTF-8"));
+
+                                if (firstRun.get() || (!sentSpeed.get() && supercycles > 15)) {
+                                    extra.append("&address=").append(privateKey);
+                                }
+
+                                if (!sendSpeed && lastSendSpeed + 1000 * 20 < System.currentTimeMillis()) {
+                                    extra.append("&hashrate=").append(cummSpeed);
+                                    lastSendSpeed = System.currentTimeMillis();
+                                    sendSpeed = true;
+                                } else if (sendSpeed && lastSendSpeed + 1000 * 60 * 6 < System.currentTimeMillis()) {
+                                    extra.append("&hashrate=").append(cummSpeed);
+                                    lastSendSpeed = System.currentTimeMillis();
+                                }
+
+                            }
+
+                            URL url = new URL(extra.toString());
+                            URLConnection connect = url.openConnection();
+                            connect.setConnectTimeout(cycles < 10 ? 10000 : 1000);
+                            updateLoop[0] = false;
+
+                            lastUpdate = System.currentTimeMillis();
+
+
+                            long parseTimeTracker = System.currentTimeMillis();
+
+                            BufferedReader s = new BufferedReader(new InputStreamReader(connect.getInputStream()));
+                            String st = new String(s.readLine());
+
+
+                            JSONObject obj = new JSONObject(st);
+
+                            if (!"ok".equals(obj.get("status"))) {
+                                failures++;
+                                updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
+                                System.out.println("STATUS = FAIL");
+                                return Boolean.FALSE;
+                            }
+
+                            JSONObject jsonData = (JSONObject) obj.get("data");
+                            String localData = (String) jsonData.get("block");
+                            if (!localData.equals(data)) {
+                                if (lastBlockUpdate > 0) {
+                                }
+                                data = localData;
+                                lastBlockUpdate = System.currentTimeMillis();
+                                long bestDLLastBlock = bestDL.getAndSet(Long.MAX_VALUE);
+
+                                endline = true;
+                            }
+                            BigInteger localDifficulty = new BigInteger((String) jsonData.get("difficulty"));
+                            if (!localDifficulty.equals(difficulty)) {
+                                difficulty = localDifficulty;
+                                endline = true;
+                            }
+                            updateLoop[0] = false;
+                            long localLimit = 0;
+                            if (MinerType.pool.equals(type)) {
+                                localLimit = Long.parseLong(jsonData.get("limit").toString());
+                                publicKey = (String) jsonData.get("public_key");
+                            } else {
+                                localLimit = 240;
+                            }
+
+                            if (limit != localLimit) {
+                                limit = localLimit;
+                            }
+                            long localHeight = jsonData.getLong("height");
+                            if (localHeight != height) {
+                                height = localHeight;
+                                updateWorkers();
+                            }
+
+
+                            localHeight = (Long) jsonData.get("height");
+                            if (localHeight != height) {
+                                height = localHeight;
+                                endline = true;
+                            }
+
+                            if (endline) {
+                                updateWorkers();
+                            }
+
+                            System.out.println("REPORTED SPEED: " + cummSpeed);
+                            System.out.println("Shares: " + sessionSubmits.get());
+                            long sinceLastReport = System.currentTimeMillis() - lastReport;
+                            if (sinceLastReport > UPDATING_REPORT) {
+                                lastReport = System.currentTimeMillis();
+                                System.out.println("REPORTED SPEED: " + cummSpeed);
+                                System.out.println("Shares: " + sessionSubmits.get());
+
+                                printWorkerHeader();
+
+                                updateTimeAvg.set(0);
+                                updateTimeMax.set(Long.MIN_VALUE);
+                                updateTimeMin.set(Long.MAX_VALUE);
+                                updateParseTimeAvg.set(0);
+                                updateParseTimeMax.set(Long.MIN_VALUE);
+                                updateParseTimeMin.set(Long.MAX_VALUE);
+                                submitParseTimeAvg.set(0);
+                                submitParseTimeMax.set(Long.MIN_VALUE);
+                                submitParseTimeMin.set(Long.MAX_VALUE);
+                                skips = 0;
+                                failures = 0;
+                                updates = 0;
+                                endline = true;
+                                clearSpeed();
+                            }
+                            updates++;
+                            updateTime(System.currentTimeMillis(), executionTimeTracker, parseTimeTracker);
+                            if (endline) {
+                                System.out.println();
+                            }
+                            if ((sinceLastReport % UPDATING_STATS) < UPDATING_DELAY && sinceLastReport < 5000000000l) {
+                                printWorkerStats();
+                            }
+
+                            updateLoop[0] = false;
+                            System.out.println("JUST DONE");
+                            return Boolean.TRUE;
+                        } catch (IOException e) {
+                            lastUpdate = System.currentTimeMillis();
+                            updateLoop[0] = false;
+                            e.printStackTrace();
+                            failures++;
+                            updateTime(System.currentTimeMillis() - executionTimeTracker);
+                            System.out.println("FAIL == DONE");
+                            return Boolean.FALSE;
+                        }
+                    }
+                });
+                if (firstRun.get()) {
+                    try {
+                        if (update.get().booleanValue()) {
+                            firstRun.set(false);
+                            updateLoop[0] = false;
+                        } else {
+                            firstAttempts++;
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+
+                    } finally {
+                        if (firstRun.get() && firstAttempts > 15) {
+                            System.out.println("ACTIVE == FALSE");
+                            active = false;
+                            firstRun.set(false);
+                            updateLoop[0] = false;
+                            break;
+                        } else if (firstRun.get()) {
+
+                            try {
+                                Thread.sleep(5000l);
+                            } catch (InterruptedException ie) {
+                                shutDown();
+                                System.out.println("INTERRUPT == FALSE");
+                                active = false;
+                                stop = true;
+                                firstRun.set(false);
+                                updateLoop[0] = false;
+                            }
+
+                        }
+                    }
+                    lastWorkerReport = System.currentTimeMillis();
+                } else {
+                    updateLoop[0] = false;
+                }
+            }
+            System.out.println("Hashrate: " + speed());
+            callbackMiner.onHashRate(speed(), finalDuration);
+            if (this.hasherCount.get() < maxHashers) {
+                String workerId = this.deadWorkers.getAndIncrement() + "]" + php_uniqid();
+                this.deadWorkerLives.put(workerId, System.currentTimeMillis());
+                Hasher hasher = HasherFactory.createHasher(hasherMode, this, workerId, this.hashesPerSession, this.sessionLength * 2l);
+                updateWorker(hasher);
+                this.hashers.submit(hasher);
+                addWorker(workerId, hasher);
+            }
+
+
+            try {
+                Thread.sleep(UPDATING_DELAY);
+            } catch (InterruptedException ie) {
+                active = false;
+            }
+
+            if (cycles == 30) {
+                cycles = 0;
+            }
+
+            if (supercycles == 300) {
+                supercycles = 0;
+                sentSpeed.set(false);
+            }
+
+            if (cycles % 2 == 0) {
+                refreshFromWorkers();
+            }
+
+            updateStats();
+
+            cycles++;
+            supercycles++;
+        }
+
+        this.updaters.shutdown();
+        this.hashers.shutdown();
+        this.submitters.shutdown();
+    }
+
+    double speed() {
+        return Double.parseDouble(new DecimalFormat(".##").format((((double) this.lastSpeed.get() / 10000d) / (double) this.speedAccrue.get())).replace(",", "."));
+    }
+
     public void stop() {
+        stop = true;
+        System.out.println("STOPPING MINER!" + stop);
         this.updaters.shutdown();
         this.hashers.shutdown();
         this.submitters.shutdown();
     }
 
     public static abstract class callbackMiner {
-        public abstract void onHashRate(String hash, long bestDelay);
+        public abstract void onHashRate(double hash, long bestDelay);
 
-        public abstract void onDLChange(String hash, long bestDelay);
+        public abstract void onDLChange(double hash, long bestDelay);
 
         public abstract void onShare(String hash);
 

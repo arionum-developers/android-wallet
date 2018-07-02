@@ -38,6 +38,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -107,37 +108,20 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         static String message = "";
         private static ArrayList<String> peers = new ArrayList<>();
         private static ArrayList<Page> pages = new ArrayList<>();
-        private static String currentPeer = "";
+    private static String currentPeer1 = "";
+    private static String arionum_peer = "https://wallet.arionum.com";
         private static String public_key = "";
         private static String private_key = "";
         private static String address = "";
         private static QRCodeReaderView qrCodeReaderView;
         private static Thread minerThread;
-        ArrayList<Long> hashTime = new ArrayList<>();
+    ArrayList<Double> hashTime = new ArrayList<>();
         private AccountHeader headerResult = null;
         private Drawer result = null;
         private MiniDrawer miniResult = null;
         private Crossfader crossFader;
         private boolean refreshing = true;
-
-        public static void setup(final DoneTask done) {
-        new Thread(new Runnable() {
-                @Override
-                public void run() {
-                        try {
-                                System.out.print(">>Running Peer download");
-                                URL url = new URL("http://api.arionum.com/peers.txt");
-                                Scanner s = new Scanner(url.openStream());
-                                while (s.hasNext())
-                                        peers.add(s.next());
-                                currentPeer = peers.get(new Random().nextInt(peers.size()));
-                                done.onDone();
-                        } catch (Exception e) {
-                                done.onError();
-                        }
-                }
-        }).start();
-        }
+    long bestRECORDEDdelay = Long.MAX_VALUE;
 
         public static String getPublic_key() {
                 return public_key;
@@ -177,9 +161,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 return after.length();
         }
 
-        public static String getCurrentPeer() {
-                return currentPeer;
-        }
 
         public static void makeTransaction(final String addressTO, double value, String MSG, final Runnable run) {
                 long UNIX = System.currentTimeMillis() / 1000;
@@ -266,6 +247,29 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 });
         }
 
+    public static void setup(final DoneTask done) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.print(">>Running Peer download");
+                    URL url = new URL("http://api.arionum.com/peers.txt");
+                    Scanner s = new Scanner(url.openStream());
+                    while (s.hasNext())
+                        peers.add(s.next());
+                    currentPeer1 = peers.get(new Random().nextInt(peers.size()));
+                    done.onDone();
+                } catch (Exception e) {
+                    done.onError();
+                }
+            }
+        }).start();
+    }
+
+    public static String getCurrentPeer() {
+        return arionum_peer;
+    }
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
         instance = this;
@@ -287,11 +291,11 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
         // SETUP
         if (peers.size() > 0)
-                currentPeer = peers.get(new Random().nextInt(peers.size()));
+            currentPeer1 = peers.get(new Random().nextInt(peers.size()));
         else
-                currentPeer = "http://peer1.arionum.com";
+            currentPeer1 = "http://peer1.arionum.com";
         TextView test = findViewById(R.id.connected);
-        test.setText(currentPeer.replace("http://", ""));
+            test.setText(currentPeer1.replace("http://", ""));
         TextView address = findViewById(R.id.address);
         address.setText(HomeView.address);
         setupThankyouList();
@@ -376,17 +380,16 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
         }
 
-        private double calculateAverage(ArrayList<Long> marks) {
+    private double calculateAverage(ArrayList<Double> marks) {
                 double sum = 0;
                 if (!marks.isEmpty()) {
-                        for (Long mark : marks) {
+                    for (Double mark : marks) {
                                 sum += mark;
                         }
                         return sum / marks.size();
                 }
                 return sum;
         }
-
         public void setupThankyouList() {
         ArrayList<String> thanks = new ArrayList<>();
         thanks.add("AroDev for developing ARIONUM");
@@ -486,74 +489,24 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                         public void run() {
 
                                                 miner = Miner.main(new Miner.callbackMiner() {
-                                                        long bestRECORDEDdelay = Long.MAX_VALUE;
                                                         long start = System.currentTimeMillis();
-                                                        long hashes = 0;
+                                                    double hashes = 0;
 
                                                         @Override
-                                                        public void onHashRate(final String asddd, final long dur) {
-                                                                Handler h = new Handler(HomeView.this.getMainLooper());
-                                                                h.post(new Runnable() {
-                                                                        @Override
-                                                                        public void run() {
-                                                                                try {
-                                                                                        DecimalFormat df = new DecimalFormat("#.00");
-                                                                                        double d = calculateAverage(hashTime);
-
-                                                                                        String s = df.format(d);
-                                                                                        if (s.startsWith(","))
-                                                                                                s = "0" + s;
-                                                                                        if (s.startsWith("."))
-                                                                                                s = "0" + s;
-
-                                                                                        if (dur < bestRECORDEDdelay)
-                                                                                                bestRECORDEDdelay = dur;
-                                                                                        Miner.finalDuration = bestRECORDEDdelay;
-
-                                                                                        ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + bestRECORDEDdelay);
-                                                                                        ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
-
-                                                                                        GraphView graph = findViewById(R.id.graph);
-                                                                                        if (graph.getSeries().size() <= 0) {
-                                                                                                LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[]{
-                                                                                                        new DataPoint(0, 0)
-                                                                                                });
-                                                                                                graph.addSeries(series);
-                                                                                        } else {
-                                                                                                LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
-                                                                                                series1.setAnimated(false);
-                                                                                                series1.setThickness(3);
-                                                                                                series1.setColor(ContextCompat.getColor(instance, R.color.colorAccent));
-                                                                                                graph.getSeries().clear();
-                                                                                                series1.appendData(new DataPoint(series1.getHighestValueX() + 1, d), false, Integer.MAX_VALUE, false);
-
-                                                                                                graph.getViewport().setMinX(series1.getLowestValueX());
-                                                                                                graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
-                                                                                                graph.getViewport().setMinY(series1.getLowestValueY());
-                                                                                                graph.getViewport().setMaxY(series1.getHighestValueY() + 2);
-
-                                                                                                graph.getViewport().setYAxisBoundsManual(true);
-                                                                                                graph.getViewport().setXAxisBoundsManual(true);
-
-                                                                                                graph.addSeries(series1);
-                                                                                        }
-
-
-                                                                                } catch (Exception e) {
-
-                                                                                }
-                                                                        }
-                                                                });
+                                                        public void onHashRate(final double hashRate, final long dur) {
+                                                            if (!((Switch) findViewById(R.id.useHs)).isChecked()) {
+                                                                updateHashGraph(hashRate);
+                                                            }
                                                         }
 
-                                                        @Override
-                                                        public void onDLChange(final String hash, final long bestDelay) {
+                                                    @Override
+                                                    public void onDLChange(final double hash, final long bestDelay) {
                                                                 Handler h = new Handler(HomeView.this.getMainLooper());
                                                                 h.post(new Runnable() {
                                                                         @Override
                                                                         public void run() {
                                                                                 DecimalFormat df = new DecimalFormat("#.00");
-                                                                                double d = Double.parseDouble(hash.replace(",", "."));
+                                                                            double d = hash;
 
                                                                                 String s = df.format(d);
                                                                                 if (s.startsWith(","))
@@ -694,37 +647,57 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
                                                         @Override
                                                         public void onDurChange(final String dur) {
-                                                                if (start + 1111 < System.currentTimeMillis()) {
-                                                                        long lasthashtime = hashTime.get(hashTime.size() - 1);
-                                                                        hashTime.clear();
-                                                                        hashTime.add(lasthashtime);
-                                                                        hashTime.add(hashes);
-                                                                        hashes = 0;
-                                                                        start = System.currentTimeMillis();
-                                                                }
-                                                                if (!dur.toLowerCase().contains("nonce"))
-                                                                        hashes++;
-
-
-                                                                final TextView t = findViewById(R.id.currentDur);
-                                                                runOnUiThread(new Runnable() {
-                                                                        @Override
-                                                                        public void run() {
-                                                                                t.setText(dur);
-                                                                                try {
-                                                                                        long l = Long.parseLong(dur);
-                                                                                        if (Miner.finalDuration >= l)
-                                                                                                Miner.finalDuration = l;
-                                                                                } catch (Exception e) {
-
-                                                                                }
+                                                            if (!dur.toLowerCase().contains("nonce"))
+                                                                if (Long.parseLong(dur) < bestRECORDEDdelay)
+                                                                    bestRECORDEDdelay = Long.parseLong(dur);
+                                                            //TODO
+                                                            runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    if (((Switch) findViewById(R.id.useHs)).isChecked())
+                                                                        if (start + 1111 < System.currentTimeMillis()) {
+                                                                            ArrayList<Double> savedHashes = new ArrayList<>();
+                                                                            savedHashes.add(1D);
+                                                                            savedHashes.add(1D);
+                                                                            if (hashTime.size() > 2) {
+                                                                                savedHashes.clear();
+                                                                                savedHashes.add(hashTime.get(1));
+                                                                                savedHashes.add(hashTime.get(2));
+                                                                            }
+                                                                            hashTime.clear();
+                                                                            hashTime.addAll(savedHashes);
+                                                                            hashTime.add(hashes);
+                                                                            double currentHashRate = calculateAverage(hashTime);
+                                                                            hashTime.set(2, currentHashRate);
+                                                                            updateHashGraph(currentHashRate);
+                                                                            hashes = 0;
+                                                                            start = System.currentTimeMillis();
                                                                         }
-                                                                });
+
+                                                                    if (((Switch) findViewById(R.id.useHs)).isChecked())
+                                                                        if (!dur.toLowerCase().contains("nonce"))
+                                                                            hashes++;
+                                                                    final TextView t = findViewById(R.id.currentDur);
+                                                                    t.setText(dur);
+                                                                    try {
+                                                                        long l = Long.parseLong(dur);
+                                                                        if (Miner.finalDuration >= l)
+                                                                            Miner.finalDuration = l;
+                                                                    } catch (Exception e) {
+
+                                                                    }
+                                                                }
+                                                            });
                                                         }
 
                                                         @Override
                                                         public void onStop() {
-                                                                b.setText("Stop Miner");
+                                                            runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    b.setText("Start Miner");
+                                                                }
+                                                            });
                                                                 try {
                                                                         miner.stop();
                                                                         Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
@@ -741,14 +714,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 minerThread.start();
                         } else {
                                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                                try {
-                                        Method m = Thread.class.getDeclaredMethod("stop0", Object.class);
-                                        m.setAccessible(true);
-                                        m.invoke(minerThread, new ThreadDeath());
-                                        minerThread.interrupt();
-                                } catch (Exception e) {
-                                        minerThread.interrupt();
-                                }
+                            Miner.shutDown();
                         }
                 }
         });
@@ -1029,6 +995,61 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 }
         });
         }
+
+    public void updateHashGraph(final double hashrate) {
+        Handler h = new Handler(HomeView.this.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DecimalFormat df = new DecimalFormat("#.00");
+                    double d = hashrate;
+
+
+                    String s = df.format(d);
+                    if (s.startsWith(","))
+                        s = "0" + s;
+                    if (s.startsWith("."))
+                        s = "0" + s;
+
+
+                    Miner.finalDuration = bestRECORDEDdelay;
+
+                    ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + bestRECORDEDdelay);
+                    ((TextView) findViewById(R.id.limitVIEW)).setText(Miner.limitDuration + "");
+
+                    GraphView graph = findViewById(R.id.graph);
+                    if (graph.getSeries().size() <= 0) {
+                        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[]{
+                                new DataPoint(0, 0)
+                        });
+                        graph.addSeries(series);
+                    } else {
+                        LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
+                        series1.setAnimated(false);
+                        series1.setThickness(3);
+                        series1.setColor(ContextCompat.getColor(instance, R.color.colorAccent));
+                        graph.getSeries().clear();
+                        series1.appendData(new DataPoint(series1.getHighestValueX() + 1, d), false, Integer.MAX_VALUE, false);
+
+                        graph.getViewport().setMinX(series1.getLowestValueX());
+                        graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
+                        graph.getViewport().setMinY(series1.getLowestValueY());
+                        graph.getViewport().setMaxY(series1.getHighestValueY() + 2);
+
+                        graph.getViewport().setYAxisBoundsManual(true);
+                        graph.getViewport().setXAxisBoundsManual(true);
+
+                        graph.addSeries(series1);
+                    }
+
+
+                } catch (Exception e) {
+
+                }
+            }
+        });
+    }
 
         public void sortArrayAndPutInList(JSONArray array, final ListView view) {
         try {

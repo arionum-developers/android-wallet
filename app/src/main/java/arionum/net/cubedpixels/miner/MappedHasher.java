@@ -25,7 +25,7 @@ public class MappedHasher extends Hasher {
         context = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
     }
 
-    private static ArrayList<Nonce> nonces = new ArrayList<>();
+    private Nonce generatedNonce;
     private static ArrayList<Share> sharePool = new ArrayList<>();
 
     @Override
@@ -52,7 +52,7 @@ public class MappedHasher extends Hasher {
         }
         sharePool.clear();
         if (this.blockHeight != blockHeight) {
-            nonces.clear();
+            generatedNonce = genNonce();
         }
         super.update(difficulty, data, limit, publicKey, blockHeight, caller);
         this.caller = caller;
@@ -79,25 +79,34 @@ public class MappedHasher extends Hasher {
             parent.workerInit(id);
         }
 
+        generatedNonce = genNonce();
 
         try {
             boolean bound = true;
             while (doLoop && active) {
+                if (Miner.stop) {
+                    System.out.println("NOT ACTIVE");
+                    active = false;
+                    this.hashEnd = System.currentTimeMillis();
+                    this.hashTime = this.hashEnd - this.hashBegin;
+                    this.hashBegin = System.currentTimeMillis();
+                    completeSession();
+                    this.loopTime = 0l;
+                }
+
                 try {
-                    //GENERATE NONCEPOOL
-                    if (nonces.size() <= 0) {
-                        for (int i = 0; i < 26; i++) {
-                            nonces.add(genNonce());
-                        }
-                    }
 
                     //GET FIRST NONCE OF NONCEPOOL
-                    Nonce nonce = nonces.get(0);
-                    System.out.println("Picked Nonce:" + nonce.nonceRaw + " -> SIZE:" + nonces.size());
+                    Nonce nonce = generatedNonce;
+                    System.out.println("Working on Nonce: " + nonce.nonceRaw + " ->HASHER: " + this);
                     String base = nonce.getNonce();
-
-                    EncodedArgon2Result result = context.argon2_hash(base.getBytes());
-
+                    EncodedArgon2Result result = null;
+                    try {
+                        result = context.argon2_hash(base.getBytes());
+                    } catch (Exception e) {
+                        System.out.println("Memory allocation error");
+                        Thread.sleep(2000);
+                    }
                     String hash = result.getEncoded();
                     String hashed_done = base + hash;
 
@@ -115,12 +124,6 @@ public class MappedHasher extends Hasher {
 
 
                     long finalDuration = new BigInteger(duration.toString()).divide(this.difficulty).longValue();
-
-                    if (finalDuration > 10000000) {
-                        nonces.remove(0);
-                    }
-                    else
-                        sharePool.add(new Share(nonce.getNonceRaw(), hash, difficulty.longValue(), finalDuration));
 
                     if (finalDuration < Miner.finalDuration) {
                         Miner.finalDuration = finalDuration;
@@ -177,6 +180,7 @@ public class MappedHasher extends Hasher {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+        System.out.println("WHILE DONE");
 
         System.gc();
         Runtime.getRuntime().gc();

@@ -445,6 +445,17 @@
                 android:text="Suggested Threads:"
                 android:textColor="#8b8b8b" />
 
+            <Switch
+                android:id="@+id/useHs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/hashers"
+                android:layout_alignParentRight="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="Use H/nds"
+                android:textColor="#8b8b8b" />
+
             <EditText
                 android:id="@+id/hashers"
                 android:layout_width="50dp"
@@ -500,6 +511,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="23dp"
                 android:textAlignment="center" />
+
 
         </RelativeLayout>
 

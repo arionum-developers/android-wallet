@@ -3,9 +3,12 @@ package arionum.net.cubedpixels.service;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -18,6 +21,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -27,33 +31,54 @@ import arionum.net.cubedpixels.utils.DoneTask;
 import arionum.net.cubedpixels.views.HomeView;
 
 public class TransactionListenerService extends Service {
-	public int counter = 0;
+
+
+
 	long oldTime = 0;
 	private Timer timer;
 	private TimerTask timerTask;
-    private Context context;
-
     public TransactionListenerService(Context applicationContext) {
 		super();
-        context = applicationContext;
     }
 
 	public TransactionListenerService() {
 	}
 
+
+    public static final String COUNTDOWN_BR = "your_package_name.countdown_br";
+    String TAG = "BroadcastService";
+
+    public static void sendImplicitBroadcast(Context ctxt, Intent i) {
+        PackageManager pm = ctxt.getPackageManager();
+        List<ResolveInfo> matches = pm.queryBroadcastReceivers(i, 0);
+
+        for (ResolveInfo resolveInfo : matches) {
+            Intent explicit = new Intent(i);
+            ComponentName cn =
+                    new ComponentName(resolveInfo.activityInfo.applicationInfo.packageName,
+                            resolveInfo.activityInfo.name);
+
+            explicit.setComponent(cn);
+            ctxt.sendBroadcast(explicit);
+        }
+    }
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
 		startTimer();
-		return START_STICKY;
+
+
+        return START_STICKY;
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+        saveCurrentTimer(getCurrentTimer() + 5);
 		Log.i("EXIT", "Arionum Service is shutting down! Trying to restart...");
-		Intent broadcastIntent = new Intent("arionum.net.cubedpixels.RestartService");
-		sendBroadcast(broadcastIntent);
+        Intent broadcastIntent = new Intent("cubedpixels.arionum.restart.service");
+        sendImplicitBroadcast(this, broadcastIntent);
 		stoptimertask();
 	}
 
@@ -63,6 +88,19 @@ public class TransactionListenerService extends Service {
 		timer.schedule(timerTask, 1000, 1000);
 	}
 
+    public void saveCurrentTimer(int time) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("currentTimer", time);
+        editor.commit();
+    }
+
+    public int getCurrentTimer() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int value = sharedPref.getInt("currentTimer", 0);
+        return value;
+    }
+
 	public void initializeTimerTask() {
 		timerTask = new TimerTask() {
 			public void run() {
@@ -70,7 +108,7 @@ public class TransactionListenerService extends Service {
 				//CHECK IF NETWORK IS AVAILABLE
 				if (!isNetworkAvailable()) {
 					try {
-						counter += 7;
+                        saveCurrentTimer(getCurrentTimer() + 7);
 						Thread.sleep(10000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -88,11 +126,13 @@ public class TransactionListenerService extends Service {
 					});
 					return;
 				}
-                counter += 1;
+                saveCurrentTimer(getCurrentTimer() + 1);
+                System.out.println("Arionum Counter: " + ((4 * 60) - getCurrentTimer()));
                 //CHECK LAST TRANSACTION ID -> IF ADDRESS IS SET
 				if (getString("address") != "")
-					if (counter > 4*60) {
-						counter = 0;
+                    if (getCurrentTimer() > 3 * 60) {
+                        System.out.println("Checking for Transaction");
+                        saveCurrentTimer(0);
 						ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 							@Override
 							public void onFeedback(JSONObject object) {
@@ -125,7 +165,7 @@ public class TransactionListenerService extends Service {
 															.setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
                                             NotificationManager mNotificationManager =
-                                                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                                 NotificationChannel channel = new NotificationChannel("notify_001",
                                                         "Channel human readable title",
@@ -153,7 +193,7 @@ public class TransactionListenerService extends Service {
 																					.get("src")))
 															.setPriority(NotificationCompat.PRIORITY_DEFAULT);
                                             NotificationManager mNotificationManager =
-                                                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                                 NotificationChannel channel = new NotificationChannel("notify_001",
                                                         "Channel human readable title",
@@ -164,9 +204,10 @@ public class TransactionListenerService extends Service {
                                         }
 										System.out.println("1 new notifications");
 									} else {
-										System.out.println("no new notifications");
+                                        System.out.println("SAME ID: " + id);
 									}
 								} catch (Exception e) {
+                                    e.printStackTrace();
 								}
 							}
 						}, "getTransactions", new ApiRequest.Argument("public_key", getString("publickey")),

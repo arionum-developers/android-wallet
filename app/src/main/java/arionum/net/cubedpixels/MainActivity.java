@@ -94,11 +94,6 @@ public class MainActivity extends AppCompatActivity {
 						setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
 						while (((Animatable) drawable).isRunning()) {
 						}
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
 						Handler h = new Handler(instance.getMainLooper());
 						h.post(new Runnable() {
 							@Override
@@ -131,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
 			public void onError() {
 				setLoadingText("Arionum Server is not reachable! Retrying...");
 				try {
-					Thread.sleep(1200);
+					Thread.sleep(600);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -142,13 +137,17 @@ public class MainActivity extends AppCompatActivity {
 			public void onDone() {
 				setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
 				try {
-					Thread.sleep(1500);
-					setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
-					Thread.sleep(new Random().nextInt(4000));
-					setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
+					Thread.sleep(300);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+				setLoadingText(someStrings[new Random().nextInt(someStrings.length)]);
+				try {
+					Thread.sleep(300);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
 				if (getString("address") != "") {
 					Intent i = new Intent(instance, HomeView.class);
 					i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
