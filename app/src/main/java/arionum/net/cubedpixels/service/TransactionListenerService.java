@@ -127,7 +127,6 @@ public class TransactionListenerService extends Service {
 					return;
 				}
                 saveCurrentTimer(getCurrentTimer() + 1);
-                System.out.println("Arionum Counter: " + ((4 * 60) - getCurrentTimer()));
                 //CHECK LAST TRANSACTION ID -> IF ADDRESS IS SET
 				if (getString("address") != "")
                     if (getCurrentTimer() > 3 * 60) {

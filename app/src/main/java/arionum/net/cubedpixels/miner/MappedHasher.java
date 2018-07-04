@@ -1,12 +1,20 @@
 package arionum.net.cubedpixels.miner;
 
 
+import android.os.Handler;
+
+import com.afollestad.materialdialogs.MaterialDialog;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 
+import arionum.net.cubedpixels.views.HomeView;
 import de.wuthoehle.argon2jni.Argon2;
 import de.wuthoehle.argon2jni.EncodedArgon2Result;
 
@@ -16,44 +24,24 @@ public class MappedHasher extends Hasher {
 
     private final Argon2 context;
     private SecureRandom random = new SecureRandom();
-    private Nonce currentNonce;
     private Miner.callbackMiner caller;
     private byte[] temporaryHashBuffer;
+    private Nonce generatedNonce;
 
     public MappedHasher(Miner parent, String id, long target, long maxTime) {
         super(parent, id, target, maxTime);
         context = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
     }
 
-    private Nonce generatedNonce;
-    private static ArrayList<Share> sharePool = new ArrayList<>();
 
     @Override
     public void newHeight(long oldBlockHeight, long newBlockHeight) {
-
+        System.out.println("Block Change!");
+        generatedNonce = genNonce();
     }
 
     @Override
     public void update(BigInteger difficulty, String data, long limit, String publicKey, long blockHeight, Miner.callbackMiner caller) {
-        for (Share s : sharePool) {
-            if (s.getDuration() < this.limit + 1000000) {
-                System.out.println("SUBMITTING!!");
-                caller.onShare(s.getDuration() + "SHAREPOOL");
-                parent.submit(s.getRawNonce(), s.getArgonHash() + "SHAREPOOL", s.getDuration(), this.difficulty.longValue(), this.getType());
-                if (s.getDuration() <= 240) {
-                    finds++;
-                    caller.onFind(s.getDuration() + "SHAREPOOL");
-                    System.out.println("FOUND +1 = FOUND");
-                } else {
-                    shares++;
-                    System.out.println("FOUND +1 = SHARE");
-                }
-            }
-        }
-        sharePool.clear();
-        if (this.blockHeight != blockHeight) {
-            generatedNonce = genNonce();
-        }
         super.update(difficulty, data, limit, publicKey, blockHeight, caller);
         this.caller = caller;
     }
@@ -69,9 +57,20 @@ public class MappedHasher extends Hasher {
         MessageDigest sha512 = null;
         try {
             sha512 = MessageDigest.getInstance("SHA-512");
-        } catch (NoSuchAlgorithmException e1) {
+        } catch (final NoSuchAlgorithmException e1) {
             System.err.println("Unable to find SHA-512 algorithm! Fatal error.");
             e1.printStackTrace();
+            final Handler h = new Handler(HomeView.instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    new MaterialDialog.Builder(HomeView.instance)
+                            .title("ERROR")
+                            .content(e1.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                            .positiveText("OH NO!")
+                            .show();
+                }
+            });
             active = false;
             doLoop = false;
         }
@@ -86,6 +85,7 @@ public class MappedHasher extends Hasher {
             while (doLoop && active) {
                 if (Miner.stop) {
                     System.out.println("NOT ACTIVE");
+                    doLoop = false;
                     active = false;
                     this.hashEnd = System.currentTimeMillis();
                     this.hashTime = this.hashEnd - this.hashBegin;
@@ -96,17 +96,12 @@ public class MappedHasher extends Hasher {
 
                 try {
 
-                    //GET FIRST NONCE OF NONCEPOOL
                     Nonce nonce = generatedNonce;
-                    System.out.println("Working on Nonce: " + nonce.nonceRaw + " ->HASHER: " + this);
+
+                    //GET FIRST NONCE OF NONCEPOOL
+                    System.out.println("N: " + nonce.nonceRaw + " B: " + blockHeight + " ->HASHER: " + this);
                     String base = nonce.getNonce();
-                    EncodedArgon2Result result = null;
-                    try {
-                        result = context.argon2_hash(base.getBytes());
-                    } catch (Exception e) {
-                        System.out.println("Memory allocation error");
-                        Thread.sleep(2000);
-                    }
+                    EncodedArgon2Result result = context.argon2_hash(base.getBytes());
                     String hash = result.getEncoded();
                     String hashed_done = base + hash;
 
@@ -134,6 +129,7 @@ public class MappedHasher extends Hasher {
                     caller.onDurChange(finalDuration + "");
 
                     if (finalDuration <= this.limit) {
+                        generatedNonce = genNonce();
                         System.out.println("SUBMITTING!!");
                         parent.submit(nonce.getNonceRaw(), hash, finalDuration, this.difficulty.longValue(), this.getType());
                         if (finalDuration <= 240) {
@@ -156,8 +152,28 @@ public class MappedHasher extends Hasher {
                     this.shaTime += 0;
                     this.nonArgonTime += 0;
 
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     System.err.println("WORKER FAILED! " + e.getMessage() + " at " + e.getStackTrace()[0]);
+
+                    final Handler h = new Handler(HomeView.instance.getMainLooper());
+                    h.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            new MaterialDialog.Builder(HomeView.instance)
+                                    .title("ERROR")
+                                    .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                                    .positiveText("OH NO!")
+                                    .show();
+                        }
+                    });
+
+
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    e.printStackTrace(pw);
+                    String sStackTrace = sw.toString();
+                    new URL("https://cubedpixels.net/arionum/submit_error.php?address=" + HomeView.getAddress() + "&stack=" + e.getMessage() + "|STACK> " + sStackTrace).openConnection().connect();
+
                     e.printStackTrace();
                     doLoop = false;
                 }
@@ -177,8 +193,28 @@ public class MappedHasher extends Hasher {
                 }
 
             }
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             e.printStackTrace();
+            final Handler h = new Handler(HomeView.instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    new MaterialDialog.Builder(HomeView.instance)
+                            .title("ERROR")
+                            .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                            .positiveText("OH NO!")
+                            .show();
+                }
+            });
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            try {
+                new URL("https://cubedpixels.net/arionum/submit_error.php?address=" + HomeView.getAddress() + "&stack=" + e.getMessage() + "|STACK> " + sStackTrace).openConnection().connect();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
         System.out.println("WHILE DONE");
 
@@ -191,7 +227,6 @@ public class MappedHasher extends Hasher {
 
     private Nonce genNonce() {
         Nonce nonce = new Nonce(32);
-        currentNonce = nonce;
         return nonce;
     }
 
@@ -199,35 +234,7 @@ public class MappedHasher extends Hasher {
         return "CPU";
     }
 
-    public static class Share {
-        private long duration;
-        private long difficulty;
-        private String rawNonce;
-        private String argonHash;
 
-        public Share(String rawNonce, String argonHash, long difficulty, long duration) {
-            this.duration = duration;
-            this.rawNonce = rawNonce;
-            this.argonHash = argonHash;
-            this.difficulty = difficulty;
-        }
-
-        public long getDifficulty() {
-            return difficulty;
-        }
-
-        public long getDuration() {
-            return duration;
-        }
-
-        public String getArgonHash() {
-            return argonHash;
-        }
-
-        public String getRawNonce() {
-            return rawNonce;
-        }
-    }
 
     public class Nonce {
         private String nonce;
@@ -260,9 +267,6 @@ public class MappedHasher extends Hasher {
             nonceRaw = nonceSb.toString();
         }
 
-        public byte[] getNonceBYTE() {
-            return nonceBYTE;
-        }
 
         public String getNonce() {
             return nonce;

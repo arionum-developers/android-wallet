@@ -122,6 +122,7 @@ public class Miner implements UncaughtExceptionHandler {
     private String statsInvoke;
     private String statsToken;
     private boolean post;
+    private boolean cbyEnabled;
     private ConcurrentHashMap<String, HasherStats> statsStage;
     private ConcurrentLinkedQueue<HasherStats> statsReport;
 
@@ -383,7 +384,18 @@ public class Miner implements UncaughtExceptionHandler {
                     if (this.statsHost != null) {
                     }
 
-                } catch (Throwable e) {
+                } catch (final Throwable e) {
+                    final Handler h = new Handler(HomeView.instance.getMainLooper());
+                    h.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            new MaterialDialog.Builder(HomeView.instance)
+                                    .title("ERROR")
+                                    .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                                    .positiveText("OH NO!")
+                                    .show();
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
@@ -395,7 +407,18 @@ public class Miner implements UncaughtExceptionHandler {
             }
             this.lastSpeed.addAndGet((long) (((newHashes.doubleValue() * 10000000d) / (double) (wallTime))));
             this.speedAccrue.incrementAndGet();
-        } catch (Exception e) {
+        } catch (final Exception e) {
+            final Handler h = new Handler(HomeView.instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    new MaterialDialog.Builder(HomeView.instance)
+                            .title("ERROR")
+                            .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                            .positiveText("OH NO!")
+                            .show();
+                }
+            });
         }
     }
 
@@ -433,8 +456,19 @@ public class Miner implements UncaughtExceptionHandler {
             if (waitEff < 0.0d) waitEff = 0.0d;
 
 
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             t.printStackTrace();
+            final Handler h = new Handler(HomeView.instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    new MaterialDialog.Builder(HomeView.instance)
+                            .title("ERROR")
+                            .content(t.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                            .positiveText("OH NO!")
+                            .show();
+                }
+            });
         }
 
         if (AdvMode.auto.equals(this.hasherMode)) {
@@ -568,7 +602,7 @@ public class Miner implements UncaughtExceptionHandler {
             @Override
             protected Void doInBackground(Void... voids) {
                 StringBuilder extra = new StringBuilder(node);
-                extra.append("/mine.php?q=submitNonce");
+                extra.append("/" + (cbyEnabled ? "cby.php" : "mine.php") + "?q=submitNonce");
                 int failures = 0;
                 long executionTimeTracker = System.currentTimeMillis();
                 try {
@@ -759,9 +793,21 @@ public class Miner implements UncaughtExceptionHandler {
                             }
                             boolean endline = false;
 
-                            double cummSpeed = speed();
+
+                            try {
+                                HttpURLConnection.setFollowRedirects(false);
+                                HttpURLConnection con =
+                                        (HttpURLConnection) new URL(node + "/cby.php").openConnection();
+                                con.setRequestMethod("HEAD");
+                                cbyEnabled = (con.getResponseCode() == HttpURLConnection.HTTP_OK);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                cbyEnabled = false;
+                            }
+                            cbyEnabled = false;
+
                             StringBuilder extra = new StringBuilder(node);
-                            extra.append("/mine.php?q=info");
+                            extra.append("/" + (cbyEnabled ? "cby.php" : "mine.php") + "?q=info");
                             if (MinerType.pool.equals(type)) {
                                 extra.append("&worker=").append(URLEncoder.encode(worker, "UTF-8"));
 
@@ -770,11 +816,11 @@ public class Miner implements UncaughtExceptionHandler {
                                 }
 
                                 if (!sendSpeed && lastSendSpeed + 1000 * 20 < System.currentTimeMillis()) {
-                                    extra.append("&hashrate=").append(cummSpeed);
+                                    extra.append("&hashrate=").append(speed());
                                     lastSendSpeed = System.currentTimeMillis();
                                     sendSpeed = true;
                                 } else if (sendSpeed && lastSendSpeed + 1000 * 60 * 6 < System.currentTimeMillis()) {
-                                    extra.append("&hashrate=").append(cummSpeed);
+                                    extra.append("&hashrate=").append(speed());
                                     lastSendSpeed = System.currentTimeMillis();
                                 }
 
@@ -848,12 +894,12 @@ public class Miner implements UncaughtExceptionHandler {
                                 updateWorkers();
                             }
 
-                            System.out.println("REPORTED SPEED: " + cummSpeed);
+                            System.out.println("REPORTED SPEED: " + speed());
                             System.out.println("Shares: " + sessionSubmits.get());
                             long sinceLastReport = System.currentTimeMillis() - lastReport;
                             if (sinceLastReport > UPDATING_REPORT) {
                                 lastReport = System.currentTimeMillis();
-                                System.out.println("REPORTED SPEED: " + cummSpeed);
+                                System.out.println("REPORTED SPEED: " + speed());
                                 System.out.println("Shares: " + sessionSubmits.get());
 
                                 printWorkerHeader();
@@ -885,10 +931,21 @@ public class Miner implements UncaughtExceptionHandler {
                             updateLoop[0] = false;
                             System.out.println("JUST DONE");
                             return Boolean.TRUE;
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             lastUpdate = System.currentTimeMillis();
                             updateLoop[0] = false;
                             e.printStackTrace();
+                            final Handler h = new Handler(HomeView.instance.getMainLooper());
+                            h.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    new MaterialDialog.Builder(HomeView.instance)
+                                            .title("ERROR")
+                                            .content(e.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                                            .positiveText("OH NO!")
+                                            .show();
+                                }
+                            });
                             failures++;
                             updateTime(System.currentTimeMillis() - executionTimeTracker);
                             System.out.println("FAIL == DONE");
@@ -917,7 +974,18 @@ public class Miner implements UncaughtExceptionHandler {
 
                             try {
                                 Thread.sleep(5000l);
-                            } catch (InterruptedException ie) {
+                            } catch (final InterruptedException ie) {
+                                final Handler h = new Handler(HomeView.instance.getMainLooper());
+                                h.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        new MaterialDialog.Builder(HomeView.instance)
+                                                .title("ERROR")
+                                                .content(ie.getMessage() + " \n- I think your devices is jammed full of cats...\n They are not really smart you know?")
+                                                .positiveText("OH NO!")
+                                                .show();
+                                    }
+                                });
                                 shutDown();
                                 System.out.println("INTERRUPT == FALSE");
                                 active = false;
@@ -940,7 +1008,11 @@ public class Miner implements UncaughtExceptionHandler {
                 this.deadWorkerLives.put(workerId, System.currentTimeMillis());
                 Hasher hasher = HasherFactory.createHasher(hasherMode, this, workerId, this.hashesPerSession, this.sessionLength * 2l);
                 updateWorker(hasher);
-                this.hashers.submit(hasher);
+                try {
+                    this.hashers.submit(hasher);
+                } catch (Exception e) {
+                    uncaughtException(Thread.currentThread(), e);
+                }
                 addWorker(workerId, hasher);
             }
 
