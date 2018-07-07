@@ -15,7 +15,11 @@ public class ServiceStopListener extends BroadcastReceiver {
         serviceint.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             System.out.println("STARTING SERVICE FOR O");
-            context.startForegroundService(serviceint);
+            try {
+                context.startForegroundService(serviceint);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 		} else {
             System.out.println("STARTING SERVICE UNDER O");
 			context.startService(serviceint);
