@@ -16,8 +16,6 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Random;
 
 import arionum.net.cubedpixels.service.TransactionListenerService;
@@ -56,10 +54,6 @@ public class MainActivity extends AppCompatActivity {
 			public void uncaughtException(Thread thread, final Throwable throwable) {
 				throwable.printStackTrace();
                 System.out.println("ERROR");
-                StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				throwable.printStackTrace(pw);
-				String sStackTrace = sw.toString();
 				final Handler h = new Handler(HomeView.instance.getMainLooper());
 				h.post(new Runnable() {
 					@Override

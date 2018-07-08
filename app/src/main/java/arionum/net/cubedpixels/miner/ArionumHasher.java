@@ -39,6 +39,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
             //TODO -> CATCH OLD PHONES WITHOUT SHA-512
         }
 
+        Thread.setDefaultUncaughtExceptionHandler(this);
+
         active = true;
         forceStop = false;
         doCycle();
@@ -79,12 +81,14 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
             long finalDuration = new BigInteger(duration.toString()).divide(new BigInteger(difficulty + "")).longValue();
 
+            ArionumMiner.getInstance().setOverallHashes(ArionumMiner.getOverallHashes() + 1);
             ArionumMiner.getInstance().getCallback().onDLChange(finalDuration);
 
             if (finalDuration <= neededDL) {
                 System.out.println("NONCE: " + nonce.getNonce());
                 System.out.println("ENCODED: " + encoded);
                 minerInstance.submitShare(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height);
+                refreshNonce();
             }
 
         }
@@ -104,7 +108,6 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
 
         if (this.height != height) {
-            System.out.println("Block update! Refreshing Nonce...");
             this.height = height;
             refreshNonce();
         }

@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -26,7 +27,7 @@ public class ArionumMiner {
     private static boolean running = false;
     private static int overallHashes;
     private static int bestDL;
-    private static int lastHashrate = 0;
+    private static double lastHashrate = 0;
     private static ArionumMiner instance;
     public String pool;
     public String minerName;
@@ -64,22 +65,7 @@ public class ArionumMiner {
         return instance;
     }
 
-    public void start(ArionumMinerCallback callback, String pool, int threads) {
-        this.pool = pool;
-        this.threads = threads;
-        this.callback = callback;
-
-        //TODO: -> USER DATA
-        String deviceId = Settings.Secure.getString(MainActivity.getInstance().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        minerName = "CubysAndroidMiner#" + deviceId.substring(0, 6);
-        address = HomeView.getAddress();
-        publicKey = address;
-
-        running = true;
-        makeStormieHappy();
-        createUpdateThread();
-    }
+    private int hasherClock = 0;
 
     public void startHashers() {
         for (int i = 0; i < threads; i++) {
@@ -90,96 +76,36 @@ public class ArionumMiner {
         updateHashers();
     }
 
-    public void createUpdateThread() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startHashers();
-                while (running) {
-                    try {
-                        Thread.sleep(1000 * 60);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if (!running)
-                        return;
-                    updateHashers();
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.setName("Arionum Miner Update Thread");
-        thread.setPriority(10);
-        thread.start();
-        threadCollection.add(thread);
+    public static double getLastHashrate() {
+        return lastHashrate;
     }
 
-    public void updateHashers() {
-        //TODO -> UPDATE HASHERS WITH NEW VARS
+    public static void setLastHashrate(double lastHashrate) {
+        ArionumMiner.lastHashrate = lastHashrate;
+    }
 
-        //TODO -> GET DATA FROM POOL!
+    public void start(ArionumMinerCallback callback, String pool, int threads) {
+        this.pool = pool;
+        this.threads = threads;
+        this.callback = callback;
 
-        String data = "";
-        String pool_key = "";
-        long difficulty = 0;
-        long neededDL = 0;
-        long height = 0;
+        //TODO: -> USER DATA
+        String deviceId = Settings.Secure.getString(MainActivity.getInstance().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        minerName = "Cuby's Android Miner " + deviceId.substring(0, 5);
+        address = HomeView.getAddress();
+        publicKey = address;
 
-        String url = getPool() + "?q=info&worker=" + getMinerName() + "&address=" + getAddress() + "&hashrate=" + lastHashrate;
-
-        System.out.println(url);
-
-        try {
-            URL u = new URL(url);
-            URLConnection uc = u.openConnection();
-            String content = new Scanner(uc.getInputStream()).nextLine();
-            JSONObject o = new JSONObject(content);
-            JSONObject jsonData = (JSONObject) o.get("data");
-            String localData = (String) jsonData.get("block");
-            data = localData;
-            BigInteger localDifficulty = new BigInteger((String) jsonData.get("difficulty"));
-            difficulty = localDifficulty.longValue();
-            long limitDL = Long.parseLong(jsonData.get("limit").toString());
-            neededDL = limitDL;
-            long localHeight = jsonData.getLong("height");
-            height = localHeight;
-            String publicpoolkey = jsonData.getString("public_key");
-            pool_key = publicpoolkey;
-            System.out.println("Response: " + o);
-        } catch (Exception e) {
-            //TODO -> HANDLE FAILED URL RESPONSE
-            e.printStackTrace();
-            final Handler h = new Handler(HomeView.instance.getMainLooper());
-            h.post(new Runnable() {
-                @Override
-                public void run() {
-                    new MaterialDialog.Builder(HomeView.instance).title("ERROR").content("The Pool URL could not get resolved!").positiveText("OH NO!").show();
-                }
-            });
-            return;
-        }
-
-        for (final ArionumHasher hasher : hashers) {
-            hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
-            if (!hasher.isActive()) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(hashers.indexOf(hasher) * 1250);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        hasher.initiate();
-                    }
-                });
-                threadCollection.add(thread);
-                thread.setDaemon(true);
-                thread.setName("Arionum Hasher Thread");
-                thread.setPriority(10);
-                thread.start();
-            }
-        }
+        System.out.println("\n" + "================================================" + "\n" +
+                ("---------STARTING CUBY'S ANDROID MINER----------") + "\n" +
+                ("--Miner Name: " + minerName) + "\n" +
+                ("--Address: " + address) + "\n" +
+                ("--Pool: " + pool) + "\n" +
+                ("--Threads: " + threads) + "\n" +
+                ("================================================"));
+        running = true;
+        makeStormieHappy();
+        createUpdateThread();
     }
 
     public void submitShare(final String nonce, String argon, final long submitDL, final long difficulty, long height) {
@@ -272,6 +198,109 @@ public class ArionumMiner {
         return threads;
     }
 
+    public void createUpdateThread() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                startHashers();
+                while (running) {
+                    try {
+                        Thread.sleep(1000 * 20);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (!running)
+                        return;
+                    updateHashers();
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.setName("Arionum Miner Update Thread");
+        thread.setPriority(10);
+        thread.start();
+        threadCollection.add(thread);
+    }
+
+    public void updateHashers() {
+        //TODO -> UPDATE HASHERS WITH NEW VARS
+        hasherClock++;
+        //TODO -> GET DATA FROM POOL!
+
+        String data = "";
+        String pool_key = "";
+        long difficulty = 0;
+        long neededDL = 0;
+        long height = 0;
+
+        String url = null;
+        try {
+            url = getPool() + "?q=info&worker=" + URLEncoder.encode(getMinerName(), "UTF-8");
+            if (hasherClock > 3) {
+                hasherClock = 0;
+                url += "&address=" + HomeView.getAddress() + "&hashrate=" + lastHashrate;
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            URL u = new URL(url);
+            URLConnection uc = u.openConnection();
+            String content = new Scanner(uc.getInputStream()).nextLine();
+            JSONObject o = new JSONObject(content);
+            JSONObject jsonData = (JSONObject) o.get("data");
+            String localData = (String) jsonData.get("block");
+            data = localData;
+            BigInteger localDifficulty = new BigInteger((String) jsonData.get("difficulty"));
+            difficulty = localDifficulty.longValue();
+            long limitDL = Long.parseLong(jsonData.get("limit").toString());
+            neededDL = limitDL;
+            long localHeight = jsonData.getLong("height");
+            height = localHeight;
+            String publicpoolkey = jsonData.getString("public_key");
+            pool_key = publicpoolkey;
+        } catch (Exception e) {
+            //TODO -> HANDLE FAILED URL RESPONSE
+            e.printStackTrace();
+            final Handler h = new Handler(HomeView.instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    new MaterialDialog.Builder(HomeView.instance).title("ERROR").content("The Pool URL could not get resolved!").positiveText("OH NO!").show();
+                }
+            });
+            return;
+        }
+
+        for (final ArionumHasher hasher : hashers) {
+            hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
+            if (!hasher.isActive()) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(hashers.indexOf(hasher) * 1250);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        hasher.initiate();
+                    }
+                });
+                threadCollection.add(thread);
+                thread.setDaemon(true);
+                thread.setName("Arionum Hasher Thread");
+                thread.setPriority(10);
+                thread.start();
+            }
+        }
+    }
+
+    public void setOverallHashes(int overallHashes) {
+        ArionumMiner.overallHashes = overallHashes;
+    }
+
     public String getMinerName() {
         return minerName;
     }
@@ -295,5 +324,6 @@ public class ArionumMiner {
         public abstract void onReject(String hash);
 
         public abstract void onDLChange(long dl);
+
     }
 }

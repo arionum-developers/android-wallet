@@ -14,7 +14,7 @@
         android:background="@color/colorBlue">
 
         <ImageView
-            android:id="@+id/preintroimage"
+            android:id="@+id/intro_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -26,7 +26,7 @@
             android:id="@+id/textView8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/preintroimage"
+            android:layout_below="@+id/intro_image"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
             android:text="Welcome to Arionum"

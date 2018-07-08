@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -269,7 +270,18 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         instance = this;
+        //TODO -> ON CREATE
 
+        PasswordView.PasswordCallback cp = new PasswordView.PasswordCallback() {
+            @Override
+            public void verification_done(boolean accepted) {
+                if (!accepted)
+                    PasswordView.makePasswordPromt(HomeView.this, this);
+            }
+        };
+
+        if (!PasswordView.hasPassword())
+            PasswordView.makePasswordPromt(this, cp);
 
         public_key = getString("publickey");
         if (!getString("privatekey").isEmpty())
@@ -543,6 +555,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 }
                             });
                         }
+
                     }, editPool.getText().toString(), Integer.parseInt(editHashers.getText().toString()));
 
                 } else {
@@ -579,10 +592,20 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         });
 
         final TextView privatekey = findViewById(R.id.yourprivatekey);
-        privatekey.setText(getPrivate_key());
+        privatekey.setText("*CLICK TO SHOW*");
         privatekey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (privatekey.getText().toString().contains("CLICK TO"))
+                    PasswordView.makePasswordPromt(HomeView.this, new PasswordView.PasswordCallback() {
+                        @Override
+                        public void verification_done(boolean accepted) {
+                            if (accepted)
+                                privatekey.setText(getPrivate_key());
+                        }
+                    });
+                if (privatekey.getText().toString().contains("CLICK TO"))
+                    return;
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Arionum-Private-Key", privatekey.getText().toString());
                 clipboard.setPrimaryClip(clip);
@@ -678,44 +701,52 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    final Double amount = Double.parseDouble(amountedit.getText().toString());
-                    final String address = ((EditText) findViewById(R.id.addressto)).getText().toString();
-                    final String message = ((EditText) findViewById(R.id.messageedit)).getText().toString();
-                    DecimalFormat format = new DecimalFormat("0.########");
-                    String vals = format.format(amount);
-                    if (!vals.contains(","))
-                        vals += ",0";
-                    while (vals.split(",")[1].length() < 8)
-                        vals += "0";
-                    vals = vals.replace(",", ".");
-                    new MaterialDialog.Builder(HomeView.this).title("Transaction")
-                            .content("Are you sure you want to send " + doubleVal(amount).replace(",", ".") + " ARO " + "\n to: " + address)
-                            .cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                    dialog.dismiss();
-                                    final MaterialDialog d = new MaterialDialog.Builder(HomeView.this).title("Sending")
-                                            .progress(true, 100).progressIndeterminateStyle(true).cancelable(false)
-                                            .show();
+
+                PasswordView.makePasswordPromt(HomeView.this, new PasswordView.PasswordCallback() {
+                    @Override
+                    public void verification_done(boolean accepted) {
+                        if (accepted) {
+                            try {
+                                final Double amount = Double.parseDouble(amountedit.getText().toString());
+                                final String address = ((EditText) findViewById(R.id.addressto)).getText().toString();
+                                final String message = ((EditText) findViewById(R.id.messageedit)).getText().toString();
+                                DecimalFormat format = new DecimalFormat("0.########");
+                                String vals = format.format(amount);
+                                if (!vals.contains(","))
+                                    vals += ",0";
+                                while (vals.split(",")[1].length() < 8)
+                                    vals += "0";
+                                vals = vals.replace(",", ".");
+                                new MaterialDialog.Builder(HomeView.this).title("Transaction")
+                                        .content("Are you sure you want to send " + doubleVal(amount).replace(",", ".") + " ARO " + "\n to: " + address)
+                                        .cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
+                                                final MaterialDialog d = new MaterialDialog.Builder(HomeView.this).title("Sending")
+                                                        .progress(true, 100).progressIndeterminateStyle(true).cancelable(false)
+                                                        .show();
 
 
-                                    //TODO REQUEST SEND
+                                                //TODO REQUEST SEND
 
-                                    makeTransaction(address, amount.doubleValue(), message, new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            d.dismiss();
-                                        }
-                                    });
+                                                makeTransaction(address, amount.doubleValue(), message, new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        d.dismiss();
+                                                    }
+                                                });
 
 
-                                }
-                            }).show();
-                } catch (Exception e) {
-
-                }
+                                            }
+                                        }).show();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
             }
         });
         qrCodeReaderView = findViewById(R.id.receivescanner);
@@ -872,8 +903,12 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     if (s.startsWith("."))
                         s = "0" + s;
 
-                    ((TextView) findViewById(R.id.hashRate)).setText(s + " H/s \nBEST DL:" + bestRECORDEDdelay);
-                    ((TextView) findViewById(R.id.limitVIEW)).setText(ArionumMiner.getOverallHashes() + "");
+                    ((TextView) findViewById(R.id.hashRate)).setText(s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
+                    ArionumMiner.setLastHashrate(emulateHs(hashrate));
+                    if (!((ArionumMiner.getOverallHashes() + "").equals(((TextView) findViewById(R.id.limitVIEW)).getText()))) {
+                        findViewById(R.id.limitVIEW).startAnimation(AnimationUtils.loadAnimation(HomeView.this, android.R.anim.fade_in));
+                        ((TextView) findViewById(R.id.limitVIEW)).setText(ArionumMiner.getOverallHashes() + "");
+                    }
 
                     if (((Switch) findViewById(R.id.disableGraph)).isChecked())
                         return;
@@ -911,6 +946,11 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     }
 
 
+    public double emulateHs(double n) {
+        //TODO-> IDK how dan his things work but this is a temporary solution
+        return n * 1.4 * 1.3 * 1.12 * 0.99301 * 1.33;
+    }
+
     public void makeNotification(final String contentsmall) {
         Handler h = new Handler(HomeView.this.getMainLooper());
         h.post(new Runnable() {
@@ -942,7 +982,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     parsed = Integer.parseInt(text);
                 } catch (Exception e) {
                 }
-                t.setText((parsed + 1) + "");
+                if (contentsmall.startsWith("Share found"))
+                    t.setText((parsed + 1) + "");
             }
         });
     }

@@ -76,7 +76,7 @@ public class IntroActivity extends MaterialIntroActivity {
             super.onCreate(savedInstanceState);
             AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
             setContentView(R.layout.pre_intro_view);
-            ImageView i = findViewById(R.id.preintroimage);
+            ImageView i = findViewById(R.id.intro_image);
             final Animation a = new TranslateAnimation(0, 0, 0, 20);
             a.setStartOffset(0);
             a.setRepeatCount(Animation.INFINITE);

@@ -10,10 +10,6 @@ public class Nonce {
 
     public Nonce(String publicKey, String data, String difficultyString, int length) {
 
-        System.out.println("data " + data);
-        System.out.println("publicKey " + publicKey);
-        System.out.println("difficultyString " + difficultyString);
-
         SecureRandom random = new SecureRandom();
         String encNonce = null;
         StringBuilder hashBase;
