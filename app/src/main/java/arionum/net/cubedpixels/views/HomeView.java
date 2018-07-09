@@ -556,7 +556,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                             });
                         }
 
-                    }, editPool.getText().toString(), Integer.parseInt(editHashers.getText().toString()));
+                    }, editPool.getText().toString(), Integer.parseInt(editHashers.getText().toString()), HomeView.this);
 
                 } else {
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -905,9 +905,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
                     ((TextView) findViewById(R.id.hashRate)).setText(s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
                     ArionumMiner.setLastHashrate(emulateHs(hashrate));
-                    if (!((ArionumMiner.getOverallHashes() + "").equals(((TextView) findViewById(R.id.limitVIEW)).getText()))) {
+                    String text = (ArionumMiner.getMinDL() + "\n" + ArionumMiner.getCurrentBlock() + "\n" + ArionumMiner.getOverallHashes());
+                    if (!text.equals(((TextView) findViewById(R.id.limitVIEW)).getText())) {
                         findViewById(R.id.limitVIEW).startAnimation(AnimationUtils.loadAnimation(HomeView.this, android.R.anim.fade_in));
-                        ((TextView) findViewById(R.id.limitVIEW)).setText(ArionumMiner.getOverallHashes() + "");
+                        ((TextView) findViewById(R.id.limitVIEW)).setText(text);
                     }
 
                     if (((Switch) findViewById(R.id.disableGraph)).isChecked())

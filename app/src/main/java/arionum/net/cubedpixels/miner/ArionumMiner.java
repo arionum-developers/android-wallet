@@ -1,5 +1,6 @@
 package arionum.net.cubedpixels.miner;
 
+import android.content.Context;
 import android.os.Handler;
 import android.provider.Settings;
 
@@ -18,17 +19,24 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.UUID;
 
-import arionum.net.cubedpixels.MainActivity;
 import arionum.net.cubedpixels.views.HomeView;
 
 public class ArionumMiner {
 
     private static boolean running = false;
-    private static int overallHashes;
-    private static int bestDL;
+
+    //TODO -> STATS
+    private static long overallHashes;
     private static double lastHashrate = 0;
+    private static long minDL;
+    private static long currentBlock;
+
+
     private static ArionumMiner instance;
+
+
     public String pool;
     public String minerName;
     public String publicKey;
@@ -49,11 +57,15 @@ public class ArionumMiner {
         //TODO -> GET SOMETHING TO MAKE STORMIE HAPPY
     }
 
-    public static int getBestDL() {
-        return bestDL;
+    public static long getMinDL() {
+        return minDL;
     }
 
-    public static int getOverallHashes() {
+    public static long getCurrentBlock() {
+        return currentBlock;
+    }
+
+    public static long getOverallHashes() {
         return overallHashes;
     }
 
@@ -84,28 +96,8 @@ public class ArionumMiner {
         ArionumMiner.lastHashrate = lastHashrate;
     }
 
-    public void start(ArionumMinerCallback callback, String pool, int threads) {
-        this.pool = pool;
-        this.threads = threads;
-        this.callback = callback;
-
-        //TODO: -> USER DATA
-        String deviceId = Settings.Secure.getString(MainActivity.getInstance().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        minerName = "Cuby's Android Miner " + deviceId.substring(0, 5);
-        address = HomeView.getAddress();
-        publicKey = address;
-
-        System.out.println("\n" + "================================================" + "\n" +
-                ("---------STARTING CUBY'S ANDROID MINER----------") + "\n" +
-                ("--Miner Name: " + minerName) + "\n" +
-                ("--Address: " + address) + "\n" +
-                ("--Pool: " + pool) + "\n" +
-                ("--Threads: " + threads) + "\n" +
-                ("================================================"));
-        running = true;
-        makeStormieHappy();
-        createUpdateThread();
+    public void setOverallHashes(long overallHashes) {
+        ArionumMiner.overallHashes = overallHashes;
     }
 
     public void submitShare(final String nonce, String argon, final long submitDL, final long difficulty, long height) {
@@ -222,6 +214,40 @@ public class ArionumMiner {
         threadCollection.add(thread);
     }
 
+    public void start(ArionumMinerCallback callback, String pool, int threads, Context context) {
+        this.pool = pool;
+        this.threads = threads;
+        this.callback = callback;
+
+        //TODO: -> USER DATA
+        String deviceId = "";
+        try {
+            deviceId = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
+        } catch (Exception e) {
+            if (HomeView.instance != null) {
+                if (HomeView.instance.getString("unkown_device_id").equals(""))
+                    HomeView.instance.saveString("unkown_device_id", UUID.randomUUID().toString());
+
+                deviceId = HomeView.instance.getString("unkown_device_id");
+            } else deviceId = "UNKOWN";
+        }
+        minerName = "Cuby's Android Miner " + deviceId.substring(0, 5);
+        address = HomeView.getAddress();
+        publicKey = address;
+
+        System.out.println("\n" + "================================================" + "\n" +
+                ("---------STARTING CUBY'S ANDROID MINER----------") + "\n" +
+                ("--Miner Name: " + minerName) + "\n" +
+                ("--Address: " + address) + "\n" +
+                ("--Pool: " + pool) + "\n" +
+                ("--Threads: " + threads) + "\n" +
+                ("================================================"));
+        running = true;
+        makeStormieHappy();
+        createUpdateThread();
+    }
+
     public void updateHashers() {
         //TODO -> UPDATE HASHERS WITH NEW VARS
         hasherClock++;
@@ -238,7 +264,7 @@ public class ArionumMiner {
             url = getPool() + "?q=info&worker=" + URLEncoder.encode(getMinerName(), "UTF-8");
             if (hasherClock > 3) {
                 hasherClock = 0;
-                url += "&address=" + HomeView.getAddress() + "&hashrate=" + lastHashrate;
+                url += "&address=" + HomeView.getAddress() + "&hashrate=" + getLastHashrate();
             }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -274,6 +300,9 @@ public class ArionumMiner {
             return;
         }
 
+        ArionumMiner.minDL = neededDL;
+        ArionumMiner.currentBlock = height;
+
         for (final ArionumHasher hasher : hashers) {
             hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
             if (!hasher.isActive()) {
@@ -295,10 +324,6 @@ public class ArionumMiner {
                 thread.start();
             }
         }
-    }
-
-    public void setOverallHashes(int overallHashes) {
-        ArionumMiner.overallHashes = overallHashes;
     }
 
     public String getMinerName() {

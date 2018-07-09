@@ -18,7 +18,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.Random;
 
-import arionum.net.cubedpixels.service.TransactionListenerService;
+import arionum.net.cubedpixels.service.AlarmReceiver;
 import arionum.net.cubedpixels.utils.DoneTask;
 import arionum.net.cubedpixels.views.HomeView;
 import arionum.net.cubedpixels.views.IntroActivity.PreIntroAcitivity;
@@ -72,11 +72,7 @@ public class MainActivity extends AppCompatActivity {
 		ImageView animationview = findViewById(R.id.imageView4);
 		drawable = animationview.getDrawable();
 
-		TransactionListenerService mSensorService = new TransactionListenerService(this);
-		Intent serviceint = new Intent(this, mSensorService.getClass());
-		if (!isServiceRunning(mSensorService.getClass())) {
-			startService(serviceint);
-		}
+		AlarmReceiver.setAlarm(this, true);
 		start();
 
 		if (drawable instanceof Animatable) {

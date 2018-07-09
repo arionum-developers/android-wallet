@@ -50,22 +50,22 @@
 
         <service
             android:name="arionum.net.cubedpixels.service.TransactionListenerService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:enabled="true" >
         </service>
 
 
         <receiver
-            android:name="arionum.net.cubedpixels.service.ServiceStopListener"
+            android:name="arionum.net.cubedpixels.service.AlarmReceiver"
             android:enabled="true"
-            android:exported="true"
             android:label="RestartServiceWhenStopped">
+
             <intent-filter>
-                <action android:name="cubedpixels.arionum.restart.service" />
+                <action android:name="net.cubedpixels.action.ALARM" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-
         </receiver>
 
 
