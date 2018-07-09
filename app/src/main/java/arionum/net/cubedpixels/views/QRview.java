@@ -37,7 +37,7 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 		qrCodeReaderView.setLoggingEnabled(false);
 		qrCodeReaderView.setTorchEnabled(true);
 		qrCodeReaderView.setBackCamera();
-
+//TODO ->
 }
 
 	@Override
