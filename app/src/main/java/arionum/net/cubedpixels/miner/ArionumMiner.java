@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -265,8 +264,26 @@ public class ArionumMiner {
             if (hasherClock > 3) {
                 hasherClock = 0;
                 url += "&address=" + HomeView.getAddress() + "&hashrate=" + getLastHashrate();
+
+                //TODO -> PAUSE AND RESUME HASHERS ->
+                for (ArionumHasher hasher : hashers) {
+                    hasher.doPause(true);
+                }
+                boolean allpaused = false;
+                while (!allpaused) {
+                    Thread.sleep(50);
+                    allpaused = true;
+                    for (ArionumHasher hasher : hashers) {
+                        if (!hasher.isPaused())
+                            allpaused = false;
+                    }
+                }
+                Thread.sleep(200);
+                for (ArionumHasher hasher : hashers) {
+                    hasher.doPause(false);
+                }
             }
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

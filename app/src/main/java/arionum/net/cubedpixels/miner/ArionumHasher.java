@@ -11,6 +11,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     private boolean active = false;
     private boolean forceStop = false;
+    private boolean paused = false;
+    private boolean doPause = false;
     private Argon2 argon2;
     private MessageDigest messageDigest;
     private Nonce nonce;
@@ -52,6 +54,19 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         while (active && !forceStop) {
             if (forceStop)
                 return;
+            if (doPause) {
+                paused = true;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.runFinalization();
+                Runtime.getRuntime().gc();
+                System.gc();
+                continue;
+            } else paused = false;
+
             //TODO -> GENERATE ARGON2 HASH
             String base = nonce.getNonce();
             EncodedArgon2Result result = argon2.argon2_hash(base.getBytes());
@@ -92,6 +107,9 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
             }
 
         }
+        System.runFinalization();
+        Runtime.getRuntime().gc();
+        System.gc();
         active = false;
     }
 
@@ -123,6 +141,14 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         return pool_key;
     }
 
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void doPause(boolean doPause) {
+        this.doPause = doPause;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -134,6 +160,11 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
     @Override
     public void uncaughtException(Thread thread, Throwable throwable) {
         throwable.printStackTrace();
+
+        System.runFinalization();
+        Runtime.getRuntime().gc();
+        System.gc();
+
         System.out.println("HASHER " + this + " FAILED FOR " + throwable.getMessage());
         doCycle();
     }
