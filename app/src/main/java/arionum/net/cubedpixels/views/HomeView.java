@@ -2,7 +2,6 @@ package arionum.net.cubedpixels.views;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -964,7 +963,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         .setContentTitle("Arionum Wallet | Miner")
                         .setContentText(contentsmall)
                         .setColor(ContextCompat.getColor(HomeView.this, R.color.colorPrimary))
-                        .setDefaults(Notification.FLAG_ONGOING_EVENT)
                         .setColorized(true)
                         .setChannelId("notify_001")
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT);
