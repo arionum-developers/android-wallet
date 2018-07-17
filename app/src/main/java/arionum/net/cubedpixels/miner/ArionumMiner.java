@@ -45,7 +45,7 @@ public class ArionumMiner {
 
 
     //TODO -> HASHERS AND LISTS
-    private ArrayList<ArionumHasher> hashers = new ArrayList<>();
+    public ArrayList<ArionumHasher> hashers = new ArrayList<>();
     private ArrayList<Thread> threadCollection = new ArrayList<>();
 
     public ArionumMiner() {
@@ -159,6 +159,8 @@ public class ArionumMiner {
             }
         } catch (Exception e) {
             //TODO -> HANDLE EXCEPTION
+            e.printStackTrace();
+            new MaterialDialog.Builder(HomeView.instance).title("ERROR").content("The Pool URL could not get resolved!").positiveText("OH NO!").show();
         }
     }
 
@@ -213,6 +215,30 @@ public class ArionumMiner {
         threadCollection.add(thread);
     }
 
+    public void removeHasher(ArionumHasher hasher) {
+        hashers.remove(hasher);
+    }
+
+    public void createHasher(final String data, final String pool_key, final long difficulty, final long neededDL, final long height) {
+        final ArionumHasher hasher = new ArionumHasher();
+        hashers.add(hasher);
+        if (!hasher.isActive()) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
+                    hasher.refreshNonce();
+                    hasher.initiate();
+                }
+            });
+            threadCollection.add(thread);
+            thread.setDaemon(true);
+            thread.setName("Arionum Hasher Thread");
+            thread.setPriority(10);
+            thread.start();
+        }
+    }
+
     public void start(ArionumMinerCallback callback, String pool, int threads, Context context) {
         this.pool = pool;
         this.threads = threads;
@@ -235,7 +261,8 @@ public class ArionumMiner {
         address = HomeView.getAddress();
         publicKey = address;
 
-        System.out.println("\n" + "================================================" + "\n" +
+        System.out.println("\n-\n" +
+                ("================================================") + "\n" +
                 ("---------STARTING CUBY'S ANDROID MINER----------") + "\n" +
                 ("--Miner Name: " + minerName) + "\n" +
                 ("--Address: " + address) + "\n" +
@@ -269,16 +296,8 @@ public class ArionumMiner {
                 for (ArionumHasher hasher : hashers) {
                     hasher.doPause(true);
                 }
-                boolean allpaused = false;
-                while (!allpaused) {
-                    Thread.sleep(50);
-                    allpaused = true;
-                    for (ArionumHasher hasher : hashers) {
-                        if (!hasher.isPaused())
-                            allpaused = false;
-                    }
-                }
-                Thread.sleep(200);
+
+                Thread.sleep(1100 * 4);
                 for (ArionumHasher hasher : hashers) {
                     hasher.doPause(false);
                 }

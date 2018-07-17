@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
@@ -21,14 +22,18 @@ public class AlarmReceiver extends BroadcastReceiver {
         cancelAlarm(context);
         AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         // EVERY X MINUTES
-        long delay = (1000 * 60 * 3);
+        long delay = (1000 * 50 * 3);
         long when = System.currentTimeMillis();
         if (!force) {
             when += delay;
-        } else when += 1000 * 1;
+        } else when += 400;
         System.out.println("ALARM ON AT " + when);
         /* fire the broadcast */
-        alarm.set(AlarmManager.RTC_WAKEUP, when, getPendingIntent(context));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, getPendingIntent(context));
+        } else
+            alarm.set(AlarmManager.RTC_WAKEUP, when, getPendingIntent(context));
     }
 
     private static PendingIntent getPendingIntent(Context context) {

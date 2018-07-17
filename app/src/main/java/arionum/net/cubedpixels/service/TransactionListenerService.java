@@ -1,5 +1,6 @@
 package arionum.net.cubedpixels.service;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -8,12 +9,11 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.JobIntentService;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,12 +26,10 @@ public class TransactionListenerService extends JobIntentService {
     private static final int JOB_ID = 1337;
 
     public static void enqueueWork(Context ctx, Intent intent) {
-        checkTransactions(ctx);
-        AlarmReceiver.setAlarm(ctx, false);
         enqueueWork(ctx, TransactionListenerService.class, JOB_ID, intent);
     }
 
-    public static void checkTransactions(final Context ctx) {
+    public void checkTransactions(final Context ctx) {
         System.out.println("Checking for Transaction");
         if (!isNetworkAvailable(ctx))
             return;
@@ -50,6 +48,11 @@ public class TransactionListenerService extends JobIntentService {
                                                                .setSmallIcon(R.drawable.aro)
                                                                .setChannelId("notify_001")
                                                                .setContentTitle("Arionum Wallet | New Transaction!")
+
+                                                               .setColor(ContextCompat.getColor(ctx, R.color.colorPrimary))
+                                                               .setDefaults(Notification.FLAG_ONGOING_EVENT)
+                                                               .setColorized(true)
+
                                                                .setContentText("You got a new Transaction of: "
                                                                        + ((JSONObject) array.get(0)).get("val").toString()
                                                                        + "ARO" + " from " + ""
@@ -80,6 +83,11 @@ public class TransactionListenerService extends JobIntentService {
                                                                ctx, "ARONOTIFICATIONS")
                                                                .setSmallIcon(R.drawable.aro)
                                                                .setChannelId("notify_001")
+
+                                                               .setColor(ContextCompat.getColor(ctx, R.color.colorPrimary))
+                                                               .setDefaults(Notification.FLAG_ONGOING_EVENT)
+                                                               .setColorized(true)
+
                                                                .setContentTitle("Arionum Wallet | Aro Sent!")
                                                                .setContentText("Your : "
                                                                        + ((JSONObject) array.get(0)).get("val").toString()
@@ -111,6 +119,11 @@ public class TransactionListenerService extends JobIntentService {
                                            } catch (Exception e) {
                                                e.printStackTrace();
                                            }
+
+
+                                           System.out.println("FINISHED! ");
+                                           stopSelf();
+
                                        }
                                    }, "getTransactions", new ApiRequest.Argument("public_key", getString(ctx, "publickey")),
                 new ApiRequest.Argument("account", getString(ctx, "address")),
@@ -138,13 +151,8 @@ public class TransactionListenerService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
+        AlarmReceiver.setAlarm(this, false);
         checkTransactions(this);
         stopSelf();
-	}
-
-	@Nullable
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
 	}
 }

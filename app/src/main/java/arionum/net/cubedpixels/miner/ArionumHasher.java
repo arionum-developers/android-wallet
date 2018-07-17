@@ -1,17 +1,22 @@
 package arionum.net.cubedpixels.miner;
 
+import android.app.ActivityManager;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import arionum.net.cubedpixels.utils.Base58;
+import arionum.net.cubedpixels.views.HomeView;
 import de.wuthoehle.argon2jni.Argon2;
 import de.wuthoehle.argon2jni.EncodedArgon2Result;
+
+import static android.content.Context.ACTIVITY_SERVICE;
 
 public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     private boolean active = false;
     private boolean forceStop = false;
-    private boolean paused = false;
     private boolean doPause = false;
     private Argon2 argon2;
     private MessageDigest messageDigest;
@@ -31,8 +36,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
     }
 
     public void initiate() {
-        System.out.println("Starting Hasher -> " + this);
         //TODO -> SETUP ARGON2
+        System.out.println("Intiting Hasher -> " + this);
         argon2 = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
         //TODO -> REGISTER HASHER AND ENVIROMENT
         try {
@@ -50,22 +55,21 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     public void doCycle() {
         //TODO -> GENERATE NONCE
-
+        System.out.println("Starting Hasher -> " + this);
         while (active && !forceStop) {
             if (forceStop)
                 return;
             if (doPause) {
-                paused = true;
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(800);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.runFinalization();
-                Runtime.getRuntime().gc();
-                System.gc();
                 continue;
-            } else paused = false;
+            }
+
+            System.out.println("Running Hasher -> " + this);
+
 
             //TODO -> GENERATE ARGON2 HASH
             String base = nonce.getNonce();
@@ -98,6 +102,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
             ArionumMiner.getInstance().setOverallHashes(ArionumMiner.getOverallHashes() + 1);
             ArionumMiner.getInstance().getCallback().onDLChange(finalDuration);
+            //TODO -> MAKE SOLO MINER
+            String signature = Base58.generateSoloSignature(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height, neededDL, ArionumMiner.getInstance().getCallback());
 
             if (finalDuration <= neededDL) {
                 System.out.println("NONCE: " + nonce.getNonce());
@@ -141,9 +147,6 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         return pool_key;
     }
 
-    public boolean isPaused() {
-        return paused;
-    }
 
     public void doPause(boolean doPause) {
         this.doPause = doPause;
@@ -159,13 +162,24 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     @Override
     public void uncaughtException(Thread thread, Throwable throwable) {
-        throwable.printStackTrace();
-
         System.runFinalization();
         Runtime.getRuntime().gc();
         System.gc();
 
+        ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+
         System.out.println("HASHER " + this + " FAILED FOR " + throwable.getMessage());
-        doCycle();
+        System.out.println("HASHER MEMORY: " + (memoryInfo.availMem / 0x100000L));
+
+        active = false;
+        forceStop = true;
+
+        boolean contains = ArionumMiner.getInstance().hashers.contains(this);
+
+        ArionumMiner.getInstance().removeHasher(this);
+        if (!throwable.getMessage().contains("Memory allocation error") && contains)
+            ArionumMiner.getInstance().createHasher(data, pool_key, difficulty, neededDL, height);
     }
 }
