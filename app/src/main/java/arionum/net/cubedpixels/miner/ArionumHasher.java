@@ -10,6 +10,7 @@ import arionum.net.cubedpixels.utils.Base58;
 import arionum.net.cubedpixels.views.HomeView;
 import de.wuthoehle.argon2jni.Argon2;
 import de.wuthoehle.argon2jni.EncodedArgon2Result;
+import de.wuthoehle.argon2jni.SecurityParameters;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
@@ -29,6 +30,15 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
     private long height;
     private String pool_key;
 
+    //TODO->  HARDFORK 80K
+    private boolean doMine = true;
+
+    //TODO-> NEW ARGON2 PARAMS
+    private int hf_argon_t_cost = 1;
+    private int hf_argon_m_cost = 524288;
+    private int hf_argon_para = 1;
+
+
     private ArionumMiner minerInstance;
 
     public ArionumHasher() {
@@ -38,7 +48,7 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
     public void initiate() {
         //TODO -> SETUP ARGON2
         System.out.println("Intiting Hasher -> " + this);
-        argon2 = new Argon2(Argon2.SecurityParameterTemplates.OFFICIAL_DEFAULT, 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
+        argon2 = new Argon2(new SecurityParameters(hf_argon_t_cost, hf_argon_m_cost, hf_argon_para), 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
         //TODO -> REGISTER HASHER AND ENVIROMENT
         try {
             messageDigest = MessageDigest.getInstance("SHA-512");
@@ -59,9 +69,9 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         while (active && !forceStop) {
             if (forceStop)
                 return;
-            if (doPause) {
+            if (doPause || !doMine) {
                 try {
-                    Thread.sleep(800);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -124,12 +134,22 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
     }
 
     //TODO -> UPDATE HASHER
-    public void updateHasher(String data, String pool_key, long difficulty, long neededDL, long height) {
+    public void updateHasher(String data, String pool_key, long difficulty, long neededDL, long height, boolean doMine, int hf_argon_t_cost, int hf_argon_m_cost, int hf_argon_para) {
         this.data = data;
         this.difficulty = difficulty;
         this.neededDL = neededDL;
         this.pool_key = pool_key;
 
+        this.doMine = doMine;
+
+        if (this.hf_argon_m_cost == hf_argon_m_cost && this.hf_argon_para == hf_argon_para && this.hf_argon_t_cost == hf_argon_t_cost) {
+            //TODO-> REINIT
+            argon2 = new Argon2(new SecurityParameters(hf_argon_t_cost, hf_argon_m_cost, hf_argon_para), 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
+        }
+
+        this.hf_argon_t_cost = hf_argon_t_cost;
+        this.hf_argon_m_cost = hf_argon_m_cost;
+        this.hf_argon_para = hf_argon_para;
 
         if (this.height != height) {
             this.height = height;
@@ -180,6 +200,6 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
         ArionumMiner.getInstance().removeHasher(this);
         if (!throwable.getMessage().contains("Memory allocation error") && contains)
-            ArionumMiner.getInstance().createHasher(data, pool_key, difficulty, neededDL, height);
+            ArionumMiner.getInstance().createHasher(data, pool_key, difficulty, neededDL, height, doMine, hf_argon_t_cost, hf_argon_m_cost, hf_argon_para);
     }
 }

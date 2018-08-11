@@ -887,6 +887,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         });
     }
 
+    private int temp = 0;
     public void updateHashGraph(final double hashrate) {
         Handler h = new Handler(HomeView.this.getMainLooper());
         h.post(new Runnable() {
@@ -903,9 +904,17 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     if (s.startsWith("."))
                         s = "0" + s;
 
-                    ((TextView) findViewById(R.id.hashRate)).setText(s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
+                    String g = df.format(ArionumMiner.getLastHashrate());
+                    if (g.startsWith(","))
+                        g = "0" + g;
+                    if (g.startsWith("."))
+                        g = "0" + g;
+
+
+                    ((TextView) findViewById(R.id.hashRate)).setText(g + " H/s \n" + s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
                     ArionumMiner.setLastHashrate(emulateHs(hashrate));
-                    String text = (ArionumMiner.getMinDL() + "\n" + ArionumMiner.getCurrentBlock() + "\n" + ArionumMiner.getOverallHashes());
+                    temp += ArionumMiner.getLastHashrate();
+                    String text = (ArionumMiner.getMinDL() + "\n" + ArionumMiner.getCurrentBlock() + "\n" + temp);
                     if (!text.equals(((TextView) findViewById(R.id.limitVIEW)).getText())) {
                         findViewById(R.id.limitVIEW).startAnimation(AnimationUtils.loadAnimation(HomeView.this, android.R.anim.fade_in));
                         ((TextView) findViewById(R.id.limitVIEW)).setText(text);

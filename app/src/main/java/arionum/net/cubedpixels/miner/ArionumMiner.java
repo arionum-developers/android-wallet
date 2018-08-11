@@ -3,6 +3,9 @@ package arionum.net.cubedpixels.miner;
 import android.content.Context;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.v4.content.ContextCompat;
+import android.view.animation.AnimationUtils;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.UUID;
 
+import arionum.net.cubedpixels.R;
 import arionum.net.cubedpixels.views.HomeView;
 
 public class ArionumMiner {
@@ -31,6 +35,8 @@ public class ArionumMiner {
     private static double lastHashrate = 0;
     private static long minDL;
     private static long currentBlock;
+
+    private static long startTimeInMillis;
 
 
     private static ArionumMiner instance;
@@ -191,6 +197,34 @@ public class ArionumMiner {
         return threads;
     }
 
+    public static void notify(final String notification, final int color) {
+        HomeView.instance.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView tv = HomeView.instance.findViewById(R.id.notificationbar);
+                tv.startAnimation(AnimationUtils.loadAnimation(HomeView.instance, android.R.anim.fade_in));
+                tv.setText(notification);
+                if (color == 0)
+                    tv.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorDark));
+                if (color != 0)
+                    tv.setTextColor(ContextCompat.getColor(HomeView.instance, color));
+            }
+        });
+
+    }
+
+    public void removeHasher(ArionumHasher hasher) {
+        hashers.remove(hasher);
+    }
+
+    public static long getStartTimeInMillis() {
+        return startTimeInMillis;
+    }
+
+    public static void setStartTimeInMillis(long startTimeInMillis) {
+        ArionumMiner.startTimeInMillis = startTimeInMillis;
+    }
+
     public void createUpdateThread() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -198,7 +232,7 @@ public class ArionumMiner {
                 startHashers();
                 while (running) {
                     try {
-                        Thread.sleep(1000 * 20);
+                        Thread.sleep(1000 * 2);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -215,18 +249,14 @@ public class ArionumMiner {
         threadCollection.add(thread);
     }
 
-    public void removeHasher(ArionumHasher hasher) {
-        hashers.remove(hasher);
-    }
-
-    public void createHasher(final String data, final String pool_key, final long difficulty, final long neededDL, final long height) {
+    public void createHasher(final String data, final String pool_key, final long difficulty, final long neededDL, final long height, final boolean doMine, final int hf_argon_t_cost, final int hf_argon_m_cost, final int hf_argon_para) {
         final ArionumHasher hasher = new ArionumHasher();
         hashers.add(hasher);
         if (!hasher.isActive()) {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
+                    hasher.updateHasher(data, pool_key, difficulty, neededDL, height, doMine, hf_argon_t_cost, hf_argon_m_cost, hf_argon_para);
                     hasher.refreshNonce();
                     hasher.initiate();
                 }
@@ -240,6 +270,8 @@ public class ArionumMiner {
     }
 
     public void start(ArionumMinerCallback callback, String pool, int threads, Context context) {
+        notify("Preparing start...", 0);
+
         this.pool = pool;
         this.threads = threads;
         this.callback = callback;
@@ -257,25 +289,24 @@ public class ArionumMiner {
                 deviceId = HomeView.instance.getString("unkown_device_id");
             } else deviceId = "UNKOWN";
         }
-        minerName = "Cuby's Android Miner " + deviceId.substring(0, 5);
+        setStartTimeInMillis(System.currentTimeMillis());
+        minerName = "Cubys Android Miner " + deviceId.substring(0, 5);
+        notify("Miner-Name: " + minerName, 0);
         address = HomeView.getAddress();
+        notify("Address: " + address, 0);
         publicKey = address;
+        notify("Public-Key: " + publicKey, 0);
 
-        System.out.println("\n-\n" +
-                ("================================================") + "\n" +
-                ("---------STARTING CUBY'S ANDROID MINER----------") + "\n" +
-                ("--Miner Name: " + minerName) + "\n" +
-                ("--Address: " + address) + "\n" +
-                ("--Pool: " + pool) + "\n" +
-                ("--Threads: " + threads) + "\n" +
-                ("================================================"));
+
         running = true;
         makeStormieHappy();
         createUpdateThread();
+        notify("Miner running...", 0);
     }
 
     public void updateHashers() {
         //TODO -> UPDATE HASHERS WITH NEW VARS
+
         hasherClock++;
         //TODO -> GET DATA FROM POOL!
 
@@ -285,16 +316,23 @@ public class ArionumMiner {
         long neededDL = 0;
         long height = 0;
 
+        //TODO->HARDFORK 80K
+        boolean doMine = true;
+        int hf_argon_t_cost = 1;
+        int hf_argon_m_cost = 524288;
+        int hf_argon_para = 1;
+
         String url = null;
         try {
             url = getPool() + "?q=info&worker=" + URLEncoder.encode(getMinerName(), "UTF-8");
-            if (hasherClock > 3) {
+            if (hasherClock > 30 * 3) {
                 hasherClock = 0;
                 url += "&address=" + HomeView.getAddress() + "&hashrate=" + getLastHashrate();
 
                 //TODO -> PAUSE AND RESUME HASHERS ->
                 for (ArionumHasher hasher : hashers) {
                     hasher.doPause(true);
+                    notify("Miner is pausing for the CPU Fetcher...", 0);
                 }
 
                 Thread.sleep(1100 * 4);
@@ -323,6 +361,31 @@ public class ArionumMiner {
             height = localHeight;
             String publicpoolkey = jsonData.getString("public_key");
             pool_key = publicpoolkey;
+
+            if (jsonData.getString("recommendation") != null) {
+                String recomm = jsonData.getString("recommendation");
+                if (!recomm.equals("mine")) {
+                    doMine = false;
+                    notify("Waiting for MN-Block...", R.color.colorAccent);
+                }
+                int argon_mem = jsonData.getInt("argon_mem");
+                int argon_threads = jsonData.getInt("argon_threads");
+                int argon_time = jsonData.getInt("argon_time");
+
+                if (doMine) {
+                    String type = "CPU";
+                    if (argon_mem < 500000)
+                        type = "GPU";
+                    notify("Mining with " + hashers.size() + " Hashers...\nType: " + type + " Threads: " + argon_threads, R.color.colorAccent);
+                }
+
+                hf_argon_m_cost = argon_mem;
+                hf_argon_para = argon_threads;
+                hf_argon_t_cost = argon_time;
+            } else {
+                notify("Mining on outdated pool!", R.color.colorAccent);
+            }
+
         } catch (Exception e) {
             //TODO -> HANDLE FAILED URL RESPONSE
             e.printStackTrace();
@@ -339,8 +402,9 @@ public class ArionumMiner {
         ArionumMiner.minDL = neededDL;
         ArionumMiner.currentBlock = height;
 
+
         for (final ArionumHasher hasher : hashers) {
-            hasher.updateHasher(data, pool_key, difficulty, neededDL, height);
+            hasher.updateHasher(data, pool_key, difficulty, neededDL, height, doMine, hf_argon_t_cost, hf_argon_m_cost, hf_argon_para);
             if (!hasher.isActive()) {
                 Thread thread = new Thread(new Runnable() {
                     @Override

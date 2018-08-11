@@ -19,7 +19,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:elevation="9dp"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <RelativeLayout
                 android:id="@+id/balancelayout"
@@ -389,7 +389,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <TextView
                 android:id="@+id/shares"
@@ -417,8 +417,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="33dp"
-                android:text="0.0 H/s"
+                android:layout_marginTop="13dp"
+                android:text="No reported hashrate"
                 android:textAlignment="center"
                 android:textSize="22sp" />
 
@@ -427,8 +427,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_below="@+id/hashRate"
-                android:layout_marginTop="27dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="103dp"
                 android:hint="Pool"
                 android:inputType="text"
                 android:textAlignment="center"
@@ -439,9 +439,9 @@
                 android:id="@+id/sugg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBaseline="@+id/hashers"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_alignBottom="@+id/disableGraph"
+                android:layout_marginEnd="-147dp"
+                android:layout_toStartOf="@+id/hashers"
                 android:text="Suggested Threads:"
                 android:textColor="#8b8b8b" />
 
@@ -449,8 +449,8 @@
                 android:id="@+id/disableGraph"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/sugg"
-                android:layout_below="@+id/hashers"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@+id/pool"
                 android:text="Disable Graph"
                 android:textColor="#8b8b8b" />
 
@@ -458,10 +458,9 @@
                 android:id="@+id/hashers"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="false"
+                android:layout_alignParentStart="true"
                 android:layout_below="@+id/pool"
-                android:layout_marginTop="2dp"
-                android:layout_toRightOf="@id/sugg"
+                android:layout_marginStart="147dp"
                 android:hint="Hashers"
                 android:inputType="number"
                 android:textAlignment="center"
@@ -496,10 +495,11 @@
 
             <com.jjoe64.graphview.GraphView
                 android:id="@+id/graph"
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:layout_above="@+id/minerToggle"
-                android:layout_alignParentStart="true" />
+                android:layout_width="match_parent"
+                android:layout_height="230dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="144dp" />
 
             <TextView
                 android:id="@+id/currentDur"
@@ -509,6 +509,18 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="23dp"
                 android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/notificationbar"
+                android:layout_width="320dp"
+                android:layout_height="43dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="223dp"
+                android:gravity="center"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textSize="18sp" />
 
 
         </RelativeLayout>
