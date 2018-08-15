@@ -39,8 +39,6 @@ Please donate. :3
 ### Screenshots
 
 <div align="center">
-    <img src="https://media.discordapp.net/attachments/436960056425185281/479427747110977575/Screenshot_20180628-140203_Arionum.png?width=348&height=676" width="200px"</img> 
-<div align="center">
     <img src="https://media.discordapp.net/attachments/436960056425185281/479427733210791936/Screenshot_20180628-140203_Arionum.jpg?width=348&height=676" width="200px"</img> 
     <img src="https://media.discordapp.net/attachments/436960056425185281/479427787065786375/Screenshot_20180628-1402031_Arionum.png?width=348&height=676" width="200px"</img> 
   <img src="https://media.discordapp.net/attachments/436960056425185281/479427777972404235/Screenshot_20180628-1402035_Arionum.png?width=348&height=676" width="200px"</img> 
