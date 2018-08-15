@@ -103,49 +103,57 @@ import static android.view.View.GONE;
 
 public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
-    //TODO -> QR READER RELATED VARS
-    private static final int PROFILE_SETTING = 1;
-    private static String currentPeer1 = "";
-    //TODO -> INSTANCE FOR EXTERNAL CLASSES
+    // TODO -> INSTANCE FOR EXTERNAL CLASSES
     public static HomeView instance;
-    //TODO -> PEERS AND RELATED
+
+    // TODO -> PEERS AND RELATED
+    private static String currentPeer1 = "";
     private static String arionum_peer = "https://wallet.arionum.com";
-    private static String public_key = "";
-    private static String private_key = "";
-    //TODO -> SAVED VARS
+
+    // TODO -> SAVED VARS
     private static String alias = "";
     private static String address = "";
-    //TODO -> TRANSACTION RELATED VARS
+    private static String public_key = "";
+    private static String private_key = "";
+
+    // TODO -> TRANSACTION RELATED VARS
     private static String signature = "";
     private static String unixTime = "";
     private static String val = "";
     private static String fee = "";
     private static String message = "";
-    //TODO -> LISTS
+
+    // TODO -> LISTS
     private static ArrayList<Page> pages = new ArrayList<>();
     private static ArrayList<String> peers = new ArrayList<>();
     private static ArrayList<Double> hashTime = new ArrayList<>();
-    private static QRCodeReaderView qrCodeReaderView;
-    //TODO -> MINING RELATED VARS
+
+    // TODO -> MINING RELATED VARS
     private long bestRECORDEDdelay = Long.MAX_VALUE;
 
-    //TODO -> UI RELATED VARS
+    // TODO -> UI RELATED VARS
     private Crossfader crossFader;
     private Page currentPage;
     private AccountHeader headerResult = null;
     private MiniDrawer miniResult = null;
     private Drawer result = null;
 
-    //TODO -> UTIL VARS AND NOT CATEGORIZED
+    // TODO -> UTIL VARS AND NOT CATEGORIZED
     private double temp = 0;
     private boolean refreshing = true;
 
+    // TODO -> QR READER RELATED VARS
+    private static final int PROFILE_SETTING = 1;
+    private static QRCodeReaderView qrCodeReaderView;
+
+
 
     //////////////////////////////////////////
-    //TODO -> INIT AND SETUP METHODS
+    // TODO -> INIT AND SETUP METHODS
     //////////////////////////////////////////
 
-    //TODO -> THIS METHOD IS GETTING EXECUTED FROM THE MAINACTITY
+
+    // TODO -> THIS METHOD IS GETTING EXECUTED FROM THE MAINACTITY
     public static void setup(final DoneTask done) {
         new Thread(new Runnable() {
             @Override
@@ -165,152 +173,16 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         }).start();
     }
 
-    public static void makeTransaction(final String addressTO, double value, String MSG, final String version, final Runnable run) {
-        long UNIX = System.currentTimeMillis() / 1000;
-        Base58.getSignature(addressTO, MSG, value, UNIX, version, new Base58.CallBackSigner() {
-            @Override
-            public void onDone(String signed1, String unix1, String val1, String fee1, String msg1) {
-                signature = signed1;
-                val = val1;
-                fee = fee1;
-                unixTime = unix1;
-                message = msg1;
-
-                System.out.println("SIGNING DONE VALUES: ");
-                System.out.println(val);
-                System.out.println(signature);
-                System.out.println(fee);
-                System.out.println(unixTime);
-                System.out.println(message);
-
-
-                ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
-                                               @Override
-                                               public void onFeedback(final JSONObject object) {
-                                                   run.run();
-                                                   if (object == null || object.toString().contains("error")) {
-                                                       Handler h = new Handler(HomeView.instance.getMainLooper());
-                                                       h.post(new Runnable() {
-                                                           @Override
-                                                           public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Error:").content("Message: " + "\n" +
-                                                                                   object.get("data") + " <-> ")
-                                                                           .cancelable(true).show();
-                                                               } catch (Exception e) {
-                                                                   e.printStackTrace();
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Error:")
-                                                                           .content("Message: " + "\n" + e.getMessage())
-                                                                           .cancelable(true).show();
-                                                               }
-                                                           }
-                                                       });
-
-                                                   } else {
-                                                       Handler h = new Handler(instance.getMainLooper());
-                                                       h.post(new Runnable() {
-                                                           @Override
-                                                           public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                           .title("Transaction sent!")
-                                                                           .content("Your transaction ID:" + "\n" +
-                                                                                   object.get("data").toString())
-                                                                           .cancelable(true).show();
-                                                               } catch (final Exception e) {
-                                                                   e.printStackTrace();
-                                                                   Handler h = new Handler(instance.getMainLooper());
-                                                                   h.post(new Runnable() {
-                                                                       @Override
-                                                                       public void run() {
-                                                                           MaterialDialog d = new MaterialDialog.Builder(
-                                                                                   HomeView.instance).title("Error:")
-                                                                                   .content("Debug: " + e.getMessage())
-                                                                                   .cancelable(true).show();
-                                                                       }
-                                                                   });
-                                                               }
-                                                           }
-                                                       });
-
-                                                   }
-
-                                               }
-                                           }, "send", new ApiRequest.Argument("val", val),
-                        new ApiRequest.Argument("dst", addressTO),
-                        new ApiRequest.Argument("public_key", public_key),
-                        new ApiRequest.Argument("signature", signature),
-                        new ApiRequest.Argument("date", unixTime),
-                        new ApiRequest.Argument("message", message), new ApiRequest.Argument("version", version));
-
-
-            }
-        });
-    }
-
-    public static String doubleVal(final double d) {
-        int afterlength = getDecimals(d);
-        String temp = "";
-        for (int i = 0; i < afterlength; i++)
-            temp += "#";
-        DecimalFormat format = new DecimalFormat("0." + temp);
-
-        return format.format(d);
-    }
-
-    public static String doubleVal(final Double d) {
-        return d == null ? "" : doubleVal(d.doubleValue());
-    }
-
-    public static String getAddress() {
-        return address;
-    }
-
-    public static String getCurrentPeer() {
-        return arionum_peer;
-    }
-
-    public static int getDecimals(double d) {
-        String[] splitt = (d + "").split("\\.");
-        if (splitt.length <= 1)
-            return 0;
-        String after = splitt[1];
-        while (after.lastIndexOf("0") == after.length())
-            after = after.substring(0, after.length() - 1);
-        if (after.length() > 10)
-            return 10;
-        return after.length();
-    }
-
-
-    //////////////////////////////////////////
-    //TODO -> SETUP PAGES
-    //////////////////////////////////////////
-
-    public static String getPrivate_key() {
-        return private_key;
-    }
-
-    public static String getPublic_key() {
-        return public_key;
-    }
-
-
-    //////////////////////////////////////////
-    //TODO -> UI RELATED METHODS
-    //////////////////////////////////////////
-
-    //TODO -> ONCREATE GETS CALLED WHEN THE UI IS GETTING LOADED !!!!!!!!! WARING !!!!!!!!!!! DONT USE HEAVY METHODS FOR FAST LOADING TIMES
+    // TODO -> ONCREATE GETS CALLED WHEN THE UI IS GETTING LOADED !!!!!!!!!
+    // WARING !!!!!!!!!!! DONT USE HEAVY METHODS FOR FAST LOADING TIMES
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //TODO -> SET INSTANCE
+        // TODO -> SET INSTANCE
         instance = this;
         checkPasswordEntry();
         registerValues();
 
-        //TODO -> UI RELATED STUFF
+        // TODO -> UI RELATED STUFF
         LayoutInflaterCompat.setFactory2(getLayoutInflater(), new IconicsLayoutInflater2(getDelegate()));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home);
@@ -328,14 +200,9 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         .content("Your private key couldn't be encrypted!").show();
             }
         address = getString("address");
-        //TODO -> ALIAS SEARCH AND SET
+        // TODO -> ALIAS SEARCH AND SET
         setupAlias();
     }
-
-
-    //////////////////////////////////////////
-    //TODO -> STOCK ANDROID OVERRIDE METHODS
-    //////////////////////////////////////////
 
     public void initUI() {
         if (peers.size() > 0)
@@ -348,6 +215,26 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         address.setText(HomeView.address);
         setupThankyouList();
         initQR();
+    }
+
+    public void setupThankyouList() {
+        ArrayList<String> thanks = new ArrayList<>();
+        thanks.add("AroDev for developing ARIONUM");
+        thanks.add("Mercury80 for developing ARIONUM");
+        thanks.add("mikepenz for the awesome libs!");
+        thanks.add("RehabbeR for being cool");
+        thanks.add("ProgrammerDan for his awesome Miner");
+        thanks.add("ario");
+        thanks.add("hearonLP");
+        thanks.add("Nikita_Banane");
+        thanks.add("dlazaro66");
+        thanks.add("and everyone else!");
+
+        TextView t = findViewById(R.id.thankstolist);
+        String build = "";
+        for (String sd : thanks)
+            build += sd + "\n";
+        t.setText(build);
     }
 
     public void initQR() {
@@ -367,7 +254,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     }
 
     public void initIcons() {
-        //TODO-> ICONS
+        // TODO-> ICONS
         ImageView sync = findViewById(R.id.refreshIcon);
         IconicsDrawable syncd = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_refresh)
                 .color(Color.WHITE).sizeDp(28);
@@ -391,7 +278,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         setAlias.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO -> SET ALIAS IF ALIAS ISN'T SET
+                // TODO -> SET ALIAS IF ALIAS ISN'T SET
                 if (!alias.equals("none")) {
                     Toasty.error(HomeView.this, "You already own an Alias!", Toast.LENGTH_SHORT, true).show();
                     return;
@@ -414,7 +301,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 str = str.replaceAll("/[^a-zA-Z0-9]/", "");
                                 str = str.toUpperCase();
                                 if (str.length() < 4 || str.length() > 25) {
-                                    Toasty.error(HomeView.this, "Invalid Alias! 4< && <25 && A-Z", Toast.LENGTH_SHORT, true).show();
+                                    Toasty.error(HomeView.this, "Invalid Alias! 4< && <25 && A-Z", Toast.LENGTH_SHORT,
+                                            true).show();
                                 }
                                 makeTransaction(getAddress(), 0.00000001, str, "1", new Runnable() {
                                     @Override
@@ -443,25 +331,20 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     }
 
     public void initDesign(Bundle savedInstanceState) {
-        //TODO-> DESIGN
+        // TODO-> DESIGN
         createDrawer(savedInstanceState);
         setupPages();
 
-        //TODO -> ANIMATIONS
+        // TODO -> ANIMATIONS
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
 
-        ResizeAnimation resizeAnimation = new ResizeAnimation(
-                findViewById(R.id.balancelayout),
-                200,
-                size.y
-        );
+        ResizeAnimation resizeAnimation = new ResizeAnimation(findViewById(R.id.balancelayout), 200, size.y);
         resizeAnimation.setDuration(1000);
         findViewById(R.id.balancelayout).startAnimation(resizeAnimation);
 
-
-        //TODO-> GET BALANCE
+        // TODO-> GET BALANCE
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                        @Override
                                        public void onFeedback(JSONObject object) {
@@ -477,7 +360,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                    }, "getBalance", new ApiRequest.Argument("public_key", public_key),
                 new ApiRequest.Argument("account", HomeView.address));
 
-        //TODO-> GETTRANSACTIONS
+        // TODO-> GETTRANSACTIONS
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                        @Override
                                        public void onFeedback(JSONObject object) {
@@ -503,29 +386,38 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 new ApiRequest.Argument("account", HomeView.address), new ApiRequest.Argument("limit", "10"));
     }
 
+
+    //////////////////////////////////////////
+    // TODO -> SETUP PAGES
+    //////////////////////////////////////////
+
+
+
+
+
     public void setupPages() {
         new ArionumMiner();
 
-        //TODO -> SETUP ABOUT SCREEN
+        // TODO -> SETUP ABOUT SCREEN
         pages.add(new Page("ABOUT", (RelativeLayout) findViewById(R.id.aboutview)) {
             @Override
             public void onEnable() {
             }
         });
 
-        //TODO -> SETUP BALANCE SCREEN
+        // TODO -> SETUP BALANCE SCREEN
         pages.add(new Page("BALANCE", (RelativeLayout) findViewById(R.id.balanceview)) {
             @Override
             public void onEnable() {
             }
         });
 
-        //TODO -> SETUP VARS FOR MINER SCREEN
+        // TODO -> SETUP VARS FOR MINER SCREEN
         final FancyButton b = findViewById(R.id.minerToggle);
         final EditText editPool = findViewById(R.id.pool);
         final EditText editHashers = findViewById(R.id.hashers);
 
-        //TODO -> SETUP MINER SCREEN
+        // TODO -> SETUP MINER SCREEN
         pages.add(new Page("MINER", (RelativeLayout) findViewById(R.id.minerview)) {
             @Override
             public void onEnable() {
@@ -534,14 +426,17 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 String saved_pool = getString("miner_pool");
                 if (saved_pool.isEmpty())
                     saved_pool = "http://aro.cool";
-                String pool = ArionumMiner.getInstance().getPool() == null ? saved_pool : ArionumMiner.getInstance().getPool();
+                String pool = ArionumMiner.getInstance().getPool() == null ? saved_pool
+                        : ArionumMiner.getInstance().getPool();
                 editPool.setText(pool);
                 System.gc();
                 int max = Runtime.getRuntime().availableProcessors();
-                ActivityManager activityManager = (ActivityManager) HomeView.instance.getSystemService(ACTIVITY_SERVICE);
+                ActivityManager activityManager = (ActivityManager) HomeView.instance
+                        .getSystemService(ACTIVITY_SERVICE);
                 ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
                 activityManager.getMemoryInfo(memoryInfo);
-                double availPercent = (((double) (memoryInfo.availMem / 0x100000L)) * 1.4 / (double) ((memoryInfo.totalMem / 0x100000L)));
+                double availPercent = (((double) (memoryInfo.availMem / 0x100000L)) * 1.4
+                        / (double) ((memoryInfo.totalMem / 0x100000L)));
                 int MAXramThreads = (int) ((memoryInfo.totalMem / 0x100000L) / 512);
                 if (MAXramThreads <= max) {
                     max = (int) (MAXramThreads * availPercent);
@@ -553,7 +448,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO -> SETUP MINER
+                // TODO -> SETUP MINER
                 b.setText(!ArionumMiner.isRunning() ? "Stop Miner" : "Start Miner");
                 editPool.setEnabled(ArionumMiner.isRunning());
                 editHashers.setEnabled(ArionumMiner.isRunning());
@@ -561,70 +456,71 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     saveString("miner_pool", editPool.getText().toString());
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     ArionumMiner.getInstance().start(new ArionumMiner.ArionumMinerCallback() {
-                        //TODO -> MINING VARS
-                        double hashes = 0;
-                        long start = System.currentTimeMillis();
+                                                         // TODO -> MINING VARS
+                                                         double hashes = 0;
+                                                         long start = System.currentTimeMillis();
 
-                        @Override
-                        public void onAccept(String hash) {
-                            System.out.println("Share Accepted : " + hash);
-                            makeNotification("Share accepted: " + hash);
-                        }
+                                                         @Override
+                                                         public void onAccept(String hash) {
+                                                             System.out.println("Share Accepted : " + hash);
+                                                             makeNotification("Share accepted: " + hash);
+                                                         }
 
-                        @Override
-                        public void onDLChange(final long dl, final String type) {
-                            if (dl < bestRECORDEDdelay)
-                                bestRECORDEDdelay = dl;
-                            //TODO -> RUN DL CHANGE UI UPDATES
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (start + 1111 < System.currentTimeMillis()) {
-                                        ArrayList<Double> savedHashes = new ArrayList<>();
-                                        if (hashTime.size() >= 6) {
-                                            savedHashes.clear();
-                                            savedHashes.add(hashTime.get(1));
-                                            savedHashes.add(hashTime.get(2));
-                                            savedHashes.add(hashTime.get(3));
-                                            savedHashes.add(hashTime.get(4));
-                                            savedHashes.add(hashTime.get(5));
-                                            hashTime.clear();
-                                            hashTime.addAll(savedHashes);
-                                        }
-                                        hashTime.add(hashes);
-                                        double currentHashRate = calculateAverage(hashTime);
-                                        hashTime.set(hashTime.size() - 1, currentHashRate);
+                                                         @Override
+                                                         public void onDLChange(final long dl, final String type) {
+                                                             if (dl < bestRECORDEDdelay)
+                                                                 bestRECORDEDdelay = dl;
+                                                             // TODO -> RUN DL CHANGE UI UPDATES
+                                                             runOnUiThread(new Runnable() {
+                                                                 @Override
+                                                                 public void run() {
+                                                                     if (start + 1111 < System.currentTimeMillis()) {
+                                                                         ArrayList<Double> savedHashes = new ArrayList<>();
+                                                                         if (hashTime.size() >= 6) {
+                                                                             savedHashes.clear();
+                                                                             savedHashes.add(hashTime.get(1));
+                                                                             savedHashes.add(hashTime.get(2));
+                                                                             savedHashes.add(hashTime.get(3));
+                                                                             savedHashes.add(hashTime.get(4));
+                                                                             savedHashes.add(hashTime.get(5));
+                                                                             hashTime.clear();
+                                                                             hashTime.addAll(savedHashes);
+                                                                         }
+                                                                         hashTime.add(hashes);
+                                                                         double currentHashRate = calculateAverage(hashTime);
+                                                                         hashTime.set(hashTime.size() - 1, currentHashRate);
 
-                                        updateHashGraph(currentHashRate, type);
-                                        hashes = 0;
-                                        start = System.currentTimeMillis();
-                                    }
-                                    hashes++;
-                                    final TextView t = findViewById(R.id.currentDur);
-                                    t.setText(dl + "");
-                                }
-                            });
-                        }
+                                                                         updateHashGraph(currentHashRate, type);
+                                                                         hashes = 0;
+                                                                         start = System.currentTimeMillis();
+                                                                     }
+                                                                     hashes++;
+                                                                     final TextView t = findViewById(R.id.currentDur);
+                                                                     t.setText(dl + "");
+                                                                 }
+                                                             });
+                                                         }
 
-                        @Override
-                        public void onFind(String hash) {
-                            System.out.println("Block found with Share : " + hash);
-                            makeNotification("Found Find: " + hash);
-                        }
+                                                         @Override
+                                                         public void onFind(String hash) {
+                                                             System.out.println("Block found with Share : " + hash);
+                                                             makeNotification("Found Find: " + hash);
+                                                         }
 
-                        @Override
-                        public void onReject(String hash) {
-                            System.out.println("Rejected Share : " + hash);
-                            makeNotification("Share rejected: " + hash);
-                        }
+                                                         @Override
+                                                         public void onReject(String hash) {
+                                                             System.out.println("Rejected Share : " + hash);
+                                                             makeNotification("Share rejected: " + hash);
+                                                         }
 
-                        @Override
-                        public void onShare(String hash) {
-                            System.out.println("Found Share : " + hash);
-                            makeNotification("Share found: " + hash);
-                        }
+                                                         @Override
+                                                         public void onShare(String hash) {
+                                                             System.out.println("Found Share : " + hash);
+                                                             makeNotification("Share found: " + hash);
+                                                         }
 
-                    }, editPool.getText().toString(), Integer.parseInt(editHashers.getText().toString()), HomeView.this);
+                                                     }, editPool.getText().toString(), Integer.parseInt(editHashers.getText().toString()),
+                            HomeView.this);
 
                 } else {
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -632,10 +528,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 }
             }
         });
-        ///////////////////////////////////////
-        //TODO -> PAGES UI SETUP
-        ///////////////////////////////////////
-
 
         final TextView addressinfo = findViewById(R.id.address);
         addressinfo.setOnClickListener(new View.OnClickListener() {
@@ -698,7 +590,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             @Override
             public void onClick(View view) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("DONATION-Address", "1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG");
+                ClipData clip = ClipData.newPlainText("DONATION-Address",
+                        "1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG");
                 clipboard.setPrimaryClip(clip);
                 Toast.makeText(instance, "Address copied to Clipboard", Toast.LENGTH_SHORT).show();
             }
@@ -723,7 +616,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 Double amount = Double.parseDouble(dialog.getInputEditText().getText().toString());
                                 ImageView qrimage = findViewById(R.id.qrreuqestimage);
                                 Bitmap myBitmap = QRCode
-                                        .from("sendaro" + "|" + address + "|" + doubleVal(amount).replace(",", ".") + "|")
+                                        .from("sendaro" + "|" + address + "|" + doubleVal(amount).replace(",", ".")
+                                                + "|")
                                         .withSize(600, 600).withColor(Color.BLACK, Color.parseColor("#00000000"))
                                         .bitmap();
                                 qrimage.setImageBitmap(myBitmap);
@@ -733,7 +627,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
-        //TODO -> SETUP SEND SCREEN
+        // TODO -> SETUP SEND SCREEN
         pages.add(new Page("SEND", (RelativeLayout) findViewById(R.id.send)) {
             @Override
             public void onEnable() {
@@ -788,26 +682,28 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                     vals += "0";
                                 vals = vals.replace(",", ".");
                                 new MaterialDialog.Builder(HomeView.this).title("Transaction")
-                                        .content("Are you sure you want to send " + doubleVal(amount).replace(",", ".") + " ARO " + "\n to: " + address)
+                                        .content("Are you sure you want to send " + doubleVal(amount).replace(",", ".")
+                                                + " ARO " + "\n to: " + address)
                                         .cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
                                         .onPositive(new MaterialDialog.SingleButtonCallback() {
                                             @Override
-                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                            public void onClick(@NonNull MaterialDialog dialog,
+                                                                @NonNull DialogAction which) {
                                                 dialog.dismiss();
-                                                final MaterialDialog d = new MaterialDialog.Builder(HomeView.this).title("Sending")
-                                                        .progress(true, 100).progressIndeterminateStyle(true).cancelable(false)
-                                                        .show();
+                                                final MaterialDialog d = new MaterialDialog.Builder(HomeView.this)
+                                                        .title("Sending").progress(true, 100)
+                                                        .progressIndeterminateStyle(true).cancelable(false).show();
                                                 String version = "1";
                                                 if (address.length() < 26)
                                                     version = "2";
-                                                //TODO REQUEST SEND
-                                                makeTransaction(address, amount.doubleValue(), message, version, new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        d.dismiss();
-                                                    }
-                                                });
-
+                                                // TODO REQUEST SEND
+                                                makeTransaction(address, amount.doubleValue(), message, version,
+                                                        new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                d.dismiss();
+                                                            }
+                                                        });
 
                                             }
                                         }).show();
@@ -820,8 +716,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
-
-        //TODO -> SETUP RECEIVE SCREEN
+        // TODO -> SETUP RECEIVE SCREEN
         pages.add(new Page("RECEIVE", (RelativeLayout) findViewById(R.id.receiveview)) {
             @Override
             public void onDisable() {
@@ -849,7 +744,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
-        //TODO -> SETUP HISTORY SCREEN
+        // TODO -> SETUP HISTORY SCREEN
         pages.add(new Page("HISTORY", (RelativeLayout) findViewById(R.id.historyview)) {
             @Override
             public void onEnable() {
@@ -915,7 +810,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 return;
                             }
 
-
                             final JSONObject p = new JSONObject(transactions);
                             JSONArray a = p.getJSONArray("data");
                             if (a.length() < 11) {
@@ -947,7 +841,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 }
                             });
 
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -957,29 +850,214 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         });
     }
 
-    public void setupThankyouList() {
-        ArrayList<String> thanks = new ArrayList<>();
-        thanks.add("AroDev for developing ARIONUM");
-        thanks.add("Mercury80 for developing ARIONUM");
-        thanks.add("mikepenz for the awesome libs!");
-        thanks.add("RehabbeR for being cool");
-        thanks.add("ProgrammerDan for his awesome Miner");
-        thanks.add("ario");
-        thanks.add("hearonLP");
-        thanks.add("Nikita_Banane");
-        thanks.add("dlazaro66");
-        thanks.add("and everyone else!");
 
-        TextView t = findViewById(R.id.thankstolist);
-        String build = "";
-        for (String sd : thanks)
-            build += sd + "\n";
-        t.setText(build);
+    //////////////////////////////////////////
+    // TODO -> UI RELATED METHODS
+    //////////////////////////////////////////
+
+
+    public void updateHashGraph(final double hashrate, final String type) {
+        Handler h = new Handler(HomeView.this.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DecimalFormat df = new DecimalFormat("#.00");
+                    double d = hashrate;
+                    String s = df.format(d);
+                    if (s.startsWith(","))
+                        s = "0" + s;
+                    if (s.startsWith("."))
+                        s = "0" + s;
+
+                    String g = df.format(ArionumMiner.getLastHashrate());
+                    if (g.startsWith(","))
+                        g = "0" + g;
+                    if (g.startsWith("."))
+                        g = "0" + g;
+
+                    if (!(type.equalsIgnoreCase("mn"))) {
+                        ((TextView) findViewById(R.id.hashRate))
+                                .setText(g + " H/s \n" + s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
+                        ArionumMiner.setLastHashrate(emulateHs(hashrate));
+                        temp += ArionumMiner.getLastHashrate();
+                    } else {
+                        ((TextView) findViewById(R.id.hashRate))
+                                .setText(0.00 + " H/s \n" + 0.00 + " H/nds \nBEST DL:" + bestRECORDEDdelay);
+                    }
+                    String text = (ArionumMiner.getMinDL() + "\n" + ArionumMiner.getCurrentBlock() + "\n" + (int) temp);
+                    if (!text.equals(((TextView) findViewById(R.id.limitVIEW)).getText())) {
+                        findViewById(R.id.limitVIEW)
+                                .startAnimation(AnimationUtils.loadAnimation(HomeView.this, android.R.anim.fade_in));
+                        ((TextView) findViewById(R.id.limitVIEW)).setText(text);
+                    }
+
+                    if (((Switch) findViewById(R.id.disableGraph)).isChecked())
+                        return;
+                    GraphView graph = findViewById(R.id.graph);
+                    if (graph.getSeries().size() <= 0) {
+                        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(
+                                new DataPoint[]{new DataPoint(0, 0)});
+                        graph.addSeries(series);
+                        LineGraphSeries<DataPoint> series1 = new LineGraphSeries<>(
+                                new DataPoint[]{new DataPoint(0, 0)});
+                        graph.addSeries(series1);
+                        LineGraphSeries<DataPoint> series2 = new LineGraphSeries<>(
+                                new DataPoint[]{new DataPoint(0, 0)});
+                        graph.addSeries(series2);
+                    } else if (!(type.equalsIgnoreCase("mn"))) {
+                        boolean cpu = type.equalsIgnoreCase("cpu");
+
+                        int series = cpu ? 0 : 1;
+                        LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(series);
+
+                        series1.setAnimated(false);
+                        series1.setThickness(3);
+
+                        int color = cpu ? R.color.colorAccent : R.color.colorPink;
+
+                        series1.setColor(ContextCompat.getColor(instance, color));
+
+                        int series_backup = !cpu ? 0 : 1;
+                        LineGraphSeries<DataPoint> backup = (LineGraphSeries<DataPoint>) graph.getSeries()
+                                .get(series_backup);
+                        backup.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE,
+                                false);
+
+                        LineGraphSeries<DataPoint> masterNode = (LineGraphSeries<DataPoint>) graph.getSeries().get(2);
+                        masterNode.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE,
+                                false);
+
+                        graph.getSeries().clear();
+
+                        series1.appendData(new DataPoint(series1.getHighestValueX() + 1, d), false, Integer.MAX_VALUE,
+                                false);
+
+                        graph.getViewport().setMinX(series1.getLowestValueX());
+                        graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
+                        graph.getViewport().setMinY(series1.getLowestValueY());
+                        graph.getViewport().setMaxY(bestYList(series1, masterNode, backup) + 2);
+
+                        graph.getViewport().setYAxisBoundsManual(true);
+                        graph.getViewport().setXAxisBoundsManual(true);
+
+                        if (series_backup == 0)
+                            graph.addSeries(backup);
+                        else
+                            graph.addSeries(series1);
+
+                        if (series_backup == 0)
+                            graph.addSeries(series1);
+                        else
+                            graph.addSeries(backup);
+
+                        graph.addSeries(masterNode);
+                    } else if ((type.equalsIgnoreCase("mn"))) {
+                        System.out.println("MASTERNODE STATS");
+                        // TODO ADD MASTERNODE STATS
+                        LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(2);
+                        series1.setAnimated(false);
+                        series1.setThickness(3);
+                        series1.setColor(ContextCompat.getColor(instance, R.color.colorYellow));
+
+                        LineGraphSeries<DataPoint> backup = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
+                        backup.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE,
+                                false);
+                        LineGraphSeries<DataPoint> backup1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(1);
+                        backup1.appendData(new DataPoint(backup1.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE,
+                                false);
+
+                        graph.getSeries().clear();
+
+                        series1.appendData(new DataPoint(series1.getHighestValueX() + 1, 3), false, Integer.MAX_VALUE,
+                                false);
+
+                        graph.getViewport().setMinX(series1.getLowestValueX());
+                        graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
+                        graph.getViewport().setMinY(series1.getLowestValueY());
+                        graph.getViewport().setMaxY(bestYList(backup, backup1, series1) + 2);
+
+                        graph.getViewport().setYAxisBoundsManual(true);
+                        graph.getViewport().setXAxisBoundsManual(true);
+
+                        graph.addSeries(backup);
+                        graph.addSeries(backup1);
+                        graph.addSeries(series1);
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    //////////////////////////////////////////
-    //TODO -> TRANSACTION RELATED METHODS
-    //////////////////////////////////////////
+    public void sortArrayAndPutInList(JSONArray array, final ListView view) {
+        try {
+
+            final int y = view.getScrollY();
+            final float yz = ViewHelper.getScrollY(view);
+
+            int size = array.length();
+            ArrayList<String> name = new ArrayList<String>();
+            ArrayList<GoogleMaterial.Icon> icon = new ArrayList<GoogleMaterial.Icon>();
+            for (int i = 0; i < size; i++) {
+                JSONObject o = array.getJSONObject(i);
+                name.add(o.get("id").toString() + "," + o.get("val").toString() + "," + o.get("src") + ","
+                        + o.get("dst") + "," + o.get("date"));
+                if (o.get("type").toString().equals("credit")) {
+                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_down);
+                } else {
+                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_up);
+
+                }
+            }
+            List<String> list = new ArrayList<String>();
+            final ArrayAdapter emptyAdapter = new ArrayAdapter<String>(HomeView.this,
+                    android.R.layout.simple_list_item_1, list.toArray(new String[0]));
+
+            final CustomList adapter = new CustomList(HomeView.this, name, icon);
+            Handler h = new Handler(instance.getMainLooper());
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    view.clearChoices();
+                    view.clearAnimation();
+                    for (int index = 0; index < view.getChildCount(); ++index) {
+                        View child = view.getChildAt(index);
+                        child.setVisibility(GONE);
+                    }
+                    view.setAdapter(emptyAdapter);
+                    view.setAdapter(adapter);
+                    view.setScrollY(y);
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (int index = 0; index < view.getChildCount(); ++index) {
+                                View child = view.getChildAt(index);
+                                Animation animation = new TranslateAnimation(500, 0, 0, 0);
+                                animation.setDuration(1000);
+                                animation.setStartOffset(index * 100);
+                                child.startAnimation(animation);
+                                view.setScrollY(y);
+                            }
+                            view.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    System.out.println("SCROLLING TO: " + y + " | " + yz);
+                                    view.scrollTo(0, y);
+                                }
+                            });
+                        }
+                    });
+                    view.setScrollY(y);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void createDrawer(Bundle savedinstance) {
         final IProfile profile = new ProfileDrawerItem().withName(address).withEmail(public_key)
@@ -1019,8 +1097,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
                     @Override
                     public boolean onProfileChanged(View view, IProfile profile, boolean current) {
-                        if (profile instanceof IDrawerItem &&
-                                profile.getIdentifier() == PROFILE_SETTING) {
+                        if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_SETTING) {
 
                         }
 
@@ -1040,8 +1117,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 .withIdentifier(4),
                         new PrimaryDrawerItem().withName("History").withIcon(GoogleMaterial.Icon.gmd_hourglass_full)
                                 .withIdentifier(5),
-                        new PrimaryDrawerItem().withName("About").withIcon(FontAwesome.Icon.faw_book)
-                                .withIdentifier(6))
+                        new PrimaryDrawerItem().withName("About").withIcon(FontAwesome.Icon.faw_book).withIdentifier(6))
                 /*
                  * new SectionDrawerItem().withName("Settings"), new
                  * SecondaryDrawerItem().withName("Settings").withIcon(
@@ -1101,8 +1177,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                             if (message.isEmpty())
                                 message = "No Message given";
                             new MaterialDialog.Builder(HomeView.this).title("Scanned Transaction Request")
-                                    .content("Do you want to accept the QR request?" + "\nAddress to: " + address +
-                                            "\nValue: " + doubleVal(val).replace(",", ".") + "\nMessage: " + message)
+                                    .content("Do you want to accept the QR request?" + "\nAddress to: " + address
+                                            + "\nValue: " + doubleVal(val).replace(",", ".") + "\nMessage: " + message)
                                     .positiveText("Yes").negativeText("No")
                                     .onNegative(new MaterialDialog.SingleButtonCallback() {
                                         @Override
@@ -1129,8 +1205,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                     makeTransaction(address, val.doubleValue(), "", version, new Runnable() {
                                         @Override
                                         public void run() {
-                                            qrCodeReaderView = findViewById(
-                                                    R.id.receivescanner);
+                                            qrCodeReaderView = findViewById(R.id.receivescanner);
                                             qrCodeReaderView.startCamera();
                                             qrCodeReaderView.setQRDecodingEnabled(true);
                                         }
@@ -1147,6 +1222,14 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         };
     }
 
+
+    //////////////////////////////////////////
+    // TODO -> STOCK ANDROID OVERRIDE METHODS
+    //////////////////////////////////////////
+
+
+
+
     @Override
     public void onBackPressed() {
         new MaterialDialog.Builder(this).title("Do you want to exit?").cancelable(true).positiveText("Yes")
@@ -1162,11 +1245,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         }).show();
     }
-
-
-    //////////////////////////////////////////
-    //TODO -> GETS AND UTIL METHODS
-    //////////////////////////////////////////
 
     @Override
     public void onConfigurationChanged(Configuration configuration) {
@@ -1236,6 +1314,89 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         }
     }
 
+
+    //////////////////////////////////////////
+    // TODO -> TRANSACTION RELATED METHODS
+    //////////////////////////////////////////
+
+
+    public static void makeTransaction(final String addressTO, double value, String MSG, final String version,
+                                       final Runnable run) {
+        long UNIX = System.currentTimeMillis() / 1000;
+        Base58.getSignature(addressTO, MSG, value, UNIX, version, new Base58.CallBackSigner() {
+            @Override
+            public void onDone(String signed1, String unix1, String val1, String fee1, String msg1) {
+                signature = signed1;
+                val = val1;
+                fee = fee1;
+                unixTime = unix1;
+                message = msg1;
+
+                System.out.println("SIGNING DONE VALUES: ");
+                System.out.println(val);
+                System.out.println(signature);
+                System.out.println(fee);
+                System.out.println(unixTime);
+                System.out.println(message);
+
+                ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
+                                               @Override
+                                               public void onFeedback(final JSONObject object) {
+                                                   run.run();
+                                                   if (object == null || object.toString().contains("error")) {
+                                                       Handler h = new Handler(HomeView.instance.getMainLooper());
+                                                       h.post(new Runnable() {
+                                                           @Override
+                                                           public void run() {
+                                                               try {
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance).title("Error:")
+                                                                           .content("Message: " + "\n" + object.get("data") + " <-> ")
+                                                                           .cancelable(true).show();
+                                                               } catch (Exception e) {
+                                                                   e.printStackTrace();
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance).title("Error:")
+                                                                           .content("Message: " + "\n" + e.getMessage()).cancelable(true).show();
+                                                               }
+                                                           }
+                                                       });
+
+                                                   } else {
+                                                       Handler h = new Handler(instance.getMainLooper());
+                                                       h.post(new Runnable() {
+                                                           @Override
+                                                           public void run() {
+                                                               try {
+                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                                           .title("Transaction sent!")
+                                                                           .content("Your transaction ID:" + "\n" + object.get("data").toString())
+                                                                           .cancelable(true).show();
+                                                               } catch (final Exception e) {
+                                                                   e.printStackTrace();
+                                                                   Handler h = new Handler(instance.getMainLooper());
+                                                                   h.post(new Runnable() {
+                                                                       @Override
+                                                                       public void run() {
+                                                                           MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                                                   .title("Error:").content("Debug: " + e.getMessage())
+                                                                                   .cancelable(true).show();
+                                                                       }
+                                                                   });
+                                                               }
+                                                           }
+                                                       });
+
+                                                   }
+
+                                               }
+                                           }, "send", new ApiRequest.Argument("val", val), new ApiRequest.Argument("dst", addressTO),
+                        new ApiRequest.Argument("public_key", public_key),
+                        new ApiRequest.Argument("signature", signature), new ApiRequest.Argument("date", unixTime),
+                        new ApiRequest.Argument("message", message), new ApiRequest.Argument("version", version));
+
+            }
+        });
+    }
+
     public void refreshLastTransactions() {
         refreshing = true;
         findViewById(R.id.waitingtransbar).setVisibility(View.VISIBLE);
@@ -1294,8 +1455,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                    }
                                                }
                                            }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
-                        new ApiRequest.Argument("account", address),
-                        new ApiRequest.Argument("limit", "1"));
+                        new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "1"));
             }
         }).start();
     }
@@ -1325,10 +1485,142 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                                    }
                                                }
                                            }, "getTransactions", new ApiRequest.Argument("public_key", getPublic_key()),
-                        new ApiRequest.Argument("account", getAddress()),
-                        new ApiRequest.Argument("limit", "1000"));
+                        new ApiRequest.Argument("account", getAddress()), new ApiRequest.Argument("limit", "1000"));
             }
         }).start();
+    }
+
+
+    //////////////////////////////////////////
+    // TODO -> GETS AND UTIL METHODS
+    //////////////////////////////////////////
+
+
+    public static String getPrivate_key() {
+        return private_key;
+    }
+
+    public static String getPublic_key() {
+        return public_key;
+    }
+
+    public void saveString(String key, String string) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(key, string);
+        editor.commit();
+    }
+
+    private void checkPasswordEntry() {
+        // TODO -> CHECK PASSWORD PROMT ON FIRST LOGIN
+        PasswordView.PasswordCallback cp = new PasswordView.PasswordCallback() {
+            @Override
+            public void verification_done(boolean accepted) {
+                if (!accepted)
+                    PasswordView.makePasswordPromt(HomeView.this, this);
+            }
+        };
+        if (!PasswordView.hasPassword())
+            PasswordView.makePasswordPromt(this, cp);
+
+    }
+
+    public String getString(String key) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String value = sharedPref.getString(key, "");
+        return value;
+    }
+
+    public double bestYList(LineGraphSeries<DataPoint>... lists) {
+        double heighestY = 0;
+        for (LineGraphSeries<DataPoint> l : lists) {
+            if (l.getHighestValueY() > heighestY)
+                heighestY = l.getHighestValueY();
+        }
+        return heighestY;
+    }
+
+    private double calculateAverage(ArrayList<Double> marks) {
+        double sum = 0;
+        if (!marks.isEmpty()) {
+            for (Double mark : marks) {
+                sum += mark;
+            }
+            return sum / marks.size();
+        }
+        return sum;
+    }
+
+    public double emulateHs(double n) {
+        // IDK how dan his things work but this is a temporary solution
+        return n * 1.4 * 1.3 * 1.12 * 0.99301 * 1.33;
+    }
+
+    public void makeNotification(final String contentsmall) {
+        Handler h = new Handler(HomeView.this.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(HomeView.this, "ARONOTIFICATIONS")
+                        .setSmallIcon(R.drawable.aro).setContentTitle("Arionum Wallet | Miner")
+                        .setContentText(contentsmall)
+                        .setColor(ContextCompat.getColor(HomeView.this, R.color.colorPrimary)).setColorized(true)
+                        .setChannelId("notify_001").setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                NotificationManager mNotificationManager = (NotificationManager) HomeView.this
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    NotificationChannel channel = new NotificationChannel("notify_001", "Channel human readable title",
+                            NotificationManager.IMPORTANCE_DEFAULT);
+                    mNotificationManager.createNotificationChannel(channel);
+                }
+                mNotificationManager.notify(1047 + new Random().nextInt(1000), mBuilder.build());
+
+                TextView t = findViewById(R.id.shares);
+                String text = t.getText().toString();
+                int parsed = 0;
+                try {
+                    parsed = Integer.parseInt(text);
+                } catch (Exception e) {
+                }
+                if (contentsmall.startsWith("Share found"))
+                    t.setText((parsed + 1) + "");
+            }
+        });
+    }
+
+    public static String doubleVal(final double d) {
+        int afterlength = getDecimals(d);
+        String temp = "";
+        for (int i = 0; i < afterlength; i++)
+            temp += "#";
+        DecimalFormat format = new DecimalFormat("0." + temp);
+
+        return format.format(d);
+    }
+
+    public static String doubleVal(final Double d) {
+        return d == null ? "" : doubleVal(d.doubleValue());
+    }
+
+    public static String getAddress() {
+        return address;
+    }
+
+    public static String getCurrentPeer() {
+        return arionum_peer;
+    }
+
+    public static int getDecimals(double d) {
+        String[] splitt = (d + "").split("\\.");
+        if (splitt.length <= 1)
+            return 0;
+        String after = splitt[1];
+        while (after.lastIndexOf("0") == after.length())
+            after = after.substring(0, after.length() - 1);
+        if (after.length() > 10)
+            return 10;
+        return after.length();
     }
 
     private void setupAlias() {
@@ -1375,309 +1667,13 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 }
                 p.getLayout().setVisibility(GONE);
 
-
             }
 
         }
     }
-
-    public void sortArrayAndPutInList(JSONArray array, final ListView view) {
-        try {
-
-            final int y = view.getScrollY();
-            final float yz = ViewHelper.getScrollY(view);
-
-            int size = array.length();
-            ArrayList<String> name = new ArrayList<String>();
-            ArrayList<GoogleMaterial.Icon> icon = new ArrayList<GoogleMaterial.Icon>();
-            for (int i = 0; i < size; i++) {
-                JSONObject o = array.getJSONObject(i);
-                name.add(o.get("id").toString() + "," + o.get("val").toString() + "," + o.get("src") + "," +
-                        o.get("dst") + "," + o.get("date"));
-                if (o.get("type").toString().equals("credit")) {
-                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_up);
-                } else {
-                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_down);
-
-                }
-            }
-            List<String> list = new ArrayList<String>();
-            final ArrayAdapter emptyAdapter = new ArrayAdapter<String>(HomeView.this,
-                    android.R.layout.simple_list_item_1,
-                    list.toArray(new String[0]));
-
-            final CustomList adapter = new CustomList(HomeView.this, name, icon);
-            Handler h = new Handler(instance.getMainLooper());
-            h.post(new Runnable() {
-                @Override
-                public void run() {
-                    view.clearChoices();
-                    view.clearAnimation();
-                    for (int index = 0; index < view.getChildCount(); ++index) {
-                        View child = view.getChildAt(index);
-                        child.setVisibility(GONE);
-                    }
-                    view.setAdapter(emptyAdapter);
-                    view.setAdapter(adapter);
-                    view.setScrollY(y);
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            for (int index = 0; index < view.getChildCount(); ++index) {
-                                View child = view.getChildAt(index);
-                                Animation animation = new TranslateAnimation(500, 0, 0, 0);
-                                animation.setDuration(1000);
-                                animation.setStartOffset(index * 100);
-                                child.startAnimation(animation);
-                                view.setScrollY(y);
-                            }
-                            view.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    System.out.println("SCROLLING TO: " + y + " | " + yz);
-                                    view.scrollTo(0, y);
-                                }
-                            });
-                        }
-                    });
-                    view.setScrollY(y);
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void updateHashGraph(final double hashrate, final String type) {
-        Handler h = new Handler(HomeView.this.getMainLooper());
-        h.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    DecimalFormat df = new DecimalFormat("#.00");
-                    double d = hashrate;
-                    String s = df.format(d);
-                    if (s.startsWith(","))
-                        s = "0" + s;
-                    if (s.startsWith("."))
-                        s = "0" + s;
-
-                    String g = df.format(ArionumMiner.getLastHashrate());
-                    if (g.startsWith(","))
-                        g = "0" + g;
-                    if (g.startsWith("."))
-                        g = "0" + g;
-
-
-                    if (!(type.equalsIgnoreCase("mn"))) {
-                        ((TextView) findViewById(R.id.hashRate)).setText(g + " H/s \n" + s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
-                        ArionumMiner.setLastHashrate(emulateHs(hashrate));
-                        temp += ArionumMiner.getLastHashrate();
-                    } else {
-                        ((TextView) findViewById(R.id.hashRate)).setText(0.00 + " H/s \n" + 0.00 + " H/nds \nBEST DL:" + bestRECORDEDdelay);
-                    }
-                    String text = (ArionumMiner.getMinDL() + "\n" + ArionumMiner.getCurrentBlock() + "\n" + (int) temp);
-                    if (!text.equals(((TextView) findViewById(R.id.limitVIEW)).getText())) {
-                        findViewById(R.id.limitVIEW).startAnimation(AnimationUtils.loadAnimation(HomeView.this, android.R.anim.fade_in));
-                        ((TextView) findViewById(R.id.limitVIEW)).setText(text);
-                    }
-
-                    if (((Switch) findViewById(R.id.disableGraph)).isChecked())
-                        return;
-                    GraphView graph = findViewById(R.id.graph);
-                    if (graph.getSeries().size() <= 0) {
-                        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[]{
-                                new DataPoint(0, 0)
-                        });
-                        graph.addSeries(series);
-                        LineGraphSeries<DataPoint> series1 = new LineGraphSeries<>(new DataPoint[]{
-                                new DataPoint(0, 0)
-                        });
-                        graph.addSeries(series1);
-                        LineGraphSeries<DataPoint> series2 = new LineGraphSeries<>(new DataPoint[]{
-                                new DataPoint(0, 0)
-                        });
-                        graph.addSeries(series2);
-                    } else if (!(type.equalsIgnoreCase("mn"))) {
-                        boolean cpu = type.equalsIgnoreCase("cpu");
-
-                        int series = cpu ? 0 : 1;
-                        LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(series);
-
-                        series1.setAnimated(false);
-                        series1.setThickness(3);
-
-                        int color = cpu ? R.color.colorAccent : R.color.colorPink;
-
-                        series1.setColor(ContextCompat.getColor(instance, color));
-
-                        int series_backup = !cpu ? 0 : 1;
-                        LineGraphSeries<DataPoint> backup = (LineGraphSeries<DataPoint>) graph.getSeries().get(series_backup);
-                        backup.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE, false);
-
-                        LineGraphSeries<DataPoint> masterNode = (LineGraphSeries<DataPoint>) graph.getSeries().get(2);
-                        masterNode.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE, false);
-
-
-                        graph.getSeries().clear();
-
-                        series1.appendData(new DataPoint(series1.getHighestValueX() + 1, d), false, Integer.MAX_VALUE, false);
-
-                        graph.getViewport().setMinX(series1.getLowestValueX());
-                        graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
-                        graph.getViewport().setMinY(series1.getLowestValueY());
-                        graph.getViewport().setMaxY(bestYList(series1, masterNode, backup) + 2);
-
-                        graph.getViewport().setYAxisBoundsManual(true);
-                        graph.getViewport().setXAxisBoundsManual(true);
-
-
-                        if (series_backup == 0)
-                            graph.addSeries(backup);
-                        else
-                            graph.addSeries(series1);
-
-                        if (series_backup == 0)
-                            graph.addSeries(series1);
-                        else
-                            graph.addSeries(backup);
-
-                        graph.addSeries(masterNode);
-                    } else if ((type.equalsIgnoreCase("mn"))) {
-                        System.out.println("MASTERNODE STATS");
-                        //TODO ADD MASTERNODE STATS
-                        LineGraphSeries<DataPoint> series1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(2);
-                        series1.setAnimated(false);
-                        series1.setThickness(3);
-                        series1.setColor(ContextCompat.getColor(instance, R.color.colorYellow));
-
-                        LineGraphSeries<DataPoint> backup = (LineGraphSeries<DataPoint>) graph.getSeries().get(0);
-                        backup.appendData(new DataPoint(backup.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE, false);
-                        LineGraphSeries<DataPoint> backup1 = (LineGraphSeries<DataPoint>) graph.getSeries().get(1);
-                        backup1.appendData(new DataPoint(backup1.getHighestValueX() + 1, 0), false, Integer.MAX_VALUE, false);
-
-
-                        graph.getSeries().clear();
-
-                        series1.appendData(new DataPoint(series1.getHighestValueX() + 1, 3), false, Integer.MAX_VALUE, false);
-
-                        graph.getViewport().setMinX(series1.getLowestValueX());
-                        graph.getViewport().setMaxX(series1.getHighestValueX() + 2);
-                        graph.getViewport().setMinY(series1.getLowestValueY());
-                        graph.getViewport().setMaxY(bestYList(backup, backup1, series1) + 2);
-
-                        graph.getViewport().setYAxisBoundsManual(true);
-                        graph.getViewport().setXAxisBoundsManual(true);
-
-
-                        graph.addSeries(backup);
-                        graph.addSeries(backup1);
-                        graph.addSeries(series1);
-
-                    }
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public void saveString(String key, String string) {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(key, string);
-        editor.commit();
-    }
-
-    private void checkPasswordEntry() {
-        //TODO -> CHECK PASSWORD PROMT ON FIRST LOGIN
-        PasswordView.PasswordCallback cp = new PasswordView.PasswordCallback() {
-            @Override
-            public void verification_done(boolean accepted) {
-                if (!accepted)
-                    PasswordView.makePasswordPromt(HomeView.this, this);
-            }
-        };
-        if (!PasswordView.hasPassword())
-            PasswordView.makePasswordPromt(this, cp);
-
-    }
-
-    public String getString(String key) {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String value = sharedPref.getString(key, "");
-        return value;
-    }
-
-    public double bestYList(LineGraphSeries<DataPoint>... lists) {
-        double heighestY = 0;
-        for (LineGraphSeries<DataPoint> l : lists) {
-            if (l.getHighestValueY() > heighestY)
-                heighestY = l.getHighestValueY();
-        }
-        return heighestY;
-    }
-
-    private double calculateAverage(ArrayList<Double> marks) {
-        double sum = 0;
-        if (!marks.isEmpty()) {
-            for (Double mark : marks) {
-                sum += mark;
-            }
-            return sum / marks.size();
-        }
-        return sum;
-    }
-
-    public double emulateHs(double n) {
-        //IDK how dan his things work but this is a temporary solution
-        return n * 1.4 * 1.3 * 1.12 * 0.99301 * 1.33;
-    }
-
-    public void makeNotification(final String contentsmall) {
-        Handler h = new Handler(HomeView.this.getMainLooper());
-        h.post(new Runnable() {
-            @Override
-            public void run() {
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
-                        HomeView.this, "ARONOTIFICATIONS")
-                        .setSmallIcon(R.drawable.aro)
-                        .setContentTitle("Arionum Wallet | Miner")
-                        .setContentText(contentsmall)
-                        .setColor(ContextCompat.getColor(HomeView.this, R.color.colorPrimary))
-                        .setColorized(true)
-                        .setChannelId("notify_001")
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-
-                NotificationManager mNotificationManager =
-                        (NotificationManager) HomeView.this.getSystemService(Context.NOTIFICATION_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    NotificationChannel channel = new NotificationChannel("notify_001",
-                            "Channel human readable title",
-                            NotificationManager.IMPORTANCE_DEFAULT);
-                    mNotificationManager.createNotificationChannel(channel);
-                }
-                mNotificationManager.notify(1047 + new Random().nextInt(1000), mBuilder.build());
-
-                TextView t = findViewById(R.id.shares);
-                String text = t.getText().toString();
-                int parsed = 0;
-                try {
-                    parsed = Integer.parseInt(text);
-                } catch (Exception e) {
-                }
-                if (contentsmall.startsWith("Share found"))
-                    t.setText((parsed + 1) + "");
-            }
-        });
-    }
-
 
     //////////////////////////////////////////
-    //TODO -> CLASSES AND STATIC CLASS CALLS//
+    // TODO -> CLASSES AND STATIC CLASS CALLS//
     //////////////////////////////////////////
 
     public static abstract class Page {
