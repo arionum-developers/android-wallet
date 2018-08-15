@@ -91,14 +91,14 @@ public class TransactionListenerService extends JobIntentService {
                                                                .setContentTitle("Arionum Wallet | Aro Sent!")
                                                                .setContentText("Your : "
                                                                        + ((JSONObject) array.get(0)).get("val").toString()
-                                                                       + "ARO has been send" + " to " + ""
+                                                                       + "ARO has been sent" + " to " + ""
                                                                        + ((JSONObject) array.get(0)).get("src"))
                                                                .setStyle(
                                                                        new NotificationCompat.InboxStyle()
                                                                                .addLine("Your "
                                                                                        + ((JSONObject) array.get(0))
                                                                                        .get("val").toString()
-                                                                                       + "ARO has been send")
+                                                                                       + "ARO has been sent")
                                                                                .addLine("to " + ((JSONObject) array.get(0))
                                                                                        .get("src")))
                                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
