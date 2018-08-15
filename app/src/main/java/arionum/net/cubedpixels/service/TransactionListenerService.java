@@ -39,8 +39,8 @@ public class TransactionListenerService extends JobIntentService {
                                            try {
                                                JSONArray array = object.getJSONArray("data");
                                                String id = ((JSONObject) array.get(0)).get("id").toString();
-                                               if (!getString(ctx, "lastID").equalsIgnoreCase(id)) {
-                                                   saveString(ctx, "lastID", id);
+                                               if (!getString(ctx, "notifyID").equalsIgnoreCase(id)) {
+                                                   saveString(ctx, "notifyID", id);
                                                    JSONObject o = ((JSONObject) array.get(0));
                                                    if (o.get("type").toString().equalsIgnoreCase("credit")) {
                                                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(

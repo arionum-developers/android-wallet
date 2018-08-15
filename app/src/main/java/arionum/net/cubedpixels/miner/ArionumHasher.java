@@ -18,6 +18,7 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     private boolean active = false;
     private boolean forceStop = false;
+    private boolean isInitiated = false;
     private boolean doPause = false;
     private Argon2 argon2;
     private MessageDigest messageDigest;
@@ -47,7 +48,12 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     public void initiate() {
         //TODO -> SETUP ARGON2
+        active = true;
+        isInitiated = true;
+
         System.out.println("Intiting Hasher -> " + this);
+
+
         argon2 = new Argon2(new SecurityParameters(hf_argon_t_cost, hf_argon_m_cost, hf_argon_para), 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
         //TODO -> REGISTER HASHER AND ENVIROMENT
         try {
@@ -58,14 +64,12 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
         Thread.setDefaultUncaughtExceptionHandler(this);
 
-        active = true;
         forceStop = false;
         doCycle();
     }
 
     public void doCycle() {
         //TODO -> GENERATE NONCE
-        System.out.println("Starting Hasher -> " + this);
         while (active && !forceStop) {
             if (forceStop)
                 return;
@@ -77,9 +81,6 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
                 }
                 continue;
             }
-
-            System.out.println("Running Hasher -> " + this);
-
 
             //TODO -> GENERATE ARGON2 HASH
             String base = nonce.getNonce();
@@ -111,7 +112,10 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
             long finalDuration = new BigInteger(duration.toString()).divide(new BigInteger(difficulty + "")).longValue();
 
             ArionumMiner.getInstance().setOverallHashes(ArionumMiner.getOverallHashes() + 1);
-            ArionumMiner.getInstance().getCallback().onDLChange(finalDuration);
+            String type = "CPU";
+            if (hf_argon_m_cost < 500000)
+                type = "GPU";
+            ArionumMiner.getInstance().getCallback().onDLChange(finalDuration, type);
             //TODO -> MAKE SOLO MINER
             String signature = Base58.generateSoloSignature(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height, neededDL, ArionumMiner.getInstance().getCallback());
 
@@ -142,8 +146,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
         this.doMine = doMine;
 
-        if (this.hf_argon_m_cost == hf_argon_m_cost && this.hf_argon_para == hf_argon_para && this.hf_argon_t_cost == hf_argon_t_cost) {
-            //TODO-> REINIT
+        if (!(this.hf_argon_m_cost == hf_argon_m_cost && this.hf_argon_para == hf_argon_para && this.hf_argon_t_cost == hf_argon_t_cost)) {
+            //TODO-> SET SECURITY PARAMS
             argon2 = new Argon2(new SecurityParameters(hf_argon_t_cost, hf_argon_m_cost, hf_argon_para), 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
         }
 
@@ -174,6 +178,10 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isInitiated() {
+        return isInitiated;
     }
 
     public void setActive(boolean active) {

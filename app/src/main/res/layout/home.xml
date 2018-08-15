@@ -19,7 +19,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:elevation="9dp"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <RelativeLayout
                 android:id="@+id/balancelayout"
@@ -84,6 +84,24 @@
                     android:textSize="12sp" />
 
                 <TextView
+                    android:id="@+id/aliasinfo"
+
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+
+                    android:layout_alignParentBottom="true"
+
+                    android:layout_alignParentStart="true"
+
+                    android:layout_marginBottom="73dp"
+                    android:elevation="5dp"
+                    android:gravity="center"
+                    android:text="Your Alias:"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorBackground"
+                    android:textSize="12sp" />
+
+                <TextView
                     android:id="@+id/connected1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -120,6 +138,16 @@
                     android:layout_marginBottom="7dp"
                     android:layout_marginStart="7dp" />
 
+                <ImageView
+                    android:id="@+id/setAlias"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginBottom="52dp"
+                    android:layout_marginStart="7dp"
+                    android:elevation="6dp" />
+
             </RelativeLayout>
 
 
@@ -151,10 +179,10 @@
             <RelativeLayout
                 android:id="@+id/qrrequestview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="315dp"
                 android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:background="#64ffffff"
+                android:layout_centerVertical="true"
+                android:background="@drawable/layout_round_bg"
                 android:elevation="25dp"
                 android:visibility="gone">
 
@@ -164,10 +192,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_alignParentTop="true"
-                    android:layout_marginEnd="35dp"
-                    android:layout_marginTop="30dp"
-                    android:background="@android:drawable/ic_delete"
-                    app:srcCompat="@android:drawable/ic_delete" />
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginTop="41dp" />
 
                 <ImageView
                     android:id="@+id/qrreuqestimage"
@@ -214,7 +240,7 @@
 
         </RelativeLayout>
 
-        <RelativeLayout
+        <RelativeLayout xmlns:fancy="http://schemas.android.com/apk/res-auto"
             android:id="@+id/send"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -239,7 +265,7 @@
                 android:layout_alignStart="@+id/amounttext"
                 android:layout_marginTop="15dp"
                 android:fontFamily="sans-serif"
-                android:text="Address to:"
+                android:text="Address/Alias:"
                 android:textAllCaps="false"
                 android:textColor="@color/colorBackground"
                 android:textStyle="bold" />
@@ -254,7 +280,7 @@
                 android:layout_marginEnd="19dp"
                 android:layout_marginStart="19dp"
                 android:layout_marginTop="29dp"
-                android:hint="Address"
+                android:hint="Address/Alias"
                 android:inputType="text"
                 android:textColor="@color/colorBackground"
                 android:textColorHint="@color/colorBackground"
@@ -281,8 +307,7 @@
                 android:inputType="numberDecimal"
                 android:textAlignment="viewStart"
                 android:textColor="@color/colorBackground"
-                android:textColorHint="@color/colorBackground"
-                android:textStyle="bold" />
+                android:textColorHint="@color/colorBackground" />
 
             <TextView
                 android:id="@+id/fee"
@@ -322,7 +347,7 @@
                 android:textColor="@color/colorBackground"
                 android:textColorHint="@color/colorBackground" />
 
-            <Button
+            <mehdi.sakout.fancybuttons.FancyButton
                 android:id="@+id/sendbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -330,9 +355,21 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginBottom="28dp"
                 android:layout_marginEnd="15dp"
-                android:background="@color/colorBackground"
-                android:elevation="24dp"
-                android:text="SEND" />
+
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="10dp"
+
+                fancy:fb_borderColor="#ffffff"
+                fancy:fb_borderWidth="1dp"
+                fancy:fb_defaultColor="#ffffff"
+                fancy:fb_focusColor="@color/colorAccent"
+                fancy:fb_fontIconResource="&#xf04b;"
+                fancy:fb_iconPosition="left"
+                fancy:fb_radius="30dp"
+                fancy:fb_text="Send"
+                fancy:fb_textColor="@color/colorAccent" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -389,7 +426,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/shares"
@@ -537,7 +574,9 @@
                 android:id="@+id/info_box"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
                 android:background="@android:drawable/edit_text"
                 android:paddingBottom="20dp"
                 android:paddingTop="20dp">
@@ -604,8 +643,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@+id/info_box"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
                 android:layout_marginTop="-5dp"
                 android:background="@android:drawable/edit_text"
                 android:paddingBottom="20dp"
@@ -627,8 +666,8 @@
                 android:layout_height="96dp"
                 android:layout_alignParentStart="true"
                 android:layout_below="@+id/donations"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
                 android:background="@android:drawable/edit_text"
                 android:paddingBottom="20dp"
                 android:paddingTop="20dp">
@@ -686,11 +725,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="320dp"
                 android:layout_below="@+id/donations"
-                android:layout_marginBottom="20dp"
-                android:layout_marginEnd="20dp"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
-                android:layout_marginStart="20dp"
                 android:layout_marginTop="98dp"
                 android:background="@android:drawable/edit_text">
 

@@ -61,6 +61,10 @@ public class Argon2 {
         this.versionid = versionid;
     }
 
+    public void setSecurityParameters(SecurityParameters securityParameters) {
+        this.securityParameters = securityParameters;
+    }
+
     /**
      * Call Argon2's hash function using all default values
      *

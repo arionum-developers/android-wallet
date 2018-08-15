@@ -239,7 +239,9 @@ public class ArionumMiner {
                     if (!running)
                         return;
                     updateHashers();
+                    System.out.println("RUNNING: " + running);
                 }
+                System.out.println("UPDATE THREAD DIED!");
             }
         });
         thread.setDaemon(true);
@@ -258,6 +260,7 @@ public class ArionumMiner {
                 public void run() {
                     hasher.updateHasher(data, pool_key, difficulty, neededDL, height, doMine, hf_argon_t_cost, hf_argon_m_cost, hf_argon_para);
                     hasher.refreshNonce();
+                    System.out.println("-> CREATING HASHER ->" + hasher + " METHOD: createHasher");
                     hasher.initiate();
                 }
             });
@@ -362,11 +365,14 @@ public class ArionumMiner {
             String publicpoolkey = jsonData.getString("public_key");
             pool_key = publicpoolkey;
 
+
             if (jsonData.getString("recommendation") != null) {
                 String recomm = jsonData.getString("recommendation");
                 if (!recomm.equals("mine")) {
                     doMine = false;
                     notify("Waiting for MN-Block...", R.color.colorAccent);
+                    ArionumMiner.getInstance().getCallback().onDLChange(Long.MAX_VALUE, "MN");
+                    ArionumMiner.getInstance().getCallback().onDLChange(Long.MAX_VALUE, "MN");
                 }
                 int argon_mem = jsonData.getInt("argon_mem");
                 int argon_threads = jsonData.getInt("argon_threads");
@@ -405,16 +411,12 @@ public class ArionumMiner {
 
         for (final ArionumHasher hasher : hashers) {
             hasher.updateHasher(data, pool_key, difficulty, neededDL, height, doMine, hf_argon_t_cost, hf_argon_m_cost, hf_argon_para);
-            if (!hasher.isActive()) {
+            if (!hasher.isInitiated()) {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            Thread.sleep(hashers.indexOf(hasher) * 1250);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
                         hasher.initiate();
+                        System.out.println("-> CREATING HASHER ->" + hasher + " METHOD: updateHasher (not active)");
                     }
                 });
                 threadCollection.add(thread);
@@ -448,7 +450,7 @@ public class ArionumMiner {
 
         public abstract void onReject(String hash);
 
-        public abstract void onDLChange(long dl);
+        public abstract void onDLChange(long dl, String type);
 
     }
 }
