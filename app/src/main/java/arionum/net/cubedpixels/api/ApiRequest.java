@@ -1,5 +1,6 @@
 package arionum.net.cubedpixels.api;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -46,14 +47,19 @@ public class ApiRequest {
 					feedback.onFeedback(obj);
 				} catch (Exception e) {
 					e.printStackTrace();
-					feedback.onFeedback(null);
+					try {
+						feedback.onFeedback(null);
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
 				}
 			}
 		}).start();
 	}
 
+
 	public static abstract class RequestFeedback {
-		public abstract void onFeedback(JSONObject object);
+		public abstract void onFeedback(JSONObject object) throws JSONException;
 
 		public void onPreFetch(JSONObject object) {
 		}

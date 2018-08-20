@@ -11,10 +11,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +31,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -71,6 +76,8 @@ import com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
+import com.nineoldandroids.animation.AnimatorSet;
+import com.nineoldandroids.animation.ValueAnimator;
 import com.nineoldandroids.view.ViewHelper;
 
 import net.glxn.qrgen.android.QRCode;
@@ -84,6 +91,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -95,7 +103,7 @@ import arionum.net.cubedpixels.miner.ArionumMiner;
 import arionum.net.cubedpixels.utils.Base58;
 import arionum.net.cubedpixels.utils.CrossfadeWrapper;
 import arionum.net.cubedpixels.utils.DoneTask;
-import arionum.net.cubedpixels.utils.ResizeAnimation;
+import arionum.net.cubedpixels.utils.Easing;
 import es.dmoral.toasty.Toasty;
 import mehdi.sakout.fancybuttons.FancyButton;
 
@@ -177,6 +185,9 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     // WARING !!!!!!!!!!! DONT USE HEAVY METHODS FOR FAST LOADING TIMES
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //TODO -> THEME PROCESSOR
+        setTheme(((boolean) SettingsView.getSettingFromName("blacktheme").getValue()) ? R.style.DarkAppTheme : R.style.AppTheme);
+
         // TODO -> SET INSTANCE
         instance = this;
         checkPasswordEntry();
@@ -221,14 +232,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         ArrayList<String> thanks = new ArrayList<>();
         thanks.add("AroDev for developing ARIONUM");
         thanks.add("Mercury80 for developing ARIONUM");
-        thanks.add("mikepenz for the awesome libs!");
-        thanks.add("RehabbeR for being cool");
         thanks.add("ProgrammerDan for his awesome Miner");
-        thanks.add("ario");
-        thanks.add("hearonLP");
-        thanks.add("Nikita_Banane");
-        thanks.add("dlazaro66");
-        thanks.add("and everyone else!");
+        thanks.add("Mikepenz for the awesome libs!");
+        thanks.add("Stormie Selling Fcapes -Mental Help");
+        thanks.add("HashPi -Mental Help");
 
         TextView t = findViewById(R.id.thankstolist);
         String build = "";
@@ -255,6 +262,9 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
     public void initIcons() {
         // TODO-> ICONS
+
+
+        //TODO -> REFRESH ICON
         ImageView sync = findViewById(R.id.refreshIcon);
         IconicsDrawable syncd = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_refresh)
                 .color(Color.WHITE).sizeDp(28);
@@ -269,6 +279,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
+        //TODO -> ALIAS SET ICON
         ImageView setAlias = findViewById(R.id.setAlias);
         IconicsDrawable sadr = new IconicsDrawable(HomeView.this).icon(FontAwesome.Icon.faw_ticket_alt)
                 .color(Color.WHITE).sizeDp(28);
@@ -279,15 +290,14 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             @Override
             public void onClick(View view) {
                 // TODO -> SET ALIAS IF ALIAS ISN'T SET
-                if (!alias.equals("none")) {
+                if (alias.equals("none")) {
                     Toasty.error(HomeView.this, "You already own an Alias!", Toast.LENGTH_SHORT, true).show();
                     return;
                 }
-                MaterialDialog d = null;
-                final MaterialDialog finalD = d;
-                d = new MaterialDialog.Builder(HomeView.this).title("Set Alias ")
-                        .content("Enter an Alias (10 AROs needed + !!NOT REVERSIBLE!!)")
-                        .inputType(InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_CLASS_NUMBER)
+
+                new MaterialDialog.Builder(HomeView.this).title("Set Alias ")
+                        .content("Enter an Alias (A-Z|0-9)(10 AROs needed + !!NOT REVERSIBLE!!)")
+                        .inputType(InputType.TYPE_CLASS_TEXT)
                         .input("Alias", "", new MaterialDialog.InputCallback() {
                             @Override
                             public void onInput(MaterialDialog dialog, CharSequence input) {
@@ -296,18 +306,17 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         }).positiveText("Set").negativeText("Cancel")
                         .onPositive(new MaterialDialog.SingleButtonCallback() {
                             @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            public void onClick(@NonNull final MaterialDialog dialog, @NonNull DialogAction which) {
                                 String str = dialog.getInputEditText().getText().toString();
-                                str = str.replaceAll("/[^a-zA-Z0-9]/", "");
                                 str = str.toUpperCase();
                                 if (str.length() < 4 || str.length() > 25) {
-                                    Toasty.error(HomeView.this, "Invalid Alias! 4< && <25 && A-Z", Toast.LENGTH_SHORT,
+                                    Toasty.error(HomeView.this, "Invalid Alias! 4< && <25 && A-Z|0-9", Toast.LENGTH_SHORT,
                                             true).show();
                                 }
-                                makeTransaction(getAddress(), 0.00000001, str, "1", new Runnable() {
+                                makeTransaction(getAddress(), 0.00000001, str, "3", new Runnable() {
                                     @Override
                                     public void run() {
-                                        finalD.dismiss();
+                                        dialog.dismiss();
                                     }
                                 });
 
@@ -316,6 +325,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
+        //TODO -> QR RECEIVE ICON
         ImageView closeQRrequest = findViewById(R.id.closeqrrequest);
         IconicsDrawable cqrrid = new IconicsDrawable(HomeView.this).icon(FontAwesome.Icon.faw_times)
                 .color(ContextCompat.getColor(instance, R.color.md_black_1000)).sizeDp(28);
@@ -335,55 +345,96 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         createDrawer(savedInstanceState);
         setupPages();
 
+        //TODO -> SCREENSAVER
+        findViewById(R.id.ScreenSaver).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleFullScreen(false, findViewById(R.id.ScreenSaver));
+            }
+        });
+
+
+
         // TODO -> ANIMATIONS
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
 
-        ResizeAnimation resizeAnimation = new ResizeAnimation(findViewById(R.id.balancelayout), 200, size.y);
-        resizeAnimation.setDuration(1000);
-        findViewById(R.id.balancelayout).startAnimation(resizeAnimation);
+        Resources r = getResources();
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, r.getDisplayMetrics());
+
+        final AnimatorSet animatorSet = new AnimatorSet();
+        ValueAnimator valueAnimatorX = ValueAnimator.ofFloat(size.y, px);
+        valueAnimatorX.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                View view = findViewById(R.id.balancelayout);
+                view.getLayoutParams().height = (int) (double) (float) animation.getAnimatedValue();
+                view.requestLayout();
+            }
+        });
+        View view = findViewById(R.id.balancelayout);
+        view.getLayoutParams().height = (int) (double) (float) size.y;
+        view.requestLayout();
+
+        Easing easing = new Easing(1500);
+        valueAnimatorX.setEvaluator(easing);
+        animatorSet.playTogether(valueAnimatorX);
+        animatorSet.setDuration(1500);
+
 
         // TODO-> GET BALANCE
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                        @Override
-                                       public void onFeedback(JSONObject object) {
-                                           System.out.println("GOT RESPONSE!");
-                                           try {
-
-                                               TextView test = findViewById(R.id.balancevalue);
-                                               test.setText(object.get("data").toString() + " ARO");
-                                           } catch (Exception e) {
-
-                                           }
+                                       public void onFeedback(final JSONObject object) throws JSONException {
+                                           final Object data = object.get("data");
+                                           HomeView.instance.runOnUiThread(new Runnable() {
+                                               @Override
+                                               public void run() {
+                                                   TextView test = findViewById(R.id.balancevalue);
+                                                   test.setText(data.toString() + " ARO");
+                                               }
+                                           });
                                        }
-                                   }, "getBalance", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", HomeView.address));
+        }, "getBalance", new ApiRequest.Argument("account", HomeView.address));
 
         // TODO-> GETTRANSACTIONS
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                        @Override
-                                       public void onFeedback(JSONObject object) {
-                                           System.out.println("GOT RESPONSE! TRANSACTIONS!");
-                                           try {
-                                               if (object.getJSONArray("data").length() > 0) {
-                                                   sortArrayAndPutInList(object.getJSONArray("data"),
-                                                           (ListView) findViewById(R.id.transactionlist));
-                                               }
-                                               Handler h = new Handler(instance.getMainLooper());
-                                               h.post(new Runnable() {
-                                                   @Override
-                                                   public void run() {
-                                                       findViewById(R.id.waitingtransbar).setVisibility(GONE);
+                                       public void onFeedback(final JSONObject object) throws JSONException {
+                                           final JSONArray array = object.getJSONArray("data");
+                                           new Thread(new Runnable() {
+                                               @Override
+                                               public void run() {
+                                                   runOnUiThread(new Runnable() {
+                                                       @Override
+                                                       public void run() {
+                                                           findViewById(R.id.waitingtransbar).setVisibility(GONE);
+                                                       }
+                                                   });
+                                                   if (array.length() > 0) {
+                                                       sortArrayAndPutInList(array,
+                                                               (ListView) findViewById(R.id.transactionlist), new Runnable() {
+                                                                   @Override
+                                                                   public void run() {
+                                                                       HomeView.instance.runOnUiThread(new Runnable() {
+                                                                           @Override
+                                                                           public void run() {
+                                                                               animatorSet.start();
+                                                                           }
+                                                                       });
+                                                                   }
+                                                               });
                                                    }
-                                               });
-                                           } catch (Exception e) {
-                                               e.printStackTrace();
-                                           }
+
+                                               }
+                                           }).start();
+
                                            refreshing = false;
                                        }
-                                   }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", HomeView.address), new ApiRequest.Argument("limit", "10"));
+        }, "getTransactions", new ApiRequest.Argument("account", HomeView.address), new ApiRequest.Argument("limit", "10"));
+
+        //TODO -> END OF CLASS
     }
 
 
@@ -455,6 +506,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 if (!ArionumMiner.isRunning()) {
                     saveString("miner_pool", editPool.getText().toString());
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    if (((Switch) findViewById(R.id.enableScreensaver)).isChecked())
+                        toggleFullScreen(true, findViewById(R.id.ScreenSaver));
                     ArionumMiner.getInstance().start(new ArionumMiner.ArionumMinerCallback() {
                                                          // TODO -> MINING VARS
                                                          double hashes = 0;
@@ -585,15 +638,12 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             }
         });
 
-        final RelativeLayout donations = findViewById(R.id.donations);
+        final RelativeLayout donations = findViewById(R.id.settings);
         donations.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("DONATION-Address",
-                        "1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG");
-                clipboard.setPrimaryClip(clip);
-                Toast.makeText(instance, "Address copied to Clipboard", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(HomeView.this, SettingsView.class);
+                HomeView.this.startActivity(i);
             }
         });
 
@@ -684,7 +734,13 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                 new MaterialDialog.Builder(HomeView.this).title("Transaction")
                                         .content("Are you sure you want to send " + doubleVal(amount).replace(",", ".")
                                                 + " ARO " + "\n to: " + address)
-                                        .cancelable(false).positiveText("Yes").negativeText("No").autoDismiss(false)
+                                        .positiveText("Yes").negativeText("No").autoDismiss(false)
+                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
+                                            }
+                                        })
                                         .onPositive(new MaterialDialog.SingleButtonCallback() {
                                             @Override
                                             public void onClick(@NonNull MaterialDialog dialog,
@@ -748,25 +804,120 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         pages.add(new Page("HISTORY", (RelativeLayout) findViewById(R.id.historyview)) {
             @Override
             public void onEnable() {
-                try {
-                    String transactions = getString("transactions");
-                    final JSONObject p = new JSONObject(transactions);
-                    sortArrayAndPutInList(p.getJSONArray("data"),
-                            (ListView) findViewById(R.id.historylisttransactions));
-                } catch (Exception e) {
-                }
-
-                checkIfLastTransactionIsSame(new LastTransactionTimer() {
+                Handler h = new Handler(instance.getMainLooper());
+                h.post(new Runnable() {
                     @Override
-                    public void onDifferect(String id) {
-                        System.out.println("DIFFERENT");
-                        downloadTransactions(new Call() {
+                    public void run() {
+                        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                    }
+                });
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String transactions = getString("transactions");
+                            final JSONObject p = new JSONObject(transactions);
+                            sortArrayAndPutInList(p.getJSONArray("data"),
+                                    (ListView) findViewById(R.id.historylisttransactions), new Runnable() {
+                                        @Override
+                                        public void run() {
+                                        }
+                                    });
+                        } catch (Exception e) {
+                        }
+
+                        checkIfLastTransactionIsSame(new LastTransactionTimer() {
                             @Override
-                            public void onDone(JSONObject o) {
+                            public void onDifferect(String id) {
+                                System.out.println("DIFFERENT");
+                                downloadTransactions(new Call() {
+                                    @Override
+                                    public void onDone(JSONObject o) {
+                                        try {
+                                            ListView l = findViewById(R.id.historylisttransactions);
+                                            sortArrayAndPutInList(o.getJSONArray("data"),
+                                                    (ListView) findViewById(R.id.historylisttransactions), new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Handler h = new Handler(instance.getMainLooper());
+                                                            h.post(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    findViewById(R.id.progressBar).setVisibility(GONE);
+                                                                }
+                                                            });
+
+                                                        }
+                                                    });
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onSame(String id) {
+                                System.out.println("SAME");
                                 try {
-                                    ListView l = findViewById(R.id.historylisttransactions);
-                                    sortArrayAndPutInList(o.getJSONArray("data"),
-                                            (ListView) findViewById(R.id.historylisttransactions));
+                                    String transactions = getString("transactions");
+                                    if (transactions.isEmpty()) {
+                                        System.out.println("transactions empty");
+                                        downloadTransactions(new Call() {
+                                            @Override
+                                            public void onDone(JSONObject o) {
+                                                try {
+                                                    ListView l = findViewById(R.id.historylisttransactions);
+                                                    sortArrayAndPutInList(o.getJSONArray("data"),
+                                                            (ListView) findViewById(R.id.historylisttransactions), new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    Handler h = new Handler(instance.getMainLooper());
+                                                                    h.post(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            findViewById(R.id.progressBar).setVisibility(GONE);
+                                                                        }
+                                                                    });
+                                                                }
+                                                            });
+
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        });
+                                        return;
+                                    }
+
+                                    final JSONObject p = new JSONObject(transactions);
+                                    JSONArray a = p.getJSONArray("data");
+                                    if (a.length() < 11) {
+                                        System.out.println("length to short");
+                                        downloadTransactions(new Call() {
+                                            @Override
+                                            public void onDone(final JSONObject o) {
+                                                try {
+                                                    sortArrayAndPutInList(o.getJSONArray("data"),
+                                                            (ListView) findViewById(R.id.historylisttransactions), new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    Handler h = new Handler(instance.getMainLooper());
+                                                                    h.post(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            findViewById(R.id.progressBar).setVisibility(GONE);
+                                                                        }
+                                                                    });
+                                                                }
+                                                            });
+
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        });
+                                    }
                                     Handler h = new Handler(instance.getMainLooper());
                                     h.post(new Runnable() {
                                         @Override
@@ -774,78 +925,15 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                                             findViewById(R.id.progressBar).setVisibility(GONE);
                                         }
                                     });
+
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }
                         });
                     }
+                }).start();
 
-                    @Override
-                    public void onSame(String id) {
-                        System.out.println("SAME");
-                        try {
-                            String transactions = getString("transactions");
-                            if (transactions.isEmpty()) {
-                                System.out.println("transactions empty");
-                                downloadTransactions(new Call() {
-                                    @Override
-                                    public void onDone(JSONObject o) {
-                                        try {
-                                            ListView l = findViewById(R.id.historylisttransactions);
-                                            sortArrayAndPutInList(o.getJSONArray("data"),
-                                                    (ListView) findViewById(R.id.historylisttransactions));
-                                            Handler h = new Handler(instance.getMainLooper());
-                                            h.post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    findViewById(R.id.progressBar).setVisibility(GONE);
-                                                }
-                                            });
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                                return;
-                            }
-
-                            final JSONObject p = new JSONObject(transactions);
-                            JSONArray a = p.getJSONArray("data");
-                            if (a.length() < 11) {
-                                System.out.println("length to short");
-                                downloadTransactions(new Call() {
-                                    @Override
-                                    public void onDone(final JSONObject o) {
-                                        try {
-                                            sortArrayAndPutInList(o.getJSONArray("data"),
-                                                    (ListView) findViewById(R.id.historylisttransactions));
-                                            Handler h = new Handler(instance.getMainLooper());
-                                            h.post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    findViewById(R.id.progressBar).setVisibility(GONE);
-                                                }
-                                            });
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                            }
-                            Handler h = new Handler(instance.getMainLooper());
-                            h.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    findViewById(R.id.progressBar).setVisibility(GONE);
-                                }
-                            });
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
             }
         });
     }
@@ -855,7 +943,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     // TODO -> UI RELATED METHODS
     //////////////////////////////////////////
 
-
+    boolean sspositiveforward = false;
+    boolean sspositiveside = false;
     public void updateHashGraph(final double hashrate, final String type) {
         Handler h = new Handler(HomeView.this.getMainLooper());
         h.post(new Runnable() {
@@ -876,6 +965,59 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     if (g.startsWith("."))
                         g = "0" + g;
 
+                    if (((Switch) findViewById(R.id.enableScreensaver)).isChecked()) {
+                        String text = ((TextView) findViewById(R.id.screensavertext)).getText().toString();
+                        String text_below = "";
+                        try {
+                            if (text.contains("\n")) text_below = text.split("\n")[1];
+                        } catch (Exception e) {
+
+                        }
+                        ((TextView) findViewById(R.id.screensavertext))
+                                .setText("Miner is running... " + g + "H/s\n" + text_below + "\n" + "(Tap 3 Times to disable SS)");
+
+                        Display display = getWindowManager().getDefaultDisplay();
+                        Point size = new Point();
+                        display.getSize(size);
+                        int width = size.x;
+                        int height = size.y;
+
+                        TextView t = findViewById(R.id.screensavertext);
+
+                        int currentY = (int) t.getY();
+                        int currentX = (int) t.getX();
+
+                        int twidth = t.getWidth();
+                        int theight = t.getHeight();
+
+                        if (currentX + twidth > width)
+                            sspositiveside = false;
+                        if (currentY + theight > height)
+                            sspositiveforward = false;
+                        if (currentX < 1)
+                            sspositiveside = true;
+                        if (currentY < 1)
+                            sspositiveforward = true;
+
+                        int speed = 50;
+
+                        if (sspositiveforward)
+                            currentY += speed;
+                        else
+                            currentY -= speed;
+
+                        if (sspositiveside)
+                            currentX += speed;
+                        else
+                            currentX -= speed;
+
+                        t.setY(currentY);
+                        t.setX(currentX);
+
+                        ArionumMiner.setLastHashrate(emulateHs(hashrate));
+                        return;
+                    }
+
                     if (!(type.equalsIgnoreCase("mn"))) {
                         ((TextView) findViewById(R.id.hashRate))
                                 .setText(g + " H/s \n" + s + " H/nds \nBEST DL:" + bestRECORDEDdelay);
@@ -892,8 +1034,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         ((TextView) findViewById(R.id.limitVIEW)).setText(text);
                     }
 
-                    if (((Switch) findViewById(R.id.disableGraph)).isChecked())
-                        return;
                     GraphView graph = findViewById(R.id.graph);
                     if (graph.getSeries().size() <= 0) {
                         LineGraphSeries<DataPoint> series = new LineGraphSeries<>(
@@ -993,7 +1133,8 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         });
     }
 
-    public void sortArrayAndPutInList(JSONArray array, final ListView view) {
+
+    public void sortArrayAndPutInList(JSONArray array, final ListView view, Runnable done) {
         try {
 
             final int y = view.getScrollY();
@@ -1008,60 +1149,64 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                         + o.get("dst") + "," + o.get("date"));
                 if (o.get("type").toString().equals("credit")) {
                     icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_down);
-                } else {
+                } else if (o.get("type").toString().equals("debit")) {
                     icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_up);
 
+                } else if (o.get("dst").toString().equals(alias)) {
+                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_down);
+                } else {
+                    icon.add(GoogleMaterial.Icon.gmd_keyboard_arrow_up);
                 }
             }
             List<String> list = new ArrayList<String>();
-            final ArrayAdapter emptyAdapter = new ArrayAdapter<String>(HomeView.this,
-                    android.R.layout.simple_list_item_1, list.toArray(new String[0]));
 
-            final CustomList adapter = new CustomList(HomeView.this, name, icon);
-            Handler h = new Handler(instance.getMainLooper());
-            h.post(new Runnable() {
+            final CustomList adapter = new CustomList(HomeView.this, name, icon, done);
+
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    view.clearChoices();
                     view.clearAnimation();
-                    for (int index = 0; index < view.getChildCount(); ++index) {
-                        View child = view.getChildAt(index);
-                        child.setVisibility(GONE);
+                    try {
+                        for (int index = 0; index < view.getChildCount(); ++index) {
+                            View child = view.getChildAt(index);
+                            child.destroyDrawingCache();
+                        }
+                    } catch (Exception e) {
                     }
-                    view.setAdapter(emptyAdapter);
+
                     view.setAdapter(adapter);
-                    view.setScrollY(y);
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
+
                             for (int index = 0; index < view.getChildCount(); ++index) {
                                 View child = view.getChildAt(index);
                                 Animation animation = new TranslateAnimation(500, 0, 0, 0);
                                 animation.setDuration(1000);
                                 animation.setStartOffset(index * 100);
                                 child.startAnimation(animation);
-                                view.setScrollY(y);
                             }
-                            view.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    System.out.println("SCROLLING TO: " + y + " | " + yz);
-                                    view.scrollTo(0, y);
-                                }
-                            });
-                        }
-                    });
-                    view.setScrollY(y);
                 }
             });
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    protected Drawable convertToGrayscale(Drawable drawable) {
+        ColorMatrix matrix = new ColorMatrix();
+        matrix.setSaturation(0);
+
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(matrix);
+
+        drawable.setColorFilter(filter);
+
+        return drawable;
+    }
     public void createDrawer(Bundle savedinstance) {
         final IProfile profile = new ProfileDrawerItem().withName(address).withEmail(public_key)
                 .withIcon(R.drawable.ic_launcher_round).withSelectedBackgroundAnimated(true);
+        if (((boolean) SettingsView.getSettingFromName("blacktheme").getValue()))
+            profile.getIcon().setIcon(convertToGrayscale(ContextCompat.getDrawable(this, R.drawable.ic_launcher_round)));
 
         headerResult = new AccountHeaderBuilder().withActivity(this).withHeaderBackground(R.drawable.colormain)
                 .withTranslucentStatusBar(false)
@@ -1105,19 +1250,21 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                     }
                 }).withSavedInstance(savedinstance).build();
 
+        int color = ((boolean) SettingsView.getSettingFromName("blacktheme").getValue()) ? Color.parseColor("#ffffff") : ContextCompat.getColor(instance, R.color.material_drawer_primary_icon);
+
         result = new DrawerBuilder().withActivity(this).withTranslucentStatusBar(true).withAccountHeader(headerResult)
                 .addDrawerItems(
                         new PrimaryDrawerItem().withName("Balance").withIcon(FontAwesome.Icon.faw_money_check)
-                                .withIdentifier(1).withSetSelected(true),
+                                .withIdentifier(1).withSetSelected(true).withIconColor(color),
                         new PrimaryDrawerItem().withName("Send").withIcon(Ionicons.Icon.ion_paper_airplane)
-                                .withIdentifier(2),
+                                .withIdentifier(2).withIconColor(color),
                         new PrimaryDrawerItem().withName("Receive").withIcon(FontAwesome.Icon.faw_qrcode)
-                                .withIdentifier(3),
+                                .withIdentifier(3).withIconColor(color),
                         new PrimaryDrawerItem().withName("Miner").withIcon(FontAwesome.Icon.faw_terminal)
-                                .withIdentifier(4),
+                                .withIdentifier(4).withIconColor(color),
                         new PrimaryDrawerItem().withName("History").withIcon(GoogleMaterial.Icon.gmd_hourglass_full)
-                                .withIdentifier(5),
-                        new PrimaryDrawerItem().withName("About").withIcon(FontAwesome.Icon.faw_book).withIdentifier(6))
+                                .withIdentifier(5).withIconColor(color),
+                        new PrimaryDrawerItem().withName("About").withIcon(FontAwesome.Icon.faw_book).withIdentifier(6).withIconColor(color))
                 /*
                  * new SectionDrawerItem().withName("Settings"), new
                  * SecondaryDrawerItem().withName("Settings").withIcon(
@@ -1341,47 +1488,32 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
                 ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                                @Override
-                                               public void onFeedback(final JSONObject object) {
+                                               public void onFeedback(final JSONObject object) throws JSONException {
                                                    run.run();
+                                                   final Object data = object.get("data");
+                                                   //TODO -> HANDLE ERROR CHECK OF TRANSACTION
                                                    if (object == null || object.toString().contains("error")) {
-                                                       Handler h = new Handler(HomeView.instance.getMainLooper());
-                                                       h.post(new Runnable() {
+
+
+                                                       //TODO -> DISPLAY DIALOG WITH ERROR AND TRY TO CATCH ERROR
+                                                       HomeView.instance.runOnUiThread(new Runnable() {
                                                            @Override
                                                            public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance).title("Error:")
-                                                                           .content("Message: " + "\n" + object.get("data") + " <-> ")
+                                                               new MaterialDialog.Builder(HomeView.instance).title("Error:")
+                                                                       .content("Message: " + "\n" + data.toString())
                                                                            .cancelable(true).show();
-                                                               } catch (Exception e) {
-                                                                   e.printStackTrace();
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance).title("Error:")
-                                                                           .content("Message: " + "\n" + e.getMessage()).cancelable(true).show();
-                                                               }
                                                            }
                                                        });
 
+                                                       //TODO -> HANDLE SUCCESS OF TRANSACTION
                                                    } else {
-                                                       Handler h = new Handler(instance.getMainLooper());
-                                                       h.post(new Runnable() {
+                                                       HomeView.instance.runOnUiThread(new Runnable() {
                                                            @Override
                                                            public void run() {
-                                                               try {
-                                                                   MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
+                                                               new MaterialDialog.Builder(HomeView.instance)
                                                                            .title("Transaction sent!")
-                                                                           .content("Your transaction ID:" + "\n" + object.get("data").toString())
+                                                                       .content("Your transaction ID:" + "\n" + data.toString())
                                                                            .cancelable(true).show();
-                                                               } catch (final Exception e) {
-                                                                   e.printStackTrace();
-                                                                   Handler h = new Handler(instance.getMainLooper());
-                                                                   h.post(new Runnable() {
-                                                                       @Override
-                                                                       public void run() {
-                                                                           MaterialDialog d = new MaterialDialog.Builder(HomeView.instance)
-                                                                                   .title("Error:").content("Debug: " + e.getMessage())
-                                                                                   .cancelable(true).show();
-                                                                       }
-                                                                   });
-                                                               }
                                                            }
                                                        });
 
@@ -1403,7 +1535,6 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                        @Override
                                        public void onFeedback(JSONObject object) {
-                                           System.out.println("GOT RESPONSE!");
                                            try {
 
                                                TextView test = findViewById(R.id.balancevalue);
@@ -1412,50 +1543,42 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
 
                                            }
                                        }
-                                   }, "getBalance", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", address));
+        }, "getBalance", new ApiRequest.Argument("account", address));
         ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 
                                        @Override
                                        public void onFeedback(JSONObject object) {
-                                           try {
-                                               sortArrayAndPutInList(object.getJSONArray("data"), (ListView) findViewById(R.id.transactionlist));
-                                               Handler h = new Handler(instance.getMainLooper());
-                                               h.post(new Runnable() {
+                                           runOnUiThread(new Runnable() {
                                                    @Override
                                                    public void run() {
                                                        findViewById(R.id.waitingtransbar).setVisibility(GONE);
                                                    }
                                                });
-                                           } catch (Exception e) {
-                                               e.printStackTrace();
-                                           }
                                            refreshing = false;
                                        }
-                                   }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
-                new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "10"));
+        }, "getTransactions", new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "10"));
     }
 
     public void checkIfLastTransactionIsSame(final LastTransactionTimer timer) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // GETTRANSACTIONS
+                //TODO ->  GET TRANSACTIONS AND CHECK IF THE SAVED "lastID" STRING IS THE SAME AS THE TRANSACTION ID
                 ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                                                @Override
-                                               public void onFeedback(JSONObject object) {
-                                                   try {
+                                               public void onFeedback(JSONObject object) throws JSONException {
+                                                   if (object == null || !object.has("data") || object.getString("data").isEmpty())
+                                                       return;
                                                        JSONArray array = object.getJSONArray("data");
+                                                   if (array.length() <= 0)
+                                                       return;
                                                        String id = ((JSONObject) array.get(0)).get("id").toString();
                                                        if (getString("lastID").equalsIgnoreCase(id))
                                                            timer.onSame(id);
                                                        else
                                                            timer.onDifferect(id);
-                                                   } catch (Exception e) {
-                                                   }
                                                }
-                                           }, "getTransactions", new ApiRequest.Argument("public_key", public_key),
-                        new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "1"));
+                }, "getTransactions", new ApiRequest.Argument("account", address), new ApiRequest.Argument("limit", "1"));
             }
         }).start();
     }
@@ -1464,7 +1587,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // GETTRANSACTIONS
+                //TODO -> GET TRANSACTIONS
                 Handler h = new Handler(getMainLooper());
                 h.post(new Runnable() {
                     @Override
@@ -1475,17 +1598,14 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
 
                                                @Override
-                                               public void onFeedback(JSONObject object) {
-                                                   try {
+                                               public void onFeedback(JSONObject object) throws JSONException {
+                                                   if (!object.has("data") || object.getString("data").isEmpty())
+                                                       return;
                                                        saveString("lastID", object.getJSONArray("data").getJSONObject(0).get("id").toString());
                                                        saveString("transactions", object.toString());
                                                        call.onDone(object);
-                                                   } catch (Exception e) {
-                                                       e.printStackTrace();
-                                                   }
                                                }
-                                           }, "getTransactions", new ApiRequest.Argument("public_key", getPublic_key()),
-                        new ApiRequest.Argument("account", getAddress()), new ApiRequest.Argument("limit", "1000"));
+                }, "getTransactions", new ApiRequest.Argument("account", getAddress()), new ApiRequest.Argument("limit", "1000"));
             }
         }).start();
     }
@@ -1495,6 +1615,28 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     // TODO -> GETS AND UTIL METHODS
     //////////////////////////////////////////
 
+    void toggleFullScreen(boolean goFullScreen, View v) {
+        if (goFullScreen) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            v.requestLayout();
+            v.bringToFront();
+            findViewById(R.id.crossview).setVisibility(GONE);
+            v.setVisibility(View.VISIBLE);
+        } else {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            getWindow().getDecorView().setSystemUiVisibility(0);
+            v.setVisibility(View.GONE);
+            findViewById(R.id.crossview).requestLayout();
+            findViewById(R.id.crossview).bringToFront();
+            findViewById(R.id.crossview).setVisibility(View.VISIBLE);
+        }
+
+    }
 
     public static String getPrivate_key() {
         return private_key;
@@ -1576,6 +1718,25 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 }
                 mNotificationManager.notify(1047 + new Random().nextInt(1000), mBuilder.build());
 
+                if (((Switch) findViewById(R.id.enableScreensaver)).isChecked()) {
+                    TextView t = findViewById(R.id.screensavertext);
+                    String text = "\nShares:";
+                    String upperText = "";
+                    int parsed = 0;
+                    if (t.getText().toString().contains("\n")) {
+                        try {
+                            upperText = t.getText().toString().split("\n")[0];
+                            parsed = Integer.parseInt(t.getText().toString().replace("Shares:", "").split("\n")[1]);
+                        } catch (Exception e) {
+                        }
+                    }
+                    parsed++;
+                    text += parsed;
+
+
+                    t.setText(upperText + text);
+                    return;
+                }
                 TextView t = findViewById(R.id.shares);
                 String text = t.getText().toString();
                 int parsed = 0;
@@ -1629,14 +1790,23 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
             public void run() {
                 ApiRequest.requestFeedback(new ApiRequest.RequestFeedback() {
                     @Override
-                    public void onFeedback(JSONObject object) {
-                        try {
+                    public void onFeedback(JSONObject object) throws JSONException {
+                        if (object == null)
+                            return;
                             alias = object.getString("data");
+
+                        if (alias == null)
+                            alias = "none";
+                        if (alias.equals("null"))
+                            alias = "none";
                             if (alias.equals("false"))
                                 alias = "none";
-                            ((TextView) findViewById(R.id.aliasinfo)).setText("Your Alias: " + alias);
-                        } catch (JSONException e) {
-                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((TextView) findViewById(R.id.aliasinfo)).setText("Your Alias: " + alias);
+                            }
+                        });
                     }
                 }, "getAlias", new ApiRequest.Argument("account", getAddress()));
             }
@@ -1672,6 +1842,10 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         }
     }
 
+    public static int spToPx(float sp, Context context) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
+    }
+
     //////////////////////////////////////////
     // TODO -> CLASSES AND STATIC CLASS CALLS//
     //////////////////////////////////////////
@@ -1703,6 +1877,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         public abstract void onDone(JSONObject o);
     }
 
+
     public class CustomList extends ArrayAdapter<String> {
 
         private final Activity context;
@@ -1711,57 +1886,175 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         private IconicsDrawable drawablepositive;
         private final ArrayList<String> strings;
 
-        public CustomList(Activity context, ArrayList<String> strings, ArrayList<GoogleMaterial.Icon> imageId) {
+        public CustomList(Activity context, final ArrayList<String> strings, ArrayList<GoogleMaterial.Icon> imageId, final Runnable done) {
             super(context, R.layout.list_single, strings);
             this.context = context;
             this.strings = strings;
             this.imageId = imageId;
             if (drawablepositive == null) {
                 drawablepositive = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_keyboard_arrow_down)
-                        .color(ContextCompat.getColor(HomeView.instance, R.color.colorGreen)).sizeDp(24);
+                        .color(Color.parseColor("#4cd964")).sizeDp(24);
             }
             if (drawablenegative == null) {
                 drawablenegative = new IconicsDrawable(HomeView.this).icon(GoogleMaterial.Icon.gmd_keyboard_arrow_up)
-                        .color(ContextCompat.getColor(HomeView.instance, R.color.colorRed)).sizeDp(24);
+                        .color(Color.parseColor("#ff3b32")).sizeDp(24);
             }
+            views.clear();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < strings.size(); i++) {
+                        generateView(i, new ListItemEvent() {
+                            @Override
+                            public void done(View view) {
+                                pregeneratedViews.add(view);
+                            }
+                        });
+                    }
+                    while (pregeneratedViews.size() != strings.size()) {
+                    }
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                    }
+                    done.run();
+                }
+            }).start();
+
         }
 
+        private ArrayList<View> pregeneratedViews = new ArrayList<>();
+        private HashMap<ViewGroup, ArrayList<View>> views = new HashMap<>();
+
         @Override
-        public View getView(int position, View view, ViewGroup parent) {
+        public View getView(final int position, View view, ViewGroup parent) {
+            if (position >= pregeneratedViews.size() || pregeneratedViews.isEmpty())
+                return generateView(position);
+            return pregeneratedViews.get(position);
+        }
+
+        public void generateView(final int position, final ListItemEvent runners) {
             LayoutInflater inflater = context.getLayoutInflater();
-            View rowView = inflater.inflate(R.layout.list_single, null, true);
-            TextView txtTitle = rowView.findViewById(R.id.txt);
-            TextView value = rowView.findViewById(R.id.value);
-            TextView from = rowView.findViewById(R.id.from);
-            TextView to = rowView.findViewById(R.id.to);
-            TextView date = rowView.findViewById(R.id.date);
-            ImageView imageView = rowView.findViewById(R.id.img);
-            txtTitle.setText("ID: " + strings.get(position).split(",")[0]);
-            value.setText(strings.get(position).split(",")[1] + " ARO");
+            final View rowView = inflater.inflate(R.layout.list_single, null, true);
+            final TextView txtTitle = rowView.findViewById(R.id.txt);
+            final TextView value = rowView.findViewById(R.id.value);
+            final TextView from = rowView.findViewById(R.id.from);
+            final TextView to = rowView.findViewById(R.id.to);
+            final TextView date = rowView.findViewById(R.id.date);
+            final ImageView imageView = rowView.findViewById(R.id.img);
 
-            if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down)
-                value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorGreen));
-            else
-                value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorRed));
 
-            from.setText("<- " + strings.get(position).split(",")[2]);
-            to.setText("-> " + strings.get(position).split(",")[3]);
+            //TODO -> SURE
+
             long t = Long.parseLong(strings.get(position).split(",")[4]) * 1000;
             Calendar dated = Calendar.getInstance();
             SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             dated.setTimeInMillis(t);
-            String date1 = format1.format(dated.getTime());
-            date.setText(date1);
+            final String date1 = format1.format(dated.getTime());
 
-            if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    txtTitle.setText("ID: " + strings.get(position).split(",")[0]);
+                    value.setText(strings.get(position).split(",")[1] + " ARO");
 
-                imageView.setImageDrawable(drawablepositive);
-            } else {
+                    from.setText("<- " + strings.get(position).split(",")[2]);
+                    to.setText("-> " + strings.get(position).split(",")[3]);
 
-                imageView.setImageDrawable(drawablenegative);
-            }
+                    date.setText(date1);
+
+                    if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down) {
+
+                        imageView.setImageDrawable(drawablepositive);
+                    } else {
+
+                        imageView.setImageDrawable(drawablenegative);
+                    }
+                    if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down)
+                        value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorGreen));
+                    else
+                        value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorRed));
+
+
+                    addClickListener(rowView, strings.get(position).split(",")[3], strings.get(position).split(",")[2], strings.get(position).split(",")[0], date1, strings.get(position).split(",")[1] + " ARO");
+
+                    runners.done(rowView);
+                }
+
+            });
+        }
+
+        public View generateView(final int position) {
+            LayoutInflater inflater = context.getLayoutInflater();
+            final View rowView = inflater.inflate(R.layout.list_single, null, true);
+            final TextView txtTitle = rowView.findViewById(R.id.txt);
+            final TextView value = rowView.findViewById(R.id.value);
+            final TextView from = rowView.findViewById(R.id.from);
+            final TextView to = rowView.findViewById(R.id.to);
+            final TextView date = rowView.findViewById(R.id.date);
+            final ImageView imageView = rowView.findViewById(R.id.img);
+
+
+            //TODO -> SURE
+
+            long t = Long.parseLong(strings.get(position).split(",")[4]) * 1000;
+            Calendar dated = Calendar.getInstance();
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            dated.setTimeInMillis(t);
+            final String date1 = format1.format(dated.getTime());
+
+            addClickListener(rowView, strings.get(position).split(",")[3], strings.get(position).split(",")[2], strings.get(position).split(",")[0], date1, strings.get(position).split(",")[1] + " ARO");
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    txtTitle.setText("ID: " + strings.get(position).split(",")[0]);
+                    value.setText(strings.get(position).split(",")[1] + " ARO");
+
+                    from.setText("<- " + strings.get(position).split(",")[2]);
+                    to.setText("-> " + strings.get(position).split(",")[3]);
+
+                    date.setText(date1);
+
+                    if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down) {
+
+                        imageView.setImageDrawable(drawablepositive);
+
+                    } else {
+
+                        imageView.setImageDrawable(drawablenegative);
+                    }
+                    if (imageId.get(position) == GoogleMaterial.Icon.gmd_keyboard_arrow_down)
+                        value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorGreen));
+                    else
+                        value.setTextColor(ContextCompat.getColor(HomeView.instance, R.color.colorRed));
+                }
+
+            });
             return rowView;
         }
+
+        public void addClickListener(final View view, final String from, final String to, final String id, final String date, final String value) {
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new MaterialDialog.Builder(HomeView.instance).title("Transaction Information")
+                            .content("ID: " + id + "\n\n" +
+                                    "From: " + to + "\n\n" +
+                                    "To: " + from + "\n\n" +
+                                    "Value: " + value + "\n\n" +
+                                    "Date: " + date + "\n"
+
+
+                            ).positiveText("Close").show();
+                }
+            });
+        }
+    }
+
+    public abstract class ListItemEvent {
+        public abstract void done(View view);
     }
 
     public abstract class LastTransactionTimer {

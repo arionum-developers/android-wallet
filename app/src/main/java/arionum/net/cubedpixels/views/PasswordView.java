@@ -43,17 +43,23 @@ public class PasswordView extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        //TODO -> THEME PROCESSOR
+        setTheme(((boolean) SettingsView.getSettingFromName("blacktheme").getValue()) ? R.style.DarkAppTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.password_layout);
         FancyButton goBackButton = findViewById(R.id.btn_go_back);
         FancyButton passwordButton = findViewById(R.id.btn_pw);
 
         final EditText pw_field = findViewById(R.id.password_text);
+        final EditText second_pw_field = findViewById(R.id.password_text_second);
 
 
         if (hasPassword()) {
+            pw_field.setHint("Password");
             passwordButton.setText("Enter Password");
         } else {
+            second_pw_field.setVisibility(View.VISIBLE);
+            pw_field.setHint("Repeat Password");
             passwordButton.setText("Save Password");
         }
 
@@ -70,6 +76,11 @@ public class PasswordView extends AppCompatActivity {
             public void onClick(View view) {
                 if (!hasPassword())
                     if (pw_field.getText().toString().length() > 3 && isValidPassword(pw_field.getText().toString())) {
+
+                        if (!second_pw_field.getText().toString().equals(pw_field.getText().toString())) {
+                            Toasty.error(PasswordView.this, "Passwords doesn't match!", Toast.LENGTH_SHORT, true).show();
+                            return;
+                        }
                         saveString("identification_password", pw_field.getText().toString());
                         Toasty.info(PasswordView.this, "Password has been saved.", Toast.LENGTH_SHORT, true).show();
                         callback.verification_done(true);

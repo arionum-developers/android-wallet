@@ -16,8 +16,11 @@ import static android.content.Context.ACTIVITY_SERVICE;
 
 public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
+    //TODO -> LIFECYCLE BOOLEANS
     private boolean active = false;
+    private boolean suspended = false;
     private boolean forceStop = false;
+
     private boolean isInitiated = false;
     private boolean doPause = false;
     private Argon2 argon2;
@@ -51,7 +54,7 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         active = true;
         isInitiated = true;
 
-        System.out.println("Intiting Hasher -> " + this);
+        System.out.println("Initiating Hasher -> " + this);
 
 
         argon2 = new Argon2(new SecurityParameters(hf_argon_t_cost, hf_argon_m_cost, hf_argon_para), 32, Argon2.TypeIdentifiers.ARGON2I, Argon2.VersionIdentifiers.VERSION_13);
@@ -65,12 +68,13 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
         Thread.setDefaultUncaughtExceptionHandler(this);
 
         forceStop = false;
+        suspended = false;
         doCycle();
     }
 
     public void doCycle() {
         //TODO -> GENERATE NONCE
-        while (active && !forceStop) {
+        while (active && !forceStop && !suspended) {
             if (forceStop)
                 return;
             if (doPause || !doMine) {
@@ -83,7 +87,8 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
             }
 
             //TODO -> GENERATE ARGON2 HASH
-            String base = nonce.getNonce();
+            final Nonce usedNonce = nonce;
+            String base = usedNonce.getNonce();
             EncodedArgon2Result result = argon2.argon2_hash(base.getBytes());
             String encoded = result.getEncoded();
 
@@ -116,15 +121,17 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
             if (hf_argon_m_cost < 500000)
                 type = "GPU";
             ArionumMiner.getInstance().getCallback().onDLChange(finalDuration, type);
-            //TODO -> MAKE SOLO MINER
-            String signature = Base58.generateSoloSignature(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height, neededDL, ArionumMiner.getInstance().getCallback());
 
-            if (finalDuration <= neededDL) {
-                System.out.println("NONCE: " + nonce.getNonce());
-                System.out.println("ENCODED: " + encoded);
-                minerInstance.submitShare(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height);
-                refreshNonce();
-            }
+            //TODO -> MAKE SOLO MINER
+            String signature = Base58.generateSoloSignature(usedNonce, encoded, finalDuration, difficulty, height, neededDL, type, ArionumMiner.getInstance().getCallback());
+
+            if (!signature.equals("error"))
+                if (finalDuration <= neededDL) {
+                    System.out.println("NONCE: " + nonce.getNonce());
+                    System.out.println("ENCODED: " + encoded);
+                    minerInstance.submitShare(nonce.getNonceRaw(), encoded, finalDuration, difficulty, height, type);
+                    refreshNonce();
+                }
 
         }
         System.runFinalization();
@@ -178,6 +185,18 @@ public class ArionumHasher implements Thread.UncaughtExceptionHandler {
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean hasForceStop() {
+        return forceStop;
+    }
+
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
+    }
+
+    public boolean isSuspended() {
+        return suspended;
     }
 
     public boolean isInitiated() {

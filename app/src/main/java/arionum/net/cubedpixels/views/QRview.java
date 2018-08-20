@@ -26,6 +26,8 @@ public class QRview extends AppCompatActivity implements QRCodeReaderView.OnQRCo
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+        //TODO -> THEME PROCESSOR
+        setTheme(((boolean) SettingsView.getSettingFromName("blacktheme").getValue()) ? R.style.DarkAppTheme : R.style.AppTheme);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.qr_login);
 

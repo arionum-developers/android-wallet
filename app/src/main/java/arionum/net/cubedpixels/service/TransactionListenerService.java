@@ -37,7 +37,11 @@ public class TransactionListenerService extends JobIntentService {
                                        @Override
                                        public void onFeedback(JSONObject object) {
                                            try {
+                                               if (!object.has("data") || object.getString("data").isEmpty())
+                                                   return;
                                                JSONArray array = object.getJSONArray("data");
+                                               if (array.length() <= 0)
+                                                   return;
                                                String id = ((JSONObject) array.get(0)).get("id").toString();
                                                if (!getString(ctx, "notifyID").equalsIgnoreCase(id)) {
                                                    saveString(ctx, "notifyID", id);

@@ -47,6 +47,8 @@
             android:name=".views.IntroActivity"
             android:theme="@style/Theme.Intro" />
         <activity android:name=".views.PasswordView" />
+        <activity android:name=".views.SettingsView" />
+
 
         <service
             android:name="arionum.net.cubedpixels.service.TransactionListenerService"

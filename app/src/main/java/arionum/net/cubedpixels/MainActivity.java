@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
 	protected void onCreate(final Bundle savedInstanceState) {
+        instance = this;
 		super.onCreate(savedInstanceState);
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
@@ -68,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 		setContentView(R.layout.activity_main);
-		instance = this;
 		ImageView animationview = findViewById(R.id.imageView4);
 		drawable = animationview.getDrawable();
 

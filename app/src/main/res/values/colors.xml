@@ -14,5 +14,6 @@
 
     <color name="colorDark">#424242</color>
     <color name="colorBackground">#fff</color>
-    <color name="colorDarkBackground">#82ffffff</color>
+    <color name="colorDarkBackground">#262626</color>
+    <color name="text_color_primary">#dd000000</color>
 </resources>

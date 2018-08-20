@@ -454,7 +454,6 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="13dp"
                 android:text="No reported hashrate"
                 android:textAlignment="center"
                 android:textSize="22sp" />
@@ -464,8 +463,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="103dp"
+                android:layout_below="@+id/hashRate"
+                android:layout_margin="4dp"
                 android:hint="Pool"
                 android:inputType="text"
                 android:textAlignment="center"
@@ -476,28 +475,26 @@
                 android:id="@+id/sugg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/disableGraph"
-                android:layout_marginEnd="-147dp"
-                android:layout_toStartOf="@+id/hashers"
-                android:text="Suggested Threads:"
-                android:textColor="#8b8b8b" />
 
-            <Switch
-                android:id="@+id/disableGraph"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
                 android:layout_below="@+id/pool"
-                android:text="Disable Graph"
+                android:layout_marginStart="14dp"
+
+                android:layout_marginTop="7dp"
+                android:text="Threads:"
                 android:textColor="#8b8b8b" />
 
             <EditText
                 android:id="@+id/hashers"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
+
+
                 android:layout_below="@+id/pool"
-                android:layout_marginStart="147dp"
+
+                android:layout_toRightOf="@+id/sugg"
+
+
                 android:hint="Hashers"
                 android:inputType="number"
                 android:textAlignment="center"
@@ -505,16 +502,27 @@
                 android:textSize="12sp"
                 android:textStyle="italic" />
 
+            <Switch
+                android:id="@+id/enableScreensaver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@+id/pool"
+                android:layout_margin="4dp"
+                android:text="Screensaver(!!)"
+                android:textColor="#8b8b8b" />
+
 
             <mehdi.sakout.fancybuttons.FancyButton
                 android:id="@+id/minerToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
                 android:layout_alignParentBottom="true"
+
                 android:layout_centerHorizontal="true"
                 android:layout_margin="57dp"
                 android:layout_marginTop="10dp"
+                android:elevation="9dp"
                 android:paddingBottom="10dp"
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp"
@@ -534,9 +542,9 @@
                 android:id="@+id/graph"
                 android:layout_width="match_parent"
                 android:layout_height="230dp"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginBottom="144dp" />
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/notificationbar"
+                android:layout_margin="4dp" />
 
             <TextView
                 android:id="@+id/currentDur"
@@ -544,16 +552,16 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/graph"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="23dp"
+                android:layout_margin="4dp"
                 android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/notificationbar"
                 android:layout_width="320dp"
                 android:layout_height="43dp"
-                android:layout_alignParentTop="true"
+                android:layout_below="@+id/hashers"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="223dp"
+                android:layout_margin="4dp"
                 android:gravity="center"
                 android:textAlignment="center"
                 android:textAllCaps="false"
@@ -570,187 +578,264 @@
             android:layout_alignParentTop="true"
             android:visibility="gone">
 
-            <RelativeLayout
-                android:id="@+id/info_box"
+            <ScrollView
+                android:id="@+id/aboutscroller"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:background="@android:drawable/edit_text"
-                android:paddingBottom="20dp"
-                android:paddingTop="20dp">
+                android:layout_height="match_parent"
+                android:fillViewport="true">>
 
-                <ImageView
-                    android:id="@+id/imageView2"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_above="@+id/textView3"
-                    android:layout_alignParentEnd="true"
-                    android:tint="@color/colorDark"
-                    app:srcCompat="@drawable/aro" />
-
-                <ImageView
-                    android:id="@+id/imageView"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="33dp"
-                    app:srcCompat="@drawable/cuby" />
-
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:id="@+id/innerScrollView"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignTop="@+id/imageView"
-                    android:layout_marginStart="12dp"
-                    android:layout_toEndOf="@+id/imageView"
-                    android:text="Cuby"
-                    android:textColor="@color/colorDark"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignStart="@+id/textView2"
-                    android:layout_below="@+id/textView2"
-                    android:text="Max Schleining"
-                    android:textColor="#696969" />
-
-                <TextView
-                    android:id="@+id/textView4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignStart="@+id/textView3"
-                    android:layout_below="@+id/textView3"
-                    android:text="http://cubedpixels.net" />
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignStart="@+id/textView4"
-                    android:layout_below="@+id/textView4"
-                    android:text="Web and Application Designer / Programmer" />
-            </RelativeLayout>
+                    android:orientation="vertical">
 
 
-            <RelativeLayout
-                android:id="@+id/donations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/info_box"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="-5dp"
-                android:background="@android:drawable/edit_text"
-                android:paddingBottom="20dp"
-                android:paddingTop="20dp">
+                    <RelativeLayout
+                        android:id="@+id/info_box"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_marginTop="5dp"
+                        android:background="@drawable/layout_round_bg"
+                        android:paddingBottom="20dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:paddingTop="20dp">
 
-                <TextView
-                    android:id="@+id/donationAddress"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG"
-                    android:textAlignment="center"
-                    android:textSize="10sp" />
-            </RelativeLayout>
+                        <ImageView
+                            android:id="@+id/imageView2"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_above="@+id/textView3"
+                            android:layout_alignParentEnd="true"
+                            android:tint="@color/colorDark"
+                            app:srcCompat="@drawable/aro" />
+
+                        <ImageView
+                            android:id="@+id/imageView"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="33dp"
+                            app:srcCompat="@drawable/cuby" />
+
+                        <TextView
+                            android:id="@+id/textView2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignTop="@+id/imageView"
+                            android:layout_marginStart="12dp"
+                            android:layout_toEndOf="@+id/imageView"
+                            android:text="Cuby"
+                            android:textColor="@color/colorDark"
+                            android:textSize="20sp" />
+
+                        <TextView
+                            android:id="@+id/textView3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignStart="@+id/textView2"
+                            android:layout_below="@+id/textView2"
+                            android:text="Max Schleining"
+                            android:textColor="#696969" />
+
+                        <TextView
+                            android:id="@+id/textView4"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignStart="@+id/textView3"
+                            android:layout_below="@+id/textView3"
+                            android:text="http://cubedpixels.net"
+                            android:textColor="#696969" />
+
+                        <TextView
+                            android:id="@+id/textView5"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignStart="@+id/textView4"
+                            android:layout_below="@+id/textView4"
+                            android:text="Web and Application Designer / Programmer"
+                            android:textColor="#696969" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/settings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_below="@+id/info_box"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_marginTop="-5dp"
+                        android:paddingBottom="20dp"
+                        android:paddingTop="20dp">
+
+                        <mehdi.sakout.fancybuttons.FancyButton
+                            android:id="@+id/settingsbutton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+
+                            android:layout_centerHorizontal="true"
+                            android:layout_centerInParent="true"
+                            android:layout_centerVertical="true"
+                            android:paddingBottom="10dp"
+
+                            android:paddingLeft="20dp"
+                            android:paddingRight="20dp"
+                            android:paddingTop="10dp"
+                            app:fb_borderColor="?attr/colorPrimary"
+                            app:fb_borderWidth="1dp"
+                            app:fb_defaultColor="#ffffff"
+                            app:fb_focusColor="@color/colorAccent"
+                            app:fb_fontIconResource="&#xf013;"
+                            app:fb_iconPosition="left"
+                            app:fb_radius="30dp"
+                            app:fb_text="Go to Settings"
+                            app:fb_textColor="@color/colorAccent" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/infos"
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_below="@+id/settings"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginRight="20dp"
+                        android:background="@drawable/layout_round_bg"
+                        android:paddingBottom="20dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:paddingTop="20dp">
+
+                        <TextView
+                            android:id="@+id/publickeyinfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_above="@+id/yourpublickey"
+                            android:layout_alignStart="@+id/yourprivatekey"
+                            android:layout_marginBottom="-12dp"
+                            android:text="Your PublicKey:"
+                            android:textAlignment="center"
+                            android:textColor="@color/colorDark"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/yourpublickey"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:paddingBottom="1dp"
+                            android:paddingTop="1dp"
+                            android:singleLine="true"
+                            android:text="null"
+                            android:textAlignment="center"
+                            android:textColor="#696969"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/privatekeyinfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_above="@+id/yourprivatekey"
+                            android:layout_alignStart="@+id/yourpublickey"
+                            android:text="Your PrivateKey:"
+                            android:textAlignment="center"
+                            android:textColor="@color/colorDark"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/yourprivatekey"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignStart="@+id/yourpublickey"
+                            android:paddingBottom="1dp"
+                            android:paddingTop="1dp"
+                            android:singleLine="true"
+                            android:text="null"
+                            android:textAlignment="center"
+                            android:textColor="#696969"
+                            android:textSize="10sp" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/thankyou"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_below="@+id/infos"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_marginTop="5dp"
+                        android:background="@drawable/layout_round_bg"
+                        android:paddingBottom="5dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:paddingTop="5dp">
+
+                        <TextView
+                            android:id="@+id/textView6"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:text="Thanks to:"
+                            android:textAppearance="@style/TextAppearance.Design.Tab"
+                            android:textColor="@color/colorDark" />
+
+                        <TextView
+                            android:id="@+id/thankstolist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@+id/textView6"
+                            android:layout_centerHorizontal="true"
+                            android:layout_marginTop="5dp"
+                            android:textColor="#696969" />
+                    </RelativeLayout>
 
 
-            <RelativeLayout
-                android:id="@+id/infos"
-                android:layout_width="match_parent"
-                android:layout_height="96dp"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/donations"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:background="@android:drawable/edit_text"
-                android:paddingBottom="20dp"
-                android:paddingTop="20dp">
+                </RelativeLayout>
+            </ScrollView>
 
-                <TextView
-                    android:id="@+id/publickeyinfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/yourpublickey"
-                    android:layout_alignStart="@+id/yourprivatekey"
-                    android:layout_marginBottom="-12dp"
-                    android:text="Your PublicKey:"
-                    android:textAlignment="center"
-                    android:textSize="10sp" />
-
-                <TextView
-                    android:id="@+id/yourpublickey"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:paddingBottom="1dp"
-                    android:paddingTop="1dp"
-                    android:singleLine="true"
-                    android:text="null"
-                    android:textAlignment="center"
-                    android:textSize="10sp" />
-
-                <TextView
-                    android:id="@+id/privatekeyinfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/yourprivatekey"
-                    android:layout_alignStart="@+id/yourpublickey"
-                    android:text="Your PrivateKey:"
-                    android:textAlignment="center"
-                    android:textSize="10sp" />
-
-                <TextView
-                    android:id="@+id/yourprivatekey"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignStart="@+id/yourpublickey"
-                    android:paddingBottom="1dp"
-                    android:paddingTop="1dp"
-                    android:singleLine="true"
-                    android:text="null"
-                    android:textAlignment="center"
-                    android:textSize="10sp" />
-            </RelativeLayout>
-
-
-            <RelativeLayout
-                android:id="@+id/thankyou"
-                android:layout_width="match_parent"
-                android:layout_height="320dp"
-                android:layout_below="@+id/donations"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="98dp"
-                android:background="@android:drawable/edit_text">
-
-                <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_centerHorizontal="true"
-                    android:text="Thanks to:"
-                    android:textAppearance="@style/TextAppearance.Design.Tab" />
-
-                <TextView
-                    android:id="@+id/thankstolist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/textView6"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="5dp" />
-            </RelativeLayout>
 
         </RelativeLayout>
 
 
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/ScreenSaver"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/md_black_1000"
+        android:fitsSystemWindows="true"
+        android:focusable="auto"
+        android:focusableInTouchMode="true"
+        android:importantForAccessibility="yes"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/screensavertext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="260dp"
+            android:text="Starting..."
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:textStyle="bold|italic"
+            android:typeface="monospace" />
     </RelativeLayout>
 
 
