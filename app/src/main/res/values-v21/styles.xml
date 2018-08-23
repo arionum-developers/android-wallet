@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:navigationBarColor">?android:attr/colorPrimaryDark</item>
+    </style>
+
+    <!-- Dark Base application theme. -->
+    <style name="DarkAppTheme" parent="Theme.AppCompat.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:navigationBarColor">@color/colorDarkBackground</item>
+        <item name="android:colorBackground">@color/colorDarkBackground</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:colorForeground">@android:color/white</item>
+        <item name="android:windowBackground">@color/colorDarkBackground</item>
+    </style>
+</resources>
