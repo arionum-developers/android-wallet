@@ -21,6 +21,7 @@ import agency.tango.materialintroscreen.MessageButtonBehaviour;
 import agency.tango.materialintroscreen.SlideFragmentBuilder;
 import arionum.net.cubedpixels.MainActivity;
 import arionum.net.cubedpixels.R;
+import arionum.net.cubedpixels.utils.Base58;
 
 public class IntroActivity extends MaterialIntroActivity {
 
@@ -175,7 +176,7 @@ public class IntroActivity extends MaterialIntroActivity {
                     }
                     saveString("address", address.getText().toString());
                     saveString("publickey", publickey.getText().toString());
-                    saveString("privatekey", privatekey.getText().toString());
+                    saveString("privatekey", Base58.encode(privatekey.getText().toString().getBytes()));
                     Intent i = new Intent(IntroViewActivity.this, MainActivity.class);
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

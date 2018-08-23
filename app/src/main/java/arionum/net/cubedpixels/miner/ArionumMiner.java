@@ -133,6 +133,8 @@ public class ArionumMiner {
         hashers.clear();
     }
 
+    long lastnotice = 0;
+
     public void submitShare(final String nonce, String argon, final long submitDL, final long difficulty, long height, String type) {
         // TODO -> SEND URL REQUEST TO POOL
         System.out.println("Submitting Share...");
@@ -193,8 +195,11 @@ public class ArionumMiner {
         } catch (Exception e) {
             // TODO -> HANDLE EXCEPTION
             e.printStackTrace();
-            new MaterialDialog.Builder(HomeView.instance).title("ERROR").content("The Pool URL could not get resolved!")
-                    .positiveText("OH NO!").show();
+            if (System.currentTimeMillis() - lastnotice > 5000) {
+                lastnotice = System.currentTimeMillis();
+                new MaterialDialog.Builder(HomeView.instance).title("ERROR").content("The Pool URL could not get resolved!")
+                        .positiveText("OH NO!").show();
+            }
         }
     }
 

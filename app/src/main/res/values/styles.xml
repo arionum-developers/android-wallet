@@ -17,7 +17,7 @@
         <item name="android:colorBackground">@color/colorDarkBackground</item>
         <item name="android:textColorPrimary">@android:color/white</item>
         <item name="android:colorForeground">@android:color/white</item>
-        <item name="android:windowBackground">@android:color/background_dark</item>
+        <item name="android:windowBackground">@color/colorDarkBackground</item>
     </style>
 
 </resources>

@@ -205,10 +205,18 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         public_key = getString("publickey");
         if (!getString("privatekey").isEmpty())
             try {
+                String tempsave = getString("privatekey");
+                try {
+                    if (new String(Base58.decode(tempsave)).contains(" ")) throw new Exception();
+                } catch (Exception e) {
+                    saveString("privatekey", Base58.encode(tempsave.getBytes()));
+                    new MaterialDialog.Builder(HomeView.this).title("Repaired!")
+                            .content("Your private key seemed broken! So we repaired it.").show();
+                }
                 private_key = new String(Base58.decode(getString("privatekey")));
             } catch (Exception e) {
                 new MaterialDialog.Builder(HomeView.this).title("D3C0D3 exception!")
-                        .content("Your private key couldn't be encrypted!").show();
+                        .content("Your private key couldn't get decrypted!").show();
             }
         address = getString("address");
         // TODO -> ALIAS SEARCH AND SET
