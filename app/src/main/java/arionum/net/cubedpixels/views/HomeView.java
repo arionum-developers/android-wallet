@@ -181,6 +181,12 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
         }).start();
     }
 
+    public static Context getInstance() {
+        if (instance == null)
+            return MainActivity.getInstance();
+        return instance;
+    }
+
     // TODO -> ONCREATE GETS CALLED WHEN THE UI IS GETTING LOADED !!!!!!!!!
     // WARING !!!!!!!!!!! DONT USE HEAVY METHODS FOR FAST LOADING TIMES
     @Override
@@ -484,7 +490,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
                 editPool.setEnabled(!ArionumMiner.isRunning());
                 String saved_pool = getString("miner_pool");
                 if (saved_pool.isEmpty())
-                    saved_pool = "http://aro.cool";
+                    saved_pool = "https://arionumpool.com";
                 String pool = ArionumMiner.getInstance().getPool() == null ? saved_pool
                         : ArionumMiner.getInstance().getPool();
                 editPool.setText(pool);
@@ -1424,7 +1430,7 @@ public class HomeView extends AppCompatActivity implements ComponentCallbacks2 {
     @Override
     protected void onResume() {
         super.onResume();
-        if (qrCodeReaderView != null && currentPage.getName().equalsIgnoreCase("RECEIVE"))
+        if (qrCodeReaderView != null && currentPage != null && currentPage.getName().equalsIgnoreCase("RECEIVE"))
             qrCodeReaderView.startCamera();
     }
 

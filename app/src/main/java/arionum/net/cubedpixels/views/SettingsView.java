@@ -14,7 +14,6 @@ import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.HashMap;
 
-import arionum.net.cubedpixels.MainActivity;
 import arionum.net.cubedpixels.R;
 import mehdi.sakout.fancybuttons.FancyButton;
 
@@ -117,7 +116,7 @@ public class SettingsView extends AppCompatActivity {
 
     public static Setting getSettingFromName(String name) {
         if (settings.isEmpty())
-            registerSettings(MainActivity.getInstance());
+            registerSettings(HomeView.getInstance());
         return settings.get(name);
     }
 

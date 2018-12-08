@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 			"Adding flying Cats...", "Doing Maths...", "Counting Stars...", "Counting AROs...", "Searching Server...",
 			"Waking Arionum...", "Loading stuff...", "Doing stuff...", "Walking in the Internet...",
 			"Destroying Meteors...", "Scuffing cats...", "Petting cats...", "Thinking about cats...",
-			"Connecting to Arionum...", "Making cats smarter...", "Building Arionum...", "Thanking BitcoinJ for EC...",
+			"Connecting to Arionum...", "Making cats smarter...", "Building Arionum...", "Checking...",
 			"Waking up the Devs...", "Playing Kurby music...", "Hey wake up!", "Doing really hard math...",
 			"Arionum \"Kickin' ass and taking names since '18\""};
 
