@@ -20,7 +20,7 @@ An Android Wallet for the Arionum Coin!
 Please donate. :3
 
 ```
-1gPvUp3kW6ARDU84b7g8YKssWhdfLadNqrKR81W8RKtYLupbJHimBtMSPkHGLXhFcynkABydovjiRUUCM3SZxCG
+4DKyR8taYQQn8NibSTLKW9XG7JwSeuk7wEnjkN8qcvKZVzN8ijEogd5xoS7CZaKR5VRwkYsYjbZNEB3c7sE6vfxf
 ```
 
 ### Donator´s
